@@ -11,6 +11,9 @@ export default function Home() {
               Your all-in-one platform for employee collaboration and workplace
               community.
             </p>
+            <div className="bg-primary text-primary-foreground p-4 rounded-lg">
+              Hello Nihongo Rashii 🌿
+            </div>
           </div>
         </section>
       </main>
