@@ -1,18 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/ui/header";
-import { Footer } from "@/components/ui/footer";
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+import { Toaster } from "@/components/ui/sonner";
 
 export const inter = Inter({
   subsets: ["latin"],
@@ -20,43 +9,9 @@ export const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Socius",
+  title: "Socius | Employee Management Platform",
   description:
     "Socius là nền tảng mạng xã hội nội bộ giúp kết nối các thành viên trong tổ chức, hỗ trợ quản lý nhân sự và các hoạt động nội bộ hiệu quả.",
-};
-
-//mock user type
-type User = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  birth_date: string;
-  image_url?: string | null;
-  gender: "male" | "female";
-  nationality: string;
-  phone_number: string;
-  hire_date: string;
-  address: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const mockUser: User = {
-  id: "12345",
-  first_name: "Joe",
-  last_name: "Mama",
-  email: "joemama@example.com",
-  birth_date: "1975-4-30",
-  image_url:
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWii2rKTD3FgFmJVzm3Z3-QXdHOQhqm_7aWQZk_XoE4CfPByvrmH2cFshN4Trv5CPkxzs&usqp=CAU",
-  gender: "male",
-  nationality: "Vietnam",
-  phone_number: "+1234567890",
-  hire_date: "2022-01-01",
-  address: "123 Main Street, Springfield, IL",
-  createdAt: "",
-  updatedAt: "",
 };
 
 export default function RootLayout({
@@ -65,19 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        className={`${inter.variable}font-sans antialiased `}
-      >
-        <Header user={mockUser} />
-
-        <main className=" px-4 bg-white">
-          <div className="container mx-auto px-4 min-h-[calc(100vh-4rem)]">
-            {children}
-          </div>
-        </main>
-        <Footer />
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased">
+        {children}
+        <Toaster />
       </body>
     </html>
   );

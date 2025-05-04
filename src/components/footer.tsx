@@ -15,18 +15,24 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
-export function Footer() {
+export function Footer({
+  className,
+  ...rest
+}: React.HTMLAttributes<HTMLElement>) {
   return (
-    <footer className="bg-white border-t">
+    <footer className={`bg-white border-t ${className ?? ""}`} {...rest}>
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 text-slate-500 md:grid-cols-4">
           <div className="space-y-4 ">
             <div className="flex items-center">
               <Image src="/icon.svg" alt="socius" width={25} height={25} />
-              <p className="text-lg font-semibold text-slate-900 ml-2">Socius</p>
+              <p className="text-lg font-semibold text-slate-900 ml-2">
+                Socius
+              </p>
             </div>
             <p className="text-sm">
-              Your all-in-one platform for employee collaboration and workplace community.
+              Your all-in-one platform for employee collaboration and workplace
+              community.
             </p>
             <div className="flex space-x-4 ">
               <Link href="#" className=" hover:text-slate-800">
