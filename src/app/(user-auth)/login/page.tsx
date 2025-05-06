@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white border-[#E9F1F7]">
+      <Card className="w-full max-w-md bg-white border-[#E9EEF6]">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-[#024023]/10 p-3">
