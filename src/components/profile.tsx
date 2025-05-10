@@ -53,16 +53,16 @@ export function Profile({ user }: ProfileProps) {
         <Button
           variant="ghost"
           area-label="User menu"
-          className="cursor-pointer hover:bg-slate-100 p-2 transition-colors flex items-center gap-2"
+          className="cursor-pointer text-muted-foreground hover:bg-accent hover:text-accent-foreground p-2 transition-colors flex items-center gap-2"
         >
-          <Avatar className="h-8 w-8 border-2 border-[#024023]/20">
+          <Avatar className="h-8 w-8 border-2 border-primary/20">
             <AvatarImage src={`${user.image_url}`} />
-            <AvatarFallback className="bg-[#024023]/10 text-[#024023] font-medium">
+            <AvatarFallback className="bg-primary/10 text-primary font-medium">
               {getInitials()}
             </AvatarFallback>
           </Avatar>
           <ChevronDown
-            className={`h-4 w-4 text-[#024023] transition-transform duration-200 ${isOpen ? "rotate-180" : " "}`}
+            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : " "}`}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -73,19 +73,17 @@ export function Profile({ user }: ProfileProps) {
       >
         <div className="p-3 border-b border-slate-100 ">
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 border border-[#024023]/20">
+            <Avatar className="h-12 w-12 border border-primary/20">
               <AvatarImage
                 src={user.image_url || "placeholder.svg"}
                 alt={getFullName()}
               />
-              <AvatarFallback className="bg-[#024023]/10 text-[#024023] font-medium">
+              <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {getInitials()}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <p className="font-bold text-[#024023] text-sm">
-                {getFullName()}
-              </p>
+              <p className="font-bold text-primary text-sm">{getFullName()}</p>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
               <p className="text-xs text-slate-400 mt-1">
                 {user.nationality} • Joined {formatHireDate()}
@@ -99,8 +97,8 @@ export function Profile({ user }: ProfileProps) {
             className="cursor-pointer hover:bg-slate-100 "
           >
             <Link href="/profile" className="flex items-center">
-              <User className="mr-2 h-4 w-4 text-[#024023]" />
-              <span className="text-[#024023]">My Profile</span>
+              <User className="mr-2 h-4 w-4 text-primary" />
+              <span className="text-primary">My Profile</span>
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

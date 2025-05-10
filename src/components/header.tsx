@@ -8,6 +8,7 @@ import { Profile } from "@/components/profile";
 import { NotificationWindow } from "@/components/notification-window";
 import { MessageWindow } from "@/components/message-window";
 import { UserType } from "@/types/types";
+import { ThemeToggle } from "@/theme/theme-toggle";
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   user: UserType;
@@ -16,10 +17,10 @@ interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 export function Header({ user, className, ...rest }: HeaderProps) {
   return (
     <header
-      className={`sticky top-0 z-50 bg-white shadow-sm ${className ?? ""}`}
+      className={`sticky top-0 z-50 w-full border-b bg-background ${className ?? ""}`}
       {...rest}
     >
-      <div className="container mx-auto flex justify-between items-center h-16 px-4 md:px-6 bg-white  ">
+      <div className="container flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="">
           <Link href={"/"}>
             <div className="relative h-12 w-24 md:h-10 md:w-10 object-contain">
@@ -29,6 +30,7 @@ export function Header({ user, className, ...rest }: HeaderProps) {
         </div>
         <div className="hidden sm:flex items-center justify-center space-x-2 h-full py-4">
           <SearchBar />
+          <ThemeToggle />
           <MessageWindow />
           <NotificationWindow currentUserId={user.id} />
           <Separator orientation="vertical" className="h-6 bg-[#024023]" />

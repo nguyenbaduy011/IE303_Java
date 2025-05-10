@@ -20,7 +20,7 @@ export function Footer({
   ...rest
 }: React.HTMLAttributes<HTMLElement>) {
   return (
-    <footer className={`bg-white border-t ${className ?? ""}`} {...rest}>
+    <footer className={`bg-background border-t ${className ?? ""}`} {...rest}>
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 text-slate-500 md:grid-cols-4">
           <div className="space-y-4 ">
