@@ -16,16 +16,16 @@ export function MessageWindow() {
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           area-label="Notifications"
-          className="relative cursor-pointer hover:bg-slate-100"
+          className="relative cursor-pointer transition-colors"
           size="icon"
         >
-          <MessageCircle className="h-6 w-6 text-[#024023]" />
+          <MessageCircle className="h-6 w-6 " />
           {unreadMessages > 0 && (
             <Badge
               variant="default"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#024023]"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary"
             >
               {unreadMessages}
             </Badge>
