@@ -1,23 +1,9 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { SidebarNav } from "@/components/sidebar-nav";
+import { UserType } from "@/types/types";
 
-type User = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  birth_date: string;
-  image_url?: string | null;
-  gender: "male" | "female";
-  nationality: string;
-  phone_number: string;
-  hire_date: string;
-  address: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const mockUser: User = {
+const mockUser: UserType = {
   id: "12345",
   first_name: "Joe",
   last_name: "Mama",
@@ -38,8 +24,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Header user={mockUser} />
-      <main className="px-4 bg-slate-50">
-        <div className="container mx-auto px-4 min-h-[calc(100vh-4rem)]">
+      <main >
+        <div className="relative mx-auto  min-h-[calc(100vh-4rem)]">
+          <SidebarNav user={mockUser} isAdmin={true} className="absolute z-50"/>
+
           {children}
         </div>
       </main>
