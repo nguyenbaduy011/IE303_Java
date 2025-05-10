@@ -16,180 +16,85 @@
   }
 
   /* Định nghĩa các lớp Tailwind tùy chỉnh */
+  /* Background */
   .bg-background {
     background-color: hsl(var(--background) / 1);
-  }
-
-  .text-foreground {
-    color: hsl(var(--foreground) / 1);
   }
 
   .bg-card {
     background-color: hsl(var(--card) / 1);
   }
 
-  .text-card-foreground {
-    color: hsl(var(--card-foreground) / 1);
-  }
-
   .bg-popover {
     background-color: hsl(var(--popover) / 1);
-  }
-
-  .text-popover-foreground {
-    color: hsl(var(--popover-foreground) / 1);
   }
 
   .bg-primary {
     background-color: hsl(var(--primary) / 1);
   }
 
-  .text-primary {
-    color: hsl(var(--primary) / 1);
-  }
-
-  .text-primary-foreground {
-    color: hsl(var(--primary-foreground) / 1);
-  }
-
   .bg-primary-50 {
     background-color: hsl(var(--primary-50) / 1);
-  }
-
-  .text-primary-50 {
-    color: hsl(var(--primary-50) / 1);
   }
 
   .bg-primary-100 {
     background-color: hsl(var(--primary-100) / 1);
   }
 
-  .text-primary-100 {
-    color: hsl(var(--primary-100) / 1);
-  }
-
   .bg-primary-200 {
     background-color: hsl(var(--primary-200) / 1);
-  }
-
-  .text-primary-200 {
-    color: hsl(var(--primary-200) / 1);
   }
 
   .bg-primary-300 {
     background-color: hsl(var(--primary-300) / 1);
   }
 
-  .text-primary-300 {
-    color: hsl(var(--primary-300) / 1);
-  }
-
   .bg-primary-400 {
     background-color: hsl(var(--primary-400) / 1);
-  }
-
-  .text-primary-400 {
-    color: hsl(var(--primary-400) / 1);
   }
 
   .bg-primary-500 {
     background-color: hsl(var(--primary-500) / 1);
   }
 
-  .text-primary-500 {
-    color: hsl(var(--primary-500) / 1);
-  }
-
   .bg-primary-600 {
     background-color: hsl(var(--primary-600) / 1);
-  }
-
-  .text-primary-600 {
-    color: hsl(var(--primary-600) / 1);
   }
 
   .bg-primary-700 {
     background-color: hsl(var(--primary-700) / 1);
   }
 
-  .text-primary-700 {
-    color: hsl(var(--primary-700) / 1);
-  }
-
   .bg-primary-800 {
     background-color: hsl(var(--primary-800) / 1);
-  }
-
-  .text-primary-800 {
-    color: hsl(var(--primary-800) / 1);
   }
 
   .bg-primary-900 {
     background-color: hsl(var(--primary-900) / 1);
   }
 
-  .text-primary-900 {
-    color: hsl(var(--primary-900) / 1);
-  }
-
   .bg-primary-950 {
     background-color: hsl(var(--primary-950) / 1);
-  }
-
-  .text-primary-950 {
-    color: hsl(var(--primary-950) / 1);
   }
 
   .bg-secondary {
     background-color: hsl(var(--secondary) / 1);
   }
 
-  .text-secondary-foreground {
-    color: hsl(var(--secondary-foreground) / 1);
-  }
-
   .bg-muted {
     background-color: hsl(var(--muted) / 1);
-  }
-
-  .text-muted-foreground {
-    color: hsl(var(--muted-foreground) / 1);
   }
 
   .bg-accent {
     background-color: hsl(var(--accent) / 1);
   }
 
-  .text-accent-foreground {
-    color: hsl(var(--accent-foreground) / 1);
-  }
-
   .bg-destructive {
     background-color: hsl(var(--destructive) / 1);
   }
 
-  .text-destructive {
-    color: hsl(var(--destructive) / 1);
-  }
-
-  .text-destructive-foreground {
-    color: hsl(var(--destructive-foreground) / 1);
-  }
-
-  .border-border {
-    border-color: hsl(var(--border) / 1);
-  }
-
   .bg-input {
     background-color: hsl(var(--input) / 1);
-  }
-
-  .ring-ring {
-    --tw-ring-color: hsl(var(--ring) / 1);
-  }
-
-  .shadow-shadow-color {
-    box-shadow: 0 0 0 1px var(--shadow-color);
   }
 
   .bg-hover-background {
@@ -200,6 +105,125 @@
     background-color: var(--active-background);
   }
 
+  /* Text */
+  .text-foreground {
+    color: hsl(var(--foreground) / 1);
+  }
+
+  .text-card-foreground {
+    color: hsl(var(--card-foreground) / 1);
+  }
+
+  .text-popover-foreground {
+    color: hsl(var(--popover-foreground) / 1);
+  }
+
+  .text-primary {
+    color: hsl(var(--primary) / 1);
+  }
+
+  .text-primary-foreground {
+    color: hsl(var(--primary-foreground) / 1);
+  }
+
+  .text-primary-50 {
+    color: hsl(var(--primary-50) / 1);
+  }
+
+  .text-primary-100 {
+    color: hsl(var(--primary-100) / 1);
+  }
+
+  .text-primary-200 {
+    color: hsl(var(--primary-200) / 1);
+  }
+
+  .text-primary-300 {
+    color: hsl(var(--primary-300) / 1);
+  }
+
+  .text-primary-400 {
+    color: hsl(var(--primary-400) / 1);
+  }
+
+  .text-primary-500 {
+    color: hsl(var(--primary-500) / 1);
+  }
+
+  .text-primary-600 {
+    color: hsl(var(--primary-600) / 1);
+  }
+
+  .text-primary-700 {
+    color: hsl(var(--primary-700) / 1);
+  }
+
+  .text-primary-800 {
+    color: hsl(var(--primary-800) / 1);
+  }
+
+  .text-primary-900 {
+    color: hsl(var(--primary-900) / 1);
+  }
+
+  .text-primary-950 {
+    color: hsl(var(--primary-950) / 1);
+  }
+
+  .text-secondary-foreground {
+    color: hsl(var(--secondary-foreground) / 1);
+  }
+
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground) / 1);
+  }
+
+  .text-accent-foreground {
+    color: hsl(var(--accent-foreground) / 1);
+  }
+
+  .text-destructive {
+    color: hsl(var(--destructive) / 1);
+  }
+
+  .text-destructive-foreground {
+    color: hsl(var(--destructive-foreground) / 1);
+  }
+
+  /* Border */
+  .border-border {
+    border-color: hsl(var(--border) / 1);
+  }
+
+  /* Ring */
+  .ring-ring {
+    --tw-ring-color: hsl(var(--ring) / 1);
+  }
+
+  /* Shadow */
+  .shadow-shadow-color {
+    box-shadow: 0 0 0 1px var(--shadow-color);
+  }
+
+  /* Border Radius */
+  .rounded-radius {
+    border-radius: var(--radius);
+  }
+
+  /* Opacity */
+  .opacity-muted {
+    opacity: 0.7;
+  }
+
+  .opacity-disabled {
+    opacity: 0.5;
+  }
+
+  /* Transition */
+  .transition-colors {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  }
+
   /* Biến thể trạng thái cho background */
   .hover\:bg-background:hover {
     background-color: hsl(var(--background) / 1);
@@ -208,6 +232,15 @@
     background-color: hsl(var(--background) / 1);
   }
   .active\:bg-background:active {
+    background-color: ssl(var(--background) / 1);
+  }
+  .disabled\:bg-background:disabled {
+    background-color: hsl(var(--background) / 0.7);
+  }
+  .focus-visible\:bg-background:focus-visible {
+    background-color: hsl(var(--background) / 1);
+  }
+  .group-hover\:bg-background:where(.group:hover *) {
     background-color: hsl(var(--background) / 1);
   }
 
@@ -220,6 +253,15 @@
   .active\:bg-card:active {
     background-color: hsl(var(--card) / 1);
   }
+  .disabled\:bg-card:disabled {
+    background-color: hsl(var(--card) / 0.7);
+  }
+  .focus-visible\:bg-card:focus-visible {
+    background-color: hsl(var(--card) / 1);
+  }
+  .group-hover\:bg-card:where(.group:hover *) {
+    background-color: hsl(var(--card) / 1);
+  }
 
   .hover\:bg-popover:hover {
     background-color: hsl(var(--popover) / 1);
@@ -228,6 +270,15 @@
     background-color: hsl(var(--popover) / 1);
   }
   .active\:bg-popover:active {
+    background-color: hsl(var(--popover) / 1);
+  }
+  .disabled\:bg-popover:disabled {
+    background-color: hsl(var(--popover) / 0.7);
+  }
+  .focus-visible\:bg-popover:focus-visible {
+    background-color: hsl(var(--popover) / 1);
+  }
+  .group-hover\:bg-popover:where(.group:hover *) {
     background-color: hsl(var(--popover) / 1);
   }
 
@@ -240,6 +291,15 @@
   .active\:bg-primary:active {
     background-color: hsl(var(--primary) / 1);
   }
+  .disabled\:bg-primary:disabled {
+    background-color: hsl(var(--primary) / 0.7);
+  }
+  .focus-visible\:bg-primary:focus-visible {
+    background-color: hsl(var(--primary) / 1);
+  }
+  .group-hover\:bg-primary:where(.group:hover *) {
+    background-color: hsl(var(--primary) / 1);
+  }
 
   .hover\:bg-primary-50:hover {
     background-color: hsl(var(--primary-50) / 1);
@@ -248,6 +308,15 @@
     background-color: hsl(var(--primary-50) / 1);
   }
   .active\:bg-primary-50:active {
+    background-color: hsl(var(--primary-50) / 1);
+  }
+  .disabled\:bg-primary-50:disabled {
+    background-color: hsl(var(--primary-50) / 0.7);
+  }
+  .focus-visible\:bg-primary-50:focus-visible {
+    background-color: hsl(var(--primary-50) / 1);
+  }
+  .group-hover\:bg-primary-50:where(.group:hover *) {
     background-color: hsl(var(--primary-50) / 1);
   }
 
@@ -260,6 +329,15 @@
   .active\:bg-primary-100:active {
     background-color: hsl(var(--primary-100) / 1);
   }
+  .disabled\:bg-primary-100:disabled {
+    background-color: hsl(var(--primary-100) / 0.7);
+  }
+  .focus-visible\:bg-primary-100:focus-visible {
+    background-color: hsl(var(--primary-100) / 1);
+  }
+  .group-hover\:bg-primary-100:where(.group:hover *) {
+    background-color: hsl(var(--primary-100) / 1);
+  }
 
   .hover\:bg-primary-200:hover {
     background-color: hsl(var(--primary-200) / 1);
@@ -268,6 +346,15 @@
     background-color: hsl(var(--primary-200) / 1);
   }
   .active\:bg-primary-200:active {
+    background-color: hsl(var(--primary-200) / 1);
+  }
+  .disabled\:bg-primary-200:disabled {
+    background-color: hsl(var(--primary-200) / 0.7);
+  }
+  .focus-visible\:bg-primary-200:focus-visible {
+    background-color: hsl(var(--primary-200) / 1);
+  }
+  .group-hover\:bg-primary-200:where(.group:hover *) {
     background-color: hsl(var(--primary-200) / 1);
   }
 
@@ -280,6 +367,15 @@
   .active\:bg-primary-300:active {
     background-color: hsl(var(--primary-300) / 1);
   }
+  .disabled\:bg-primary-300:disabled {
+    background-color: hsl(var(--primary-300) / 0.7);
+  }
+  .focus-visible\:bg-primary-300:focus-visible {
+    background-color: hsl(var(--primary-300) / 1);
+  }
+  .group-hover\:bg-primary-300:where(.group:hover *) {
+    background-color: hsl(var(--primary-300) / 1);
+  }
 
   .hover\:bg-primary-400:hover {
     background-color: hsl(var(--primary-400) / 1);
@@ -288,6 +384,15 @@
     background-color: hsl(var(--primary-400) / 1);
   }
   .active\:bg-primary-400:active {
+    background-color: hsl(var(--primary-400) / 1);
+  }
+  .disabled\:bg-primary-400:disabled {
+    background-color: hsl(var(--primary-400) / 0.7);
+  }
+  .focus-visible\:bg-primary-400:focus-visible {
+    background-color: hsl(var(--primary-400) / 1);
+  }
+  .group-hover\:bg-primary-400:where(.group:hover *) {
     background-color: hsl(var(--primary-400) / 1);
   }
 
@@ -300,6 +405,15 @@
   .active\:bg-primary-500:active {
     background-color: hsl(var(--primary-500) / 1);
   }
+  .disabled\:bg-primary-500:disabled {
+    background-color: hsl(var(--primary-500) / 0.7);
+  }
+  .focus-visible\:bg-primary-500:focus-visible {
+    background-color: hsl(var(--primary-500) / 1);
+  }
+  .group-hover\:bg-primary-500:where(.group:hover *) {
+    background-color: hsl(var(--primary-500) / 1);
+  }
 
   .hover\:bg-primary-600:hover {
     background-color: hsl(var(--primary-600) / 1);
@@ -308,6 +422,15 @@
     background-color: hsl(var(--primary-600) / 1);
   }
   .active\:bg-primary-600:active {
+    background-color: hsl(var(--primary-600) / 1);
+  }
+  .disabled\:bg-primary-600:disabled {
+    background-color: hsl(var(--primary-600) / 0.7);
+  }
+  .focus-visible\:bg-primary-600:focus-visible {
+    background-color: hsl(var(--primary-600) / 1);
+  }
+  .group-hover\:bg-primary-600:where(.group:hover *) {
     background-color: hsl(var(--primary-600) / 1);
   }
 
@@ -320,6 +443,15 @@
   .active\:bg-primary-700:active {
     background-color: hsl(var(--primary-700) / 1);
   }
+  .disabled\:bg-primary-700:disabled {
+    background-color: hsl(var(--primary-700) / 0.7);
+  }
+  .focus-visible\:bg-primary-700:focus-visible {
+    background-color: hsl(var(--primary-700) / 1);
+  }
+  .group-hover\:bg-primary-700:where(.group:hover *) {
+    background-color: hsl(var(--primary-700) / 1);
+  }
 
   .hover\:bg-primary-800:hover {
     background-color: hsl(var(--primary-800) / 1);
@@ -328,6 +460,15 @@
     background-color: hsl(var(--primary-800) / 1);
   }
   .active\:bg-primary-800:active {
+    background-color: hsl(var(--primary-800) / 1);
+  }
+  .disabled\:bg-primary-800:disabled {
+    background-color: hsl(var(--primary-800) / 0.7);
+  }
+  .focus-visible\:bg-primary-800:focus-visible {
+    background-color: hsl(var(--primary-800) / 1);
+  }
+  .group-hover\:bg-primary-800:where(.group:hover *) {
     background-color: hsl(var(--primary-800) / 1);
   }
 
@@ -340,6 +481,15 @@
   .active\:bg-primary-900:active {
     background-color: hsl(var(--primary-900) / 1);
   }
+  .disabled\:bg-primary-900:disabled {
+    background-color: hsl(var(--primary-900) / 0.7);
+  }
+  .focus-visible\:bg-primary-900:focus-visible {
+    background-color: hsl(var(--primary-900) / 1);
+  }
+  .group-hover\:bg-primary-900:where(.group:hover *) {
+    background-color: hsl(var(--primary-900) / 1);
+  }
 
   .hover\:bg-primary-950:hover {
     background-color: hsl(var(--primary-950) / 1);
@@ -348,6 +498,15 @@
     background-color: hsl(var(--primary-950) / 1);
   }
   .active\:bg-primary-950:active {
+    background-color: hsl(var(--primary-950) / 1);
+  }
+  .disabled\:bg-primary-950:disabled {
+    background-color: hsl(var(--primary-950) / 0.7);
+  }
+  .focus-visible\:bg-primary-950:focus-visible {
+    background-color: hsl(var(--primary-950) / 1);
+  }
+  .group-hover\:bg-primary-950:where(.group:hover *) {
     background-color: hsl(var(--primary-950) / 1);
   }
 
@@ -360,6 +519,15 @@
   .active\:bg-secondary:active {
     background-color: hsl(var(--secondary) / 1);
   }
+  .disabled\:bg-secondary:disabled {
+    background-color: hsl(var(--secondary) / 0.7);
+  }
+  .focus-visible\:bg-secondary:focus-visible {
+    background-color: hsl(var(--secondary) / 1);
+  }
+  .group-hover\:bg-secondary:where(.group:hover *) {
+    background-color: hsl(var(--secondary) / 1);
+  }
 
   .hover\:bg-muted:hover {
     background-color: hsl(var(--muted) / 1);
@@ -368,6 +536,15 @@
     background-color: hsl(var(--muted) / 1);
   }
   .active\:bg-muted:active {
+    background-color: hsl(var(--muted) / 1);
+  }
+  .disabled\:bg-muted:disabled {
+    background-color: hsl(var(--muted) / 0.7);
+  }
+  .focus-visible\:bg-muted:focus-visible {
+    background-color: hsl(var(--muted) / 1);
+  }
+  .group-hover\:bg-muted:where(.group:hover *) {
     background-color: hsl(var(--muted) / 1);
   }
 
@@ -380,6 +557,15 @@
   .active\:bg-accent:active {
     background-color: hsl(var(--accent) / 1);
   }
+  .disabled\:bg-accent:disabled {
+    background-color: hsl(var(--accent) / 0.7);
+  }
+  .focus-visible\:bg-accent:focus-visible {
+    background-color: hsl(var(--accent) / 1);
+  }
+  .group-hover\:bg-accent:where(.group:hover *) {
+    background-color: hsl(var(--accent) / 1);
+  }
 
   .hover\:bg-destructive:hover {
     background-color: hsl(var(--destructive) / 1);
@@ -388,6 +574,15 @@
     background-color: hsl(var(--destructive) / 1);
   }
   .active\:bg-destructive:active {
+    background-color: hsl(var(--destructive) / 1);
+  }
+  .disabled\:bg-destructive:disabled {
+    background-color: hsl(var(--destructive) / 0.7);
+  }
+  .focus-visible\:bg-destructive:focus-visible {
+    background-color: hsl(var(--destructive) / 1);
+  }
+  .group-hover\:bg-destructive:where(.group:hover *) {
     background-color: hsl(var(--destructive) / 1);
   }
 
@@ -400,6 +595,15 @@
   .active\:bg-input:active {
     background-color: hsl(var(--input) / 1);
   }
+  .disabled\:bg-input:disabled {
+    background-color: hsl(var(--input) / 0.7);
+  }
+  .focus-visible\:bg-input:focus-visible {
+    background-color: hsl(var(--input) / 1);
+  }
+  .group-hover\:bg-input:where(.group:hover *) {
+    background-color: hsl(var(--input) / 1);
+  }
 
   .hover\:bg-hover-background:hover {
     background-color: var(--hover-background);
@@ -410,6 +614,15 @@
   .active\:bg-hover-background:active {
     background-color: var(--hover-background);
   }
+  .disabled\:bg-hover-background:disabled {
+    background-color: var(--hover-background);
+  }
+  .focus-visible\:bg-hover-background:focus-visible {
+    background-color: var(--hover-background);
+  }
+  .group-hover\:bg-hover-background:where(.group:hover *) {
+    background-color: var(--hover-background);
+  }
 
   .hover\:bg-active-background:hover {
     background-color: var(--active-background);
@@ -418,6 +631,15 @@
     background-color: var(--active-background);
   }
   .active\:bg-active-background:active {
+    background-color: var(--active-background);
+  }
+  .disabled\:bg-active-background:disabled {
+    background-color: var(--active-background);
+  }
+  .focus-visible\:bg-active-background:focus-visible {
+    background-color: var(--active-background);
+  }
+  .group-hover\:bg-active-background:where(.group:hover *) {
     background-color: var(--active-background);
   }
 
@@ -431,6 +653,15 @@
   .active\:text-foreground:active {
     color: hsl(var(--foreground) / 1);
   }
+  .disabled\:text-foreground:disabled {
+    color: hsl(var(--foreground) / 0.7);
+  }
+  .focus-visible\:text-foreground:focus-visible {
+    color: hsl(var(--foreground) / 1);
+  }
+  .group-hover\:text-foreground:where(.group:hover *) {
+    color: hsl(var(--foreground) / 1);
+  }
 
   .hover\:text-card-foreground:hover {
     color: hsl(var(--card-foreground) / 1);
@@ -439,6 +670,15 @@
     color: hsl(var(--card-foreground) / 1);
   }
   .active\:text-card-foreground:active {
+    color: hsl(var(--card-foreground) / 1);
+  }
+  .disabled\:text-card-foreground:disabled {
+    color: hsl(var(--card-foreground) / 0.7);
+  }
+  .focus-visible\:text-card-foreground:focus-visible {
+    color: hsl(var(--card-foreground) / 1);
+  }
+  .group-hover\:text-card-foreground:where(.group:hover *) {
     color: hsl(var(--card-foreground) / 1);
   }
 
@@ -451,6 +691,15 @@
   .active\:text-popover-foreground:active {
     color: hsl(var(--popover-foreground) / 1);
   }
+  .disabled\:text-popover-foreground:disabled {
+    color: hsl(var(--popover-foreground) / 0.7);
+  }
+  .focus-visible\:text-popover-foreground:focus-visible {
+    color: hsl(var(--popover-foreground) / 1);
+  }
+  .group-hover\:text-popover-foreground:where(.group:hover *) {
+    color: hsl(var(--popover-foreground) / 1);
+  }
 
   .hover\:text-primary:hover {
     color: hsl(var(--primary) / 1);
@@ -459,6 +708,15 @@
     color: hsl(var(--primary) / 1);
   }
   .active\:text-primary:active {
+    color: hsl(var(--primary) / 1);
+  }
+  .disabled\:text-primary:disabled {
+    color: hsl(var(--primary) / 0.7);
+  }
+  .focus-visible\:text-primary:focus-visible {
+    color: hsl(var(--primary) / 1);
+  }
+  .group-hover\:text-primary:where(.group:hover *) {
     color: hsl(var(--primary) / 1);
   }
 
@@ -471,6 +729,15 @@
   .active\:text-primary-foreground:active {
     color: hsl(var(--primary-foreground) / 1);
   }
+  .disabled\:text-primary-foreground:disabled {
+    color: hsl(var(--primary-foreground) / 0.7);
+  }
+  .focus-visible\:text-primary-foreground:focus-visible {
+    color: hsl(var(--primary-foreground) / 1);
+  }
+  .group-hover\:text-primary-foreground:where(.group:hover *) {
+    color: hsl(var(--primary-foreground) / 1);
+  }
 
   .hover\:text-primary-50:hover {
     color: hsl(var(--primary-50) / 1);
@@ -479,6 +746,15 @@
     color: hsl(var(--primary-50) / 1);
   }
   .active\:text-primary-50:active {
+    color: hsl(var(--primary-50) / 1);
+  }
+  .disabled\:text-primary-50:disabled {
+    color: hsl(var(--primary-50) / 0.7);
+  }
+  .focus-visible\:text-primary-50:focus-visible {
+    color: hsl(var(--primary-50) / 1);
+  }
+  .group-hover\:text-primary-50:where(.group:hover *) {
     color: hsl(var(--primary-50) / 1);
   }
 
@@ -491,6 +767,15 @@
   .active\:text-primary-100:active {
     color: hsl(var(--primary-100) / 1);
   }
+  .disabled\:text-primary-100:disabled {
+    color: hsl(var(--primary-100) / 0.7);
+  }
+  .focus-visible\:text-primary-100:focus-visible {
+    color: hsl(var(--primary-100) / 1);
+  }
+  .group-hover\:text-primary-100:where(.group:hover *) {
+    color: hsl(var(--primary-100) / 1);
+  }
 
   .hover\:text-primary-200:hover {
     color: hsl(var(--primary-200) / 1);
@@ -499,6 +784,15 @@
     color: hsl(var(--primary-200) / 1);
   }
   .active\:text-primary-200:active {
+    color: hsl(var(--primary-200) / 1);
+  }
+  .disabled\:text-primary-200:disabled {
+    color: hsl(var(--primary-200) / 0.7);
+  }
+  .focus-visible\:text-primary-200:focus-visible {
+    color: hsl(var(--primary-200) / 1);
+  }
+  .group-hover\:text-primary-200:where(.group:hover *) {
     color: hsl(var(--primary-200) / 1);
   }
 
@@ -511,6 +805,15 @@
   .active\:text-primary-300:active {
     color: hsl(var(--primary-300) / 1);
   }
+  .disabled\:text-primary-300:disabled {
+    color: hsl(var(--primary-300) / 0.7);
+  }
+  .focus-visible\:text-primary-300:focus-visible {
+    color: hsl(var(--primary-300) / 1);
+  }
+  .group-hover\:text-primary-300:where(.group:hover *) {
+    color: hsl(var(--primary-300) / 1);
+  }
 
   .hover\:text-primary-400:hover {
     color: hsl(var(--primary-400) / 1);
@@ -519,6 +822,15 @@
     color: hsl(var(--primary-400) / 1);
   }
   .active\:text-primary-400:active {
+    color: hsl(var(--primary-400) / 1);
+  }
+  .disabled\:text-primary-400:disabled {
+    color: hsl(var(--primary-400) / 0.7);
+  }
+  .focus-visible\:text-primary-400:focus-visible {
+    color: hsl(var(--primary-400) / 1);
+  }
+  .group-hover\:text-primary-400:where(.group:hover *) {
     color: hsl(var(--primary-400) / 1);
   }
 
@@ -531,6 +843,15 @@
   .active\:text-primary-500:active {
     color: hsl(var(--primary-500) / 1);
   }
+  .disabled\:text-primary-500:disabled {
+    color: hsl(var(--primary-500) / 0.7);
+  }
+  .focus-visible\:text-primary-500:focus-visible {
+    color: hsl(var(--primary-500) / 1);
+  }
+  .group-hover\:text-primary-500:where(.group:hover *) {
+    color: hsl(var(--primary-500) / 1);
+  }
 
   .hover\:text-primary-600:hover {
     color: hsl(var(--primary-600) / 1);
@@ -539,6 +860,15 @@
     color: hsl(var(--primary-600) / 1);
   }
   .active\:text-primary-600:active {
+    color: hsl(var(--primary-600) / 1);
+  }
+  .disabled\:text-primary-600:disabled {
+    color: hsl(var(--primary-600) / 0.7);
+  }
+  .focus-visible\:text-primary-600:focus-visible {
+    color: hsl(var(--primary-600) / 1);
+  }
+  .group-hover\:text-primary-600:where(.group:hover *) {
     color: hsl(var(--primary-600) / 1);
   }
 
@@ -551,6 +881,15 @@
   .active\:text-primary-700:active {
     color: hsl(var(--primary-700) / 1);
   }
+  .disabled\:text-primary-700:disabled {
+    color: hsl(var(--primary-700) / 0.7);
+  }
+  .focus-visible\:text-primary-700:focus-visible {
+    color: hsl(var(--primary-700) / 1);
+  }
+  .group-hover\:text-primary-700:where(.group:hover *) {
+    color: hsl(var(--primary-700) / 1);
+  }
 
   .hover\:text-primary-800:hover {
     color: hsl(var(--primary-800) / 1);
@@ -559,6 +898,15 @@
     color: hsl(var(--primary-800) / 1);
   }
   .active\:text-primary-800:active {
+    color: hsl(var(--primary-800) / 1);
+  }
+  .disabled\:text-primary-800:disabled {
+    color: hsl(var(--primary-800) / 0.7);
+  }
+  .focus-visible\:text-primary-800:focus-visible {
+    color: hsl(var(--primary-800) / 1);
+  }
+  .group-hover\:text-primary-800:where(.group:hover *) {
     color: hsl(var(--primary-800) / 1);
   }
 
@@ -571,6 +919,15 @@
   .active\:text-primary-900:active {
     color: hsl(var(--primary-900) / 1);
   }
+  .disabled\:text-primary-900:disabled {
+    color: hsl(var(--primary-900) / 0.7);
+  }
+  .focus-visible\:text-primary-900:focus-visible {
+    color: hsl(var(--primary-900) / 1);
+  }
+  .group-hover\:text-primary-900:where(.group:hover *) {
+    color: hsl(var(--primary-900) / 1);
+  }
 
   .hover\:text-primary-950:hover {
     color: hsl(var(--primary-950) / 1);
@@ -579,6 +936,15 @@
     color: hsl(var(--primary-950) / 1);
   }
   .active\:text-primary-950:active {
+    color: hsl(var(--primary-950) / 1);
+  }
+  .disabled\:text-primary-950:disabled {
+    color: hsl(var(--primary-950) / 0.7);
+  }
+  .focus-visible\:text-primary-950:focus-visible {
+    color: hsl(var(--primary-950) / 1);
+  }
+  .group-hover\:text-primary-950:where(.group:hover *) {
     color: hsl(var(--primary-950) / 1);
   }
 
@@ -591,6 +957,15 @@
   .active\:text-secondary-foreground:active {
     color: hsl(var(--secondary-foreground) / 1);
   }
+  .disabled\:text-secondary-foreground:disabled {
+    color: hsl(var(--secondary-foreground) / 0.7);
+  }
+  .focus-visible\:text-secondary-foreground:focus-visible {
+    color: hsl(var(--secondary-foreground) / 1);
+  }
+  .group-hover\:text-secondary-foreground:where(.group:hover *) {
+    color: hsl(var(--secondary-foreground) / 1);
+  }
 
   .hover\:text-muted-foreground:hover {
     color: hsl(var(--muted-foreground) / 1);
@@ -599,6 +974,15 @@
     color: hsl(var(--muted-foreground) / 1);
   }
   .active\:text-muted-foreground:active {
+    color: hsl(var(--muted-foreground) / 1);
+  }
+  .disabled\:text-muted-foreground:disabled {
+    color: hsl(var(--muted-foreground) / 0.7);
+  }
+  .focus-visible\:text-muted-foreground:focus-visible {
+    color: hsl(var(--muted-foreground) / 1);
+  }
+  .group-hover\:text-muted-foreground:where(.group:hover *) {
     color: hsl(var(--muted-foreground) / 1);
   }
 
@@ -611,6 +995,15 @@
   .active\:text-accent-foreground:active {
     color: hsl(var(--accent-foreground) / 1);
   }
+  .disabled\:text-accent-foreground:disabled {
+    color: hsl(var(--accent-foreground) / 0.7);
+  }
+  .focus-visible\:text-accent-foreground:focus-visible {
+    color: hsl(var(--accent-foreground) / 1);
+  }
+  .group-hover\:text-accent-foreground:where(.group:hover *) {
+    color: hsl(var(--accent-foreground) / 1);
+  }
 
   .hover\:text-destructive:hover {
     color: hsl(var(--destructive) / 1);
@@ -619,6 +1012,15 @@
     color: hsl(var(--destructive) / 1);
   }
   .active\:text-destructive:active {
+    color: hsl(var(--destructive) / 1);
+  }
+  .disabled\:text-destructive:disabled {
+    color: hsl(var(--destructive) / 0.7);
+  }
+  .focus-visible\:text-destructive:focus-visible {
+    color: hsl(var(--destructive) / 1);
+  }
+  .group-hover\:text-destructive:where(.group:hover *) {
     color: hsl(var(--destructive) / 1);
   }
 
@@ -631,8 +1033,17 @@
   .active\:text-destructive-foreground:active {
     color: hsl(var(--destructive-foreground) / 1);
   }
+  .disabled\:text-destructive-foreground:disabled {
+    color: hsl(var(--destructive-foreground) / 0.7);
+  }
+  .focus-visible\:text-destructive-foreground:focus-visible {
+    color: hsl(var(--destructive-foreground) / 1);
+  }
+  .group-hover\:text-destructive-foreground:where(.group:hover *) {
+    color: hsl(var(--destructive-foreground) / 1);
+  }
 
-  /* Biến thể trạng thái cho border, ring, shadow */
+  /* Biến thể trạng thái cho border */
   .hover\:border-border:hover {
     border-color: hsl(var(--border) / 1);
   }
@@ -642,7 +1053,17 @@
   .active\:border-border:active {
     border-color: hsl(var(--border) / 1);
   }
+  .disabled\:border-border:disabled {
+    border-color: hsl(var(--border) / 0.7);
+  }
+  .focus-visible\:border-border:focus-visible {
+    border-color: hsl(var(--border) / 1);
+  }
+  .group-hover\:border-border:where(.group:hover *) {
+    border-color: hsl(var(--border) / 1);
+  }
 
+  /* Biến thể trạng thái cho ring */
   .hover\:ring-ring:hover {
     --tw-ring-color: hsl(var(--ring) / 1);
   }
@@ -652,7 +1073,17 @@
   .active\:ring-ring:active {
     --tw-ring-color: hsl(var(--ring) / 1);
   }
+  .disabled\:ring-ring:disabled {
+    --tw-ring-color: hsl(var(--ring) / 0.7);
+  }
+  .focus-visible\:ring-ring:focus-visible {
+    --tw-ring-color: hsl(var(--ring) / 1);
+  }
+  .group-hover\:ring-ring:where(.group:hover *) {
+    --tw-ring-color: hsl(var(--ring) / 1);
+  }
 
+  /* Biến thể trạng thái cho shadow */
   .hover\:shadow-shadow-color:hover {
     box-shadow: 0 0 0 1px var(--shadow-color);
   }
@@ -661,6 +1092,55 @@
   }
   .active\:shadow-shadow-color:active {
     box-shadow: 0 0 0 1px var(--shadow-color);
+  }
+  .disabled\:shadow-shadow-color:disabled {
+    box-shadow: 0 0 0 1px var(--shadow-color);
+  }
+  .focus-visible\:shadow-shadow-color:focus-visible {
+    box-shadow: 0 0 0 1px var(--shadow-color);
+  }
+  .group-hover\:shadow-shadow-color:where(.group:hover *) {
+    box-shadow: 0 0 0 1px var(--shadow-color);
+  }
+
+  /* Biến thể trạng thái cho border-radius */
+  .hover\:rounded-radius:hover {
+    border-radius: var(--radius);
+  }
+  .focus\:rounded-radius:focus {
+    border-radius: var(--radius);
+  }
+  .active\:rounded-radius:active {
+    border-radius: var(--radius);
+  }
+  .disabled\:rounded-radius:disabled {
+    border-radius: var(--radius);
+  }
+  .focus-visible\:rounded-radius:focus-visible {
+    border-radius: var(--radius);
+  }
+  .group-hover\:rounded-radius:where(.group:hover *) {
+    border-radius: var(--radius);
+  }
+
+  /* Biến thể trạng thái cho opacity */
+  .hover\:opacity-muted:hover {
+    opacity: 0.7;
+  }
+  .focus\:opacity-muted:focus {
+    opacity: 0.7;
+  }
+  .active\:opacity-muted:active {
+    opacity: 0.7;
+  }
+  .disabled\:opacity-disabled:disabled {
+    opacity: 0.5;
+  }
+  .focus-visible\:opacity-muted:focus-visible {
+    opacity: 0.7;
+  }
+  .group-hover\:opacity-muted:where(.group:hover *) {
+    opacity: 0.7;
   }
 }
 
