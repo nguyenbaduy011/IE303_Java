@@ -312,7 +312,9 @@ export function NotificationWindow({
   //Hàm lấy ký tự đầu trong tên của người gửi sau đó viết hoa
   const getSenderInitials = (sender?: UserType) => {
     if (!sender) return "??";
-    return `${sender.first_name.charAt(0)}${sender.last_name.charAt(0)}`.toUpperCase();
+    return `${sender.first_name.charAt(0)}${sender.last_name.charAt(
+      0
+    )}`.toUpperCase();
   };
 
   //Hàm lấy tên đầy đủ của người gửi
@@ -325,12 +327,12 @@ export function NotificationWindow({
     <DropdownMenu modal={false} open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           area-label="Notifications"
-          className="relative cursor-pointer hover:bg-slate-100 transition-colors"
+          className="relative cursor-pointer transition-colors"
           size="icon"
         >
-          <Bell className="h-6 w-6 text-primary" />
+          <Bell className="h-6 w-6" />
           {unreadCount > 0 && (
             <Badge
               variant="default"
@@ -346,11 +348,11 @@ export function NotificationWindow({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[400px] bg-white text-primary shadow-lg rounded-lg border border-slate-200"
+        className="w-[400px] bg-background text-primary shadow-lg rounded-lg border"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <div className="flex items-center justify-between p-4">
-          <DropdownMenuLabel className="text-lg font-semibold p-0">
+          <DropdownMenuLabel className="text-lg font-semibold p-0 ">
             Notifications
           </DropdownMenuLabel>
           {unreadCount > 0 && (
@@ -366,9 +368,9 @@ export function NotificationWindow({
           )}
         </div>
 
-        <DropdownMenuSeparator className="bg-slate-200" />
+        <DropdownMenuSeparator className="bg-primary" />
         {notifications.length === 0 ? (
-          <div className=" flex flex-col py-8 items-center text-slate-500 ">
+          <div className=" flex flex-col py-8 items-center text-muted-foreground ">
             <Bell className="mx-auto h-8 w-8 mb-2 opacity-20" />
             <p>No notifications yet</p>
           </div>
@@ -383,7 +385,7 @@ export function NotificationWindow({
                       className={cn(
                         "flex items-start gap-3 p-4 cursor-pointer transition-colors",
                         notification.recipient.is_read
-                          ? "bg-white"
+                          ? "bg-background"
                           : "bg-slate-50",
                         getNotificationTypeStyle(
                           notification.type,
@@ -405,8 +407,8 @@ export function NotificationWindow({
                             notification.type === "info"
                               ? "bg-blue-500"
                               : notification.type === "reminder"
-                                ? "bg-amber-500"
-                                : "bg-red-500"
+                              ? "bg-amber-500"
+                              : "bg-red-500"
                           )}
                         >
                           {getSenderInitials(notification.sender)}
@@ -455,7 +457,7 @@ export function NotificationWindow({
             </div>
           </>
         )}
-        <DropdownMenuSeparator className="bg-slate-200" />
+        <DropdownMenuSeparator className="bg-primary" />
         <div className="p-2">
           <DropdownMenuItem
             asChild
@@ -463,7 +465,7 @@ export function NotificationWindow({
           >
             <Link
               href="/notifications"
-              className="text-center text-sm font-medium text-primary hover:text-primary/80"
+              className="text-center text-sm font-medium text-primary hover:text-primary/80 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             >
               View all notifications
             </Link>

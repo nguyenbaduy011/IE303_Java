@@ -42,7 +42,7 @@ export function SearchBar({
     >
       <div className="relative flex-1 group">
         <div className="absolute px-3 w-4 h-full left-0 top-0 ">
-          <Search className="w-4 h-full text-[#024023]" />
+          <Search className="w-4 h-full text-primary" />
         </div>
 
         <Input
@@ -53,8 +53,8 @@ export function SearchBar({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "pr-10 pl-10 border-[#024023] border-opacity-30 focus-visible:border-[#024023] focus-visible:border-opacity-70 focus-visible:ring-1 focus-visible:ring-[#024023] focus-visible:ring-opacity-20",
-            "transition-all duration-200 text-[#024023]"
+            "pr-10 pl-10 border-primary border-opacity-30 focus-visible:border-primary focus-visible:border-opacity-70 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-opacity-20",
+            "transition-all duration-200 text-primary"
           )}
           aria-label="Search input"
         />
@@ -64,7 +64,7 @@ export function SearchBar({
             size="icon"
             variant="ghost"
             onClick={handleClear}
-            className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-[#024023] "
+            className="absolute right-0 top-0 h-full w-10 text-muted-foreground hover:text-primary "
             aria-label="Clear search"
           >
             <X className="h-4 w-4" />
