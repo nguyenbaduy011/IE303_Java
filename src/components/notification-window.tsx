@@ -330,12 +330,12 @@ export function NotificationWindow({
           className="relative cursor-pointer hover:bg-slate-100 transition-colors"
           size="icon"
         >
-          <Bell className="h-6 w-6 text-[#024023]" />
+          <Bell className="h-6 w-6 text-primary" />
           {unreadCount > 0 && (
             <Badge
               variant="default"
               className={cn(
-                "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[#024023]",
+                "absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-primary",
                 unreadCount > 0 && "animate-pulse"
               )}
             >
@@ -346,7 +346,7 @@ export function NotificationWindow({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-[400px] bg-white text-[#024023] shadow-lg rounded-lg border border-slate-200"
+        className="w-[400px] bg-white text-primary shadow-lg rounded-lg border border-slate-200"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <div className="flex items-center justify-between p-4">
@@ -357,7 +357,7 @@ export function NotificationWindow({
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-[#024023] hover:text-[#024023]/80 hover:bg-slate-100"
+              className="text-xs text-primary hover:text-primary/80 hover:bg-slate-100"
               onClick={markAllAsRead}
             >
               <Check className="mr-1 h-3 w-3" />
@@ -426,13 +426,13 @@ export function NotificationWindow({
                           {notification.is_urgent && (
                             <Badge
                               variant="outline"
-                              className="ml-1 py-0 h-5 text-[10px] font-medium bg-red-500 text-white animate-pulse"
+                              className="ml-1 py-0 h-5 text-[10px] font-medium bg-destructive text-white animate-pulse"
                             >
                               URGENT
                             </Badge>
                           )}
                           {!notification.recipient.is_read && (
-                            <span className="absolute -right-2 -top-2 h-2 w-2 rounded-full bg-[#024023]" />
+                            <span className="absolute -right-2 -top-2 h-2 w-2 rounded-full bg-primary" />
                           )}
                         </div>
                         <p className="text-sx text-slate-600 line-clamp-2">
@@ -463,7 +463,7 @@ export function NotificationWindow({
           >
             <Link
               href="/notifications"
-              className="text-center text-sm font-medium text-[#024023] hover:text-[#024023]/80"
+              className="text-center text-sm font-medium text-primary hover:text-primary/80"
             >
               View all notifications
             </Link>
