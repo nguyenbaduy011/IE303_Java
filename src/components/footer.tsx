@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 
-import Image from "next/image";
 import Link from "next/link";
 import SociusLogo from "./socius-logo";
 
@@ -152,7 +151,7 @@ export function Footer({
 
           {/* Contact & Support */}
           <div className="space-y-4">
-            <h3 className="text-muted-foreground text-lg font-semibold">
+            <h3 className="text-lg font-semibold">
               Contact & Support
             </h3>
             <ul className="space-y-2 text-sm">
