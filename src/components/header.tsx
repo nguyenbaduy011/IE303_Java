@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { SearchBar } from "@/components/search-bar";
 import { Profile } from "@/components/profile";
@@ -30,7 +29,7 @@ export function Header({ user, className, ...rest }: HeaderProps) {
               <Image src="/icon.svg" alt="Socius" fill priority />
             </div> */}
             <div className="relative h-12 w-24 md:h-10 md:w-10 object-contain">
-              <SociusLogo className="text-primary"/>
+              <SociusLogo className="dark:text-primary-foreground text-primary"/>
             </div>
           </Link>
         </div>

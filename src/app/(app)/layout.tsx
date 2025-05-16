@@ -1,6 +1,6 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { SidebarNav } from "@/components/sidebar-nav";
+// import { SidebarNav } from "@/components/sidebar-nav";
 import { UserType } from "@/types/types";
 
 const mockUser: UserType = {
@@ -16,8 +16,8 @@ const mockUser: UserType = {
   phone_number: "+1234567890",
   hire_date: "2022-01-01",
   address: "123 Main Street, Springfield, IL",
-  createdAt: "",
-  updatedAt: "",
+  created_at: "",
+  updated_at: "",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Header user={mockUser} />
       <main >
         <div className="relative mx-auto  min-h-[calc(100vh-4rem)]">
-          <SidebarNav user={mockUser} isAdmin={true} className="absolute z-50"/>
+          {/* <SidebarNav user={mockUser} isAdmin={true} className="absolute z-50"/> */}
 
           {children}
         </div>

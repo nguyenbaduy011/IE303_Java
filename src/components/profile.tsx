@@ -1,6 +1,6 @@
 "use client";
-import { ChevronDown, LogOut, User } from "lucide-react";
 
+import { ChevronDown, LogOut, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { UserType } from "@/types/types";
 import { useState } from "react";
+import { formatDateShort } from "@/utils/dateFormatter";
 
 interface ProfileProps {
   user: UserType;
@@ -33,19 +34,7 @@ export function Profile({ user }: ProfileProps) {
     return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
   };
 
-  const formatHireDate = () => {
-    try {
-      const date = new Date(user.hire_date);
-      return new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }).format(date);
-    } catch (e) {
-      console.log(e);
-      return user.hire_date;
-    }
-  };
+  const formattedHiredDate = formatDateShort(user.hire_date);
 
   return (
     <DropdownMenu modal={false} open={isOpen} onOpenChange={setIsOpen}>
@@ -86,7 +75,7 @@ export function Profile({ user }: ProfileProps) {
               <p className="font-bold text-primary text-sm">{getFullName()}</p>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
               <p className="text-xs text-slate-400 mt-1">
-                {user.nationality} • Joined {formatHireDate()}
+                {user.nationality} • Joined {formattedHiredDate}
               </p>
             </div>
           </div>
