@@ -27,24 +27,24 @@ const mockPosition: PositionType = {
   name: "Software Engineer",
   description:
     "Responsible for developing and maintaining software applications",
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockDepartment: DepartmentType = {
   id: "dept-123e4567-e89b-12d3-a456-426614174002",
   name: "Engineering",
   description: "Handles all technical development and IT operations",
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockRole: RoleType = {
   id: "role-123e4567-e89b-12d3-a456-426614174003",
   name: "Developer",
   description: "Role for software developers",
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockPermissions: PermissionType[] = [
@@ -52,15 +52,15 @@ const mockPermissions: PermissionType[] = [
     id: "perm-123e4567-e89b-12d3-a456-426614174004",
     name: "write_code",
     description: "Permission to write and commit code",
-    createdAt: "2022-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2022-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
   {
     id: "perm-123e4567-e89b-12d3-a456-426614174005",
     name: "review_code",
     description: "Permission to review code",
-    createdAt: "2022-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2022-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -88,16 +88,16 @@ const mockUserData: UserType = {
   phone_number: "+1234567890",
   hire_date: "2022-01-01",
   address: "123 Main Street, Springfield, IL",
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockTeam: TeamType = {
   id: "team-123e4567-e89b-12d3-a456-426614174006",
   name: "Backend Team",
   leader_id: mockUserData.id,
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockEmploymentDetail: EmploymentDetailType = {
@@ -110,20 +110,20 @@ const mockEmploymentDetail: EmploymentDetailType = {
   start_date: "2022-01-01",
   salary: 5000,
   working_status: "active",
-  createdAt: "2022-01-01T00:00:00Z",
-  updatedAt: "2025-05-08T10:00:00Z",
+  created_at: "2022-01-01T00:00:00Z",
+  updated_at: "2025-05-08T10:00:00Z",
 };
 
 const mockSalaryHistory: SalaryHistoryType[] = [
   {
     id: "salhist-123e4567-e89b-12d3-a456-426614174009",
     user_id: mockUserData.id,
-    previous_salary: 4000,
+    previous_salary: null,
     new_salary: 5000,
     effective_date: "2023-01-01",
     reason: "Annual raise",
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2023-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -141,19 +141,6 @@ const mockNotifications: NotificationType[] = [
   },
 ];
 
-// Mock user tổng hợp với thông tin từ các bảng liên quan
-export const mockUser = {
-  user: mockUserData,
-  department: mockDepartment,
-  position: mockPosition,
-  team: mockTeam,
-  role: mockRole,
-  permissions: mockPermissions,
-  employmentDetail: mockEmploymentDetail,
-  salaryHistory: mockSalaryHistory,
-  notifications: mockNotifications,
-};
-
 // Dữ liệu mẫu cho các bảng còn lại
 const mockPeriods: PeriodType[] = [
   {
@@ -164,8 +151,8 @@ const mockPeriods: PeriodType[] = [
     end_date: "2025-03-31",
     status: "active",
     description: "Performance review period for Q1 2025",
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -175,14 +162,14 @@ const mockEmploymentHistory: EmploymentHistoryType[] = [
     user_id: mockUserData.id,
     position_id: "pos-old-123e4567-e89b-12d3-a456-426614174011", // Giả lập vị trí cũ
     department_id: "dept-old-123e4567-e89b-12d3-a456-426614174012", // Giả lập phòng ban cũ
-    team_id: null,
+    team_id: "team-123e4567-e89b-12d3-a456-426614174006",
     role_id: "role-old-123e4567-e89b-12d3-a456-426614174013", // Giả lập vai trò cũ
     start_date: "2020-01-01",
     end_date: "2021-12-31",
     salary: 3000,
     description: "Previous role as Junior Developer",
-    createdAt: "2020-01-01T00:00:00Z",
-    updatedAt: "2021-12-31T00:00:00Z",
+    created_at: "2020-01-01T00:00:00Z",
+    updated_at: "2021-12-31T00:00:00Z",
   },
 ];
 
@@ -194,8 +181,8 @@ const mockTargets: TargetType[] = [
     deadline: "2025-06-30",
     status: "in_progress",
     assigned_to: mockUserData.id,
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -207,8 +194,8 @@ const mockTasks: TaskType[] = [
     deadline: "2025-06-01",
     status: "pending",
     assigned_to: mockUserData.id,
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -220,8 +207,8 @@ const mockPerformanceReviews: PerformanceReviewType[] = [
     period_id: mockPeriods[0].id,
     rating: 8.5,
     comment: "Great performance, keep up the good work!",
-    createdAt: "2025-04-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-04-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -233,8 +220,8 @@ const mockPeerVotes: PeerVoteType[] = [
     period_id: mockPeriods[0].id,
     reason: "Excellent teamwork",
     vote_type: "positive",
-    createdAt: "2025-04-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-04-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -245,8 +232,8 @@ const mockEmployeeRankings: EmployeeRankingType[] = [
     period_id: mockPeriods[0].id,
     rank: 1,
     criteria: "performance",
-    createdAt: "2025-04-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-04-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -267,8 +254,8 @@ const mockAccounts: AccountType[] = [
     is_active: true,
     is_default_password: false,
     password: "hashed_password_123", // Giả lập mật khẩu đã mã hóa
-    createdAt: "2022-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2022-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -279,8 +266,8 @@ const mockLoginHistory: LoginHistoryType[] = [
     login_time: "2025-05-08T09:00:00Z",
     ip_address: "192.168.1.1",
     device_info: "Chrome on Windows 10",
-    createdAt: "2025-05-08T09:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2025-05-08T09:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
 
@@ -290,10 +277,27 @@ const mockAppSettings: AppSettingType[] = [
     setting_key: "default_language",
     setting_value: "en",
     description: "Default language for the application",
-    createdAt: "2022-01-01T00:00:00Z",
-    updatedAt: "2025-05-08T10:00:00Z",
+    created_at: "2022-01-01T00:00:00Z",
+    updated_at: "2025-05-08T10:00:00Z",
   },
 ];
+
+// Mock user tổng hợp với thông tin từ các bảng liên quan
+export const mockUser = {
+  user: mockUserData,
+  department: mockDepartment,
+  position: mockPosition,
+  team: mockTeam,
+  role: mockRole,
+  permissions: mockPermissions,
+  employmentDetail: mockEmploymentDetail,
+  employmentHistory: mockEmploymentHistory,
+  salaryHistory: mockSalaryHistory,
+  notifications: mockNotifications,
+  performanceReviews: mockPerformanceReviews,
+  tasks: mockTasks,
+  targets: mockTargets,
+};
 
 // Gộp tất cả dữ liệu mẫu thành một đối tượng
 export const mockData = {

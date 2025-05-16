@@ -54,8 +54,8 @@ const mockUsers: Record<string, UserType> = {
     phone_number: "+1 (555) 123-4567",
     hire_date: "2020-01-10",
     address: "123 Main St, Anytown, USA",
-    createdAt: "2020-01-10T08:00:00Z",
-    updatedAt: "2023-04-15T14:30:00Z",
+    created_at: "2020-01-10T08:00:00Z",
+    updated_at: "2023-04-15T14:30:00Z",
   },
   user2: {
     id: "user2",
@@ -69,8 +69,8 @@ const mockUsers: Record<string, UserType> = {
     phone_number: "+1 (555) 987-6543",
     hire_date: "2021-03-15",
     address: "456 Oak Ave, Somewhere, Canada",
-    createdAt: "2021-03-15T09:30:00Z",
-    updatedAt: "2023-02-10T11:45:00Z",
+    created_at: "2021-03-15T09:30:00Z",
+    updated_at: "2023-02-10T11:45:00Z",
   },
   user3: {
     id: "user3",
@@ -84,8 +84,8 @@ const mockUsers: Record<string, UserType> = {
     phone_number: "+65 9123 4567",
     hire_date: "2019-07-22",
     address: "789 River Rd, Singapore",
-    createdAt: "2019-07-22T10:15:00Z",
-    updatedAt: "2023-01-05T16:20:00Z",
+    created_at: "2019-07-22T10:15:00Z",
+    updated_at: "2023-01-05T16:20:00Z",
   },
   system: {
     id: "system",
@@ -99,8 +99,8 @@ const mockUsers: Record<string, UserType> = {
     phone_number: "",
     hire_date: "2000-01-01",
     address: "",
-    createdAt: "2000-01-01T00:00:00Z",
-    updatedAt: "2000-01-01T00:00:00Z",
+    created_at: "2000-01-01T00:00:00Z",
+    updated_at: "2000-01-01T00:00:00Z",
   },
 };
 
