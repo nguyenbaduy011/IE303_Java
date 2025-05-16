@@ -5,8 +5,8 @@ export type PositionType = {
   id: string; // UUID, khóa chính, tự động sinh
   name: string; // Tên vị trí, không null, duy nhất
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng departments (Danh sách các phòng ban) - Đã có
@@ -14,8 +14,8 @@ export type DepartmentType = {
   id: string; // UUID, khóa chính, tự động sinh
   name: string; // Tên phòng ban, không null, duy nhất
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng roles (Danh sách các vai trò)
@@ -23,8 +23,8 @@ export type RoleType = {
   id: string; // UUID, khóa chính, tự động sinh
   name: string; // Tên vai trò, không null, duy nhất
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng permissions (Danh sách các quyền)
@@ -32,8 +32,8 @@ export type PermissionType = {
   id: string; // UUID, khóa chính, tự động sinh
   name: string; // Tên quyền, không null, duy nhất
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng role_permissions (Mối quan hệ giữa vai trò và quyền)
@@ -51,8 +51,8 @@ export type PeriodType = {
   end_date: string; // Ngày kết thúc, không null, phải >= start_date
   status: "active" | "inactive"; // Trạng thái kỳ hạn, chỉ cho phép active hoặc inactive
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng users (Thông tin cá nhân người dùng) - Đã có
@@ -68,8 +68,8 @@ export type UserType = {
   phone_number?: string | null; // Số điện thoại, định dạng 10-15 số
   hire_date: string; // Ngày tuyển dụng, không null, phải <= ngày hiện tại
   address?: string | null; // Địa chỉ
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng teams (Danh sách các đội nhóm)
@@ -77,8 +77,8 @@ export type TeamType = {
   id: string; // UUID, khóa chính, tự động sinh
   name: string; // Tên đội nhóm, không null, duy nhất
   leader_id?: string | null; // ID người lãnh đạo, khóa ngoại tham chiếu users(id), duy nhất, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng employment_details (Thông tin việc làm hiện tại)
@@ -92,8 +92,8 @@ export type EmploymentDetailType = {
   start_date: string; // Ngày bắt đầu, không null, phải <= ngày hiện tại
   salary: number; // Lương, không null, phải >= 0
   working_status: "active" | "inactive" | "terminated"; // Trạng thái làm việc, chỉ cho phép các giá trị cố định
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng employment_history (Lịch sử việc làm)
@@ -108,20 +108,20 @@ export type EmploymentHistoryType = {
   end_date: string; // Ngày kết thúc, không null, phải >= start_date
   salary: number; // Lương, không null, phải >= 0
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng salary_history (Lịch sử lương)
 export type SalaryHistoryType = {
   id: string; // UUID, khóa chính, tự động sinh
   user_id: string; // ID người dùng, không null, khóa ngoại tham chiếu users(id)
-  previous_salary: number; // Lương cũ, không null, phải >= 0
+  previous_salary: number | null; // Lương cũ, không null, phải >= 0
   new_salary: number; // Lương mới, không null, phải >= 0
   effective_date: string; // Ngày hiệu lực, không null
   reason?: string | null; // Lý do thay đổi, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng targets (Mục tiêu)
@@ -132,8 +132,8 @@ export type TargetType = {
   deadline: string; // Hạn chót, không null
   status: "pending" | "completed" | "failed" | "in_progress"; // Trạng thái, chỉ cho phép các giá trị cố định
   assigned_to?: string | null; // ID người được giao, có thể null, khóa ngoại tham chiếu users(id)
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng tasks (Nhiệm vụ)
@@ -144,8 +144,8 @@ export type TaskType = {
   deadline: string; // Hạn chót, không null, phải > ngày hiện tại
   status: "pending" | "completed" | "failed" | "in_progress"; // Trạng thái, chỉ cho phép các giá trị cố định
   assigned_to?: string | null; // ID người được giao, có thể null, khóa ngoại tham chiếu users(id)
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng performance_reviews (Đánh giá hiệu suất)
@@ -156,8 +156,8 @@ export type PerformanceReviewType = {
   period_id: string; // ID kỳ hạn, không null, khóa ngoại tham chiếu periods(id)
   rating: number; // Điểm đánh giá, không null, từ 0 đến 10
   comment?: string | null; // Nhận xét, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng peer_votes (Phiếu bầu từ đồng nghiệp)
@@ -168,8 +168,8 @@ export type PeerVoteType = {
   period_id: string; // ID kỳ hạn, không null, khóa ngoại tham chiếu periods(id)
   reason?: string | null; // Lý do, có thể null
   vote_type: "positive" | "negative"; // Loại phiếu, chỉ cho phép positive hoặc negative
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho bảng employee_ranking (Xếp hạng nhân viên)
@@ -179,8 +179,8 @@ export type EmployeeRankingType = {
   period_id: string; // ID kỳ hạn, không null, khóa ngoại tham chiếu periods(id)
   rank: number; // Xếp hạng, không null
   criteria: "performance" | "peer_vote" | "attendance" | "task_completion"; // Tiêu chí xếp hạng, chỉ cho phép các giá trị cố định
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
 // Type cho các loại thông báo - Đã có
@@ -197,7 +197,7 @@ export type NotificationType = {
   is_urgent: boolean; // Mức độ khẩn cấp, không null
   created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
   updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
-}
+};
 
 // Type cho bảng notification_recipients (Người nhận thông báo) - Đã có
 export type NotificationRecipient = {
@@ -205,7 +205,7 @@ export type NotificationRecipient = {
   user_id: string; // ID người nhận, không null, khóa ngoại tham chiếu users(id)
   is_read: boolean; // Đã đọc chưa, mặc định false
   read_at: string | null; // Thời gian đọc, có thể null
-}
+};
 
 // Type cho bảng account (Thông tin tài khoản)
 export type AccountType = {
@@ -215,9 +215,9 @@ export type AccountType = {
   is_active: boolean; // Trạng thái hoạt động, mặc định true
   is_default_password: boolean; // Sử dụng mật khẩu mặc định, mặc định true
   password: string; // Mật khẩu, không null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
-}
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+};
 
 // Type cho bảng login_history (Lịch sử đăng nhập)
 export type LoginHistoryType = {
@@ -226,9 +226,9 @@ export type LoginHistoryType = {
   login_time: string; // Thời gian đăng nhập, mặc định CURRENT_TIMESTAMP
   ip_address?: string | null; // Địa chỉ IP, có thể null
   device_info?: string | null; // Thông tin thiết bị, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
-}
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+};
 
 // Type cho bảng app_settings (Cài đặt ứng dụng)
 export type AppSettingType = {
@@ -236,6 +236,6 @@ export type AppSettingType = {
   setting_key: string; // Khóa cài đặt, không null, duy nhất
   setting_value: string; // Giá trị cài đặt, không null
   description?: string | null; // Mô tả, có thể null
-  createdAt: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
-  updatedAt: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
-}
+  created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
+  updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+};
