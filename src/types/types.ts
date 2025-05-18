@@ -96,6 +96,14 @@ export type EmploymentDetailType = {
   updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
 };
 
+// // Type thể hiện toàn bộ thông tin chi tiết của nhân viên
+// export type EmployeeDetail = {
+//   user: UserType;
+//   employment: EmploymentDetailType;
+//   department: DepartmentType;
+//   role: RoleType;
+// };
+
 // Type cho bảng employment_history (Lịch sử việc làm)
 export type EmploymentHistoryType = {
   id: string; // UUID, khóa chính, tự động sinh
@@ -238,4 +246,36 @@ export type AppSettingType = {
   description?: string | null; // Mô tả, có thể null
   created_at: string; // Thời gian tạo, mặc định CURRENT_TIMESTAMP
   updated_at: string; // Thời gian cập nhật, mặc định CURRENT_TIMESTAMP
+};
+
+// ------------------------------------------------
+
+export type RoleWithPermissions = RoleType & {
+  permissions: PermissionType[];
+};
+
+export type UserFullShape = {
+  /* ── Thông tin cá nhân ── */
+  id: string;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  birth_date: string;
+  image_url: string | null;
+  gender: "male" | "female";
+  nationality: string | null;
+  phone_number: string | null;
+  hire_date: string;
+  address: string | null;
+  department: DepartmentType;
+  role: RoleWithPermissions;
+  session_id: string;
+  authenticated: boolean;
+  message: string;
+  password_changed_required: boolean;
+  employment: EmploymentDetailType;
+  position: PositionType;
+  team?: TeamType | null;
 };
