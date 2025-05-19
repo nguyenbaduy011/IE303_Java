@@ -1,8 +1,6 @@
 "use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
 import { formatDateLong, formatDateShort } from "@/utils/dateFormatter";
-import { getMockUser } from "@/lib/getMockUser";
 import { getInitials } from "@/utils/getInitials";
 import {
   Briefcase,
@@ -41,51 +39,67 @@ import { TargetList } from "@/components/target-list";
 import { EmploymentHistoryCard } from "@/components/employment-hitsory-card";
 import { EduCertCard } from "@/components/edu-cert-card";
 import { SalaryHistoryCard } from "@/components/salary-history-card";
+import { TaskType } from "@/types/types";
+import { getMockSessionUser } from "@/lib/getMockUser";
+import React from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function ProfilePage() {
-  const [userData] = useState(getMockUser());
+interface userProps {
+  searchParams: {
+    id?: string;
+  };
+}
 
-  const {
-    user,
-    employmentDetail,
-    employmentHistory,
-    salaryHistory,
-    performanceReviews,
-    tasks,
-    targets,
-    team,
-    department,
-    position,
-  } = userData;
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ProfilePage({searchParams}: userProps) {
+  const params = useSearchParams();
+  const id = params.get("id");
+
+  const current_user = getMockSessionUser();
+  let user;
+
+  if (id === current_user.id) {
+    user = current_user;
+  } else {
+    user = null; // Xử lý lỗi nếu không tìm thấy user
+  }
+
+  if (!user) {
+    return <div>User not found</div>; // Hoặc redirect
+  }
 
   // Tính số năm kinh nghiệm
-  const hireDate = new Date(user.hire_date);
+  const hireDate = new Date(user?.hire_date ?? "");
   const today = new Date();
 
   // Số năm kinh nghiệm
   const yearsOfExperience = today.getFullYear() - hireDate.getFullYear();
 
   // Định dạng lại ngày sinh
-  const formattedBirthDate = formatDateLong(user.birth_date);
+  const formattedBirthDate = formatDateLong(user?.birth_date ?? "");
 
   // Định dạng lại ngày được thuê
-  const formattedHiredDate = formatDateShort(user.hire_date);
+  const formattedHiredDate = formatDateShort(user?.hire_date ?? "");
 
   // Định dạng lại ngày bắt đầu làm việc
-  const formattedStartDate = formatDateLong(employmentDetail.start_date);
+  const formattedStartDate = formatDateLong(user?.employment.start_date ?? "");
 
   // Danh sách các nhiệm vụ
-  const activeTasks = tasks.filter(
-    (task) => task.status === "in_progress" || task.status === "pending"
+  const activeTasks = (user?.tasks ?? []).filter(
+    (task: TaskType) =>
+      task.status === "in_progress" || task.status === "pending"
   );
 
   // Danh sách các nhiệm vụ đã hoàn thành
-  const completedTasks = tasks.filter((task) => task.status === "completed");
+  const completedTasks = (user?.tasks ?? []).filter(
+    (task: TaskType) => task.status === "completed"
+  );
 
   // Tỷ lệ hoàn thành nhiệm vụ
   const completionRate =
-    tasks.length > 0
-      ? Math.round((completedTasks.length / tasks.length) * 100)
+    (user?.tasks ?? []).length > 0
+      ? Math.round((completedTasks.length / (user?.tasks ?? []).length) * 100)
       : 0;
 
   return (
@@ -97,43 +111,49 @@ export default function ProfilePage() {
             <Avatar className="h-20 w-20 border-2 border-primary/10">
               <AvatarImage
                 src={
-                  `${user.image_url}` || "/placeholder.svg?height=80&width=80"
+                  `${user?.image_url}` || "/placeholder.svg?height=80&width=80"
                 }
-                alt={`${user.first_name} ${user.last_name}`}
+                alt={`${user?.first_name} ${user?.last_name}`}
               />
               <AvatarFallback className="text-lg">
-                {getInitials(user)}
+                {getInitials(user?.first_name ?? "", user?.last_name ?? "")}
               </AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold">
-                {user.first_name} {user.last_name}
+                {user?.first_name ?? ""} {user?.last_name ?? ""}
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Briefcase className="h-4 w-4" />
-                <span>{position.name}</span>
+                <span>{user?.position.name ?? ""}</span>
                 <span className="">•</span>
                 <Building className="h-4 w-4" />
-                <span>{department.name}</span>
+                <span>{user?.department.name ?? ""}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge variant="outline" className="bg-primary/10">
-                  {team.name}
+                  {user?.team?.name ?? ""}
                 </Badge>
                 <Badge
                   variant={
-                    employmentDetail.working_status === "active"
+                    user?.employment.working_status === "active"
                       ? "default"
                       : "destructive"
                   }
                 >
-                  {employmentDetail.working_status.charAt(0).toUpperCase() +
-                    employmentDetail.working_status.slice(1)}
+                  {user?.employment?.working_status
+                    ? user.employment.working_status.charAt(0).toUpperCase() +
+                      user.employment.working_status.slice(1)
+                    : ""}
                 </Badge>
               </div>
             </div>
           </div>
           <div className="mt-4 flex gap-2 md:mt-0">
+            <Button variant="outline" size="sm" className="cursor-pointer">
+              <FileText className="mr-2 h-4 w-4" />
+              Message
+            </Button>
             <Button variant="outline" size="sm" className="cursor-pointer">
               <FileText className="mr-2 h-4 w-4" />
               Documents
@@ -161,15 +181,15 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{user.email}</span>
+                <span>{user?.email}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{user.phone_number || "Not provided"}</span>
+                <span>{user?.phone_number || "Not provided"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{user.address || "Not provided"}</span>
+                <span>{user?.address || "Not provided"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -177,13 +197,15 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span>Nationality: {user.nationality || "Not provided"}</span>
+                <span>Nationality: {user?.nationality || "Not provided"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span>
                   Gender:{" "}
-                  {user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}
+                  {user?.gender
+                    ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1)
+                    : "Not provided"}
                 </span>
               </div>
               <Separator />
@@ -213,28 +235,30 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Department:</span>
-                  <span>{department.name}</span>
+                  <span>{user?.department.name}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Position:</span>
-                  <span>{position.name}</span>
+                  <span>{user?.position.name}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Team:</span>
-                  <span>{team.name}</span>
+                  <span>{user?.team?.name}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Status:</span>
                   <Badge
                     variant={
-                      employmentDetail.working_status === "active"
+                      user?.employment.working_status === "active"
                         ? "default"
                         : "destructive"
                     }
                     className="text-xs"
                   >
-                    {employmentDetail.working_status.charAt(0).toUpperCase() +
-                      employmentDetail.working_status.slice(1)}
+                    {user?.employment.working_status
+                      ? user.employment.working_status.charAt(0).toUpperCase() +
+                        user.employment.working_status.slice(1)
+                      : ""}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
@@ -254,7 +278,7 @@ export default function ProfilePage() {
                 <Progress value={completionRate} className="h-2" />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{completedTasks.length} completed</span>
-                  <span>{tasks.length} total</span>
+                  <span>{user?.tasks?.length} total</span>
                 </div>
               </div>
             </CardContent>
@@ -291,10 +315,11 @@ export default function ProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  Experienced {position.name} with {yearsOfExperience} years at
-                  the company. Currently working in the {department.name}{" "}
-                  department as part of the {team.name} team. Specializes in
-                  project management, team leadership, and strategic planning.
+                  Experienced {user?.position.name} with {yearsOfExperience}{" "}
+                  years at the company. Currently working in the{" "}
+                  {user?.department.name} department as part of the{" "}
+                  {user?.team?.name} team. Specializes in project management,
+                  team leadership, and strategic planning.
                 </CardContent>
               </Card>
               {/* Quick Stat */}
@@ -332,7 +357,7 @@ export default function ProfilePage() {
                         {completedTasks.length}
                       </span>
                       <span className="ml-1 text-sm text-muted-foreground">
-                        /{tasks.length}
+                        /{user?.tasks?.length}
                       </span>
                     </div>
                   </CardContent>
@@ -393,7 +418,9 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px]">
-                    <PerformanceChart performanceData={performanceReviews} />
+                    <PerformanceChart
+                      performanceData={user?.performance_review ?? []}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -473,9 +500,9 @@ export default function ProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <TargetList targets={targets.slice(0, 3)} />
+                  <TargetList targets={user?.targets?.slice(0, 3) ?? []} />
                 </CardContent>
-                {targets.length > 0 && (
+                {(user?.targets?.length ?? 0) > 0 && (
                   <CardFooter>
                     {" "}
                     <Button
@@ -504,7 +531,7 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <EmploymentHistoryCard
-                    employmentHistory={employmentHistory}
+                    employmentHistory={user?.employment_history ?? []}
                   />
                 </CardContent>
               </Card>
@@ -534,14 +561,14 @@ export default function ProfilePage() {
                         Current Salary:
                       </span>
                       <span className="text-xl font-bold">
-                        ${employmentDetail.salary.toLocaleString()}
+                        ${user?.employment.salary.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span>Effective Since:</span>
                       <span>
                         {new Date(
-                          employmentDetail.start_date
+                          user?.employment.start_date ?? ""
                         ).toLocaleDateString()}
                       </span>
                     </div>
@@ -558,7 +585,9 @@ export default function ProfilePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <SalaryHistoryCard salaryHistory={salaryHistory} />
+                  <SalaryHistoryCard
+                    salaryHistory={user?.salary_history ?? []}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

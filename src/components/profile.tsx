@@ -85,7 +85,7 @@ export function Profile({ user }: ProfileProps) {
             asChild
             className="cursor-pointer hover:bg-slate-100 "
           >
-            <Link href="/profile" className="flex items-center">
+            <Link href={`/user?id=${user.id}`} className="flex items-center">
               <User className="mr-2 h-4 w-4 text-primary" />
               <span className="text-primary">My Profile</span>
             </Link>

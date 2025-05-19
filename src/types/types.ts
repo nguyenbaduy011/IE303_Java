@@ -1,3 +1,4 @@
+
 // File: types.ts
 
 // Type cho bảng positions (Danh sách các vị trí công việc) - Đã có
@@ -254,6 +255,13 @@ export type RoleWithPermissions = RoleType & {
   permissions: PermissionType[];
 };
 
+export type EmploymentHistoryWithAllTypes =
+  EmploymentHistoryType & {
+    department: DepartmentType; 
+    position: PositionType;
+    team: TeamType
+  };
+
 export type UserFullShape = {
   /* ── Thông tin cá nhân ── */
   id: string;
@@ -277,5 +285,10 @@ export type UserFullShape = {
   password_changed_required: boolean;
   employment: EmploymentDetailType;
   position: PositionType;
-  team?: TeamType | null;
+  team: TeamType | null;
+  tasks: TaskType[] | null;
+  targets: TargetType[] | null;
+  employment_history: EmploymentHistoryWithAllTypes[] | null;
+  salary_history: SalaryHistoryType[] | null;
+  performance_review: PerformanceReviewType[] | null;
 };
