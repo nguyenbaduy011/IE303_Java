@@ -1,5 +1,10 @@
-import { mockUser } from "@/app/data/mock-data";
+import { mockEmployees, mockSession } from "@/app/data/mock-data";
 
-export function getMockUser() {
-  return mockUser;
+export function getMockEmployees() {
+  return mockEmployees;
+}
+
+
+export function getMockSessionUser(){
+  return mockSession;
 }
