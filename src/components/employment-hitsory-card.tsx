@@ -1,9 +1,9 @@
-import type { EmploymentHistoryType } from "@/types/types";
+import type { EmploymentHistoryWithAllTypes } from "@/types/types";
 import { Briefcase, Calendar } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface EmploymentHistoryCardProps {
-  employmentHistory: EmploymentHistoryType[];
+  employmentHistory: EmploymentHistoryWithAllTypes[];
 }
 
 export function EmploymentHistoryCard({
@@ -24,7 +24,7 @@ export function EmploymentHistoryCard({
             </div>
             <div className="space-y-1">
               <span className="text-base font-medium">
-                Position: {history.position_id}
+                Position: {history.position.name}
               </span>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="mr-1 h-4 w-4" />
@@ -40,9 +40,9 @@ export function EmploymentHistoryCard({
               </div>
               <p className="text-sm">{history.description}</p>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span>Department: {history.department_id}</span>
+                <span>Department: {history.department.name}</span>
                 <span>•</span>
-                <span>Team: {history.team_id || "None"}</span>
+                <span>Team: {history.team.name || "None"}</span>
                 <span>•</span>
                 <span>Salary: ${history.salary.toLocaleString()}</span>
               </div>
