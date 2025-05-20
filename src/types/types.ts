@@ -193,7 +193,15 @@ export type EmployeeRankingType = {
 };
 
 // Type cho các loại thông báo - Đã có
-export type NotiType = "info" | "reminder" | "error";
+export type NotiType =
+  | "info" // Thông báo chung (ví dụ: thông báo sự kiện, cập nhật chính sách)
+  | "reminder" // Nhắc nhở (ví dụ: deadline nhiệm vụ, nộp báo cáo)
+  | "action" // Yêu cầu hành động (ví dụ: phê duyệt, phản hồi đánh giá)
+  | "achievement" // Thông báo thành tích (ví dụ: hoàn thành nhiệm vụ, xếp hạng cao)
+  | "social" // Thông báo xã hội (ví dụ: thích, bình luận, chia sẻ trên mạng nội bộ)
+  | "warning" // Cảnh báo (ví dụ: vi phạm quy định, lỗi nhẹ)
+  | "system" // Thông báo hệ thống (ví dụ: bảo trì, cập nhật hệ thống)
+  | "celebration"; // Thông báo chúc mừng (ví dụ: sinh nhật, thăng chức);
 
 // Type cho bảng notifications (Thông báo) - Đã có
 export type NotificationType = {
