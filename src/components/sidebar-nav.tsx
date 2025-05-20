@@ -3,13 +3,16 @@
 import { UserType } from "@/types/types";
 import {
   BarChart,
+  Bell,
   Calendar,
+  CheckSquare,
+  FileText,
   Home,
+  LayoutDashboard,
   Menu,
   MessageSquare,
-  ShieldAlert,
+  Settings,
   Users,
-  Vote,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,9 +40,19 @@ export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
 
   const navItems = [
     {
-      title: "Home",
+      title: "Dashboard",
       href: "/",
       icon: <Home className="h-5 w-5" />,
+    },
+    {
+      title: "My Team",
+      href: "/teams",
+      icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "My Tasks",
+      href: "/tasks",
+      icon: <CheckSquare className="h-5 w-5" />,
     },
     {
       title: "Calendar",
@@ -47,24 +60,29 @@ export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
       icon: <Calendar className="h-5 w-5" />,
     },
     {
-      title: "Chat",
+      title: "Messages",
       href: "/chat",
       icon: <MessageSquare className="h-5 w-5" />,
     },
     {
-      title: "Vote",
-      href: "/vote",
-      icon: <Vote className="h-5 w-5" />,
+      title: "Notifications",
+      href: "/my-notifications",
+      icon: <Bell className="h-5 w-5" />,
     },
     {
-      title: "Rankings",
-      href: "/rankings",
+      title: "Reports",
+      href: "/reports",
       icon: <BarChart className="h-5 w-5" />,
     },
     {
-      title: "Profile",
-      href: "/profile",
-      icon: <Users className="h-5 w-5" />,
+      title: "Documents",
+      href: "/documents",
+      icon: <FileText className="h-5 w-5" />,
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: <Settings className="h-5 w-5" />,
     },
   ];
 
@@ -72,12 +90,22 @@ export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
     {
       title: "Admin Dashboard",
       href: "/admin/dashboard",
-      icon: <ShieldAlert className="h-5 w-5" />,
+      icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
-      title: "Admin Profile",
-      href: "/admin/profile",
+      title: "Employees",
+      href: "/admin/employees",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "Teams",
+      href: "/admin/teams",
+      icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "Announcements",
+      href: "/admin/announcements",
+      icon: <Bell className="h-5 w-5" />,
     },
   ];
 
