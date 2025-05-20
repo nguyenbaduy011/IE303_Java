@@ -40,7 +40,7 @@ import { EmploymentHistoryCard } from "@/components/employment-hitsory-card";
 import { EduCertCard } from "@/components/edu-cert-card";
 import { SalaryHistoryCard } from "@/components/salary-history-card";
 import { TaskType } from "@/types/types";
-import { getMockSessionUser } from "@/lib/getMockUser";
+import { getMockSessionUser } from "@/lib/getMockData";
 import React from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -50,9 +50,8 @@ interface userProps {
   };
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function ProfilePage({searchParams}: userProps) {
+export default function ProfilePage({ searchParams }: userProps) {
   const params = useSearchParams();
   const id = params.get("id");
 
