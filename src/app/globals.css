@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -20,96 +19,96 @@
 }
 
 :root {
-  --background: oklch(1 0 0);;
-  --foreground: oklch(0.141 0.022 264.23);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.022 264.23);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.022 264.23);
-  --primary: oklch(0.285 0.124 159.92); 
-  --primary-foreground: oklch(0.985 0.005 234.29);
-  --primary-50: oklch(0.953 0.026 159.92); /* Xanh rừng nhạt nhất (#e6f0eb) */
-  --primary-100: oklch(0.891 0.048 159.92); /* Xanh rừng nhạt (#cce1d7) */
-  --primary-200: oklch(0.767 0.091 159.92); /* Xanh rừng trung bình nhạt (#99c3af) */
-  --primary-300: oklch(0.642 0.134 159.92); /* Xanh rừng trung bình (#66a587) */
-  --primary-400: oklch(0.518 0.177 159.92); /* Xanh rừng đậm nhạt (#33875f) */
-  --primary-500: oklch(0.394 0.198 159.92); /* Xanh rừng đậm (#024023) */
-  --primary-600: oklch(0.363 0.201 159.92); /* Xanh rừng rất đậm (#023a1f) */
-  --primary-700: oklch(0.332 0.204 159.92); /* Xanh rừng siêu đậm (#01331b) */
-  --primary-800: oklch(0.301 0.207 159.92); /* Xanh rừng tối (#012d17) */
-  --primary-900: oklch(0.27 0.21 159.92); /* Xanh rừng rất tối (#012613) */
-  --primary-950: oklch(0.239 0.213 159.92); /* Xanh rừng tối nhất (#001f0f) */
-  --secondary: oklch(0.914 0.026 159.92); 
-  --secondary-foreground: oklch(0.336 0.095 159.92);
-  --muted: oklch(0.961 0.009 234.29); 
-  --muted-foreground: oklch(0.553 0.016 235.83);
-  --accent: oklch(0.914 0.026 159.92);
-  --accent-foreground: oklch(0.336 0.095 159.92);
-  --destructive: oklch(0.672 0.216 32.47); 
-  --destructive-foreground: oklch(0.985 0.005 234.29);
+  --background: oklch(1 0 0); /* Trắng (#ffffff) */
+  --foreground: oklch(0.2 0.03 264.23); /* Đen đậm hơn (~#2a2a2a) */
+  --card: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --card-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --popover: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --popover-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --primary: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --primary-50: oklch(0.953 0.026 159.92); /* Xanh rừng nhạt nhất (~#e6f0eb) */
+  --primary-100: oklch(0.891 0.048 159.92); /* Xanh rừng nhạt (~#cce1d7) */
+  --primary-200: oklch(0.767 0.091 159.92); /* Xanh rừng trung bình nhạt (~#99c3af) */
+  --primary-300: oklch(0.642 0.134 159.92); /* Xanh rừng trung bình (~#66a587) */
+  --primary-400: oklch(0.518 0.177 159.92); /* Xanh rừng đậm nhạt (~#33875f) */
+  --primary-500: oklch(0.394 0.198 159.92); /* Xanh rừng đậm (~#024023) */
+  --primary-600: oklch(0.363 0.201 159.92); /* Xanh rừng rất đậm (~#023a1f) */
+  --primary-700: oklch(0.332 0.204 159.92); /* Xanh rừng siêu đậm (~#01331b) */
+  --primary-800: oklch(0.301 0.207 159.92); /* Xanh rừng tối (~#012d17) */
+  --primary-900: oklch(0.27 0.21 159.92); /* Xanh rừng rất tối (~#012613) */
+  --primary-950: oklch(0.239 0.213 159.92); /* Xanh rừng tối nhất (~#001f0f) */
+  --secondary: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --secondary-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --muted: oklch(0.961 0.009 234.29); /* Xám nhạt (~#f3f4f6) */
+  --muted-foreground: oklch(0.5 0.02 235.83); /* Xám đậm hơn (~#6b7280) */
+  --accent: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --accent-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --destructive: oklch(0.672 0.216 32.47); /* Đỏ (~#dc2626) */
+  --destructive-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
   --border: oklch(0.914 0.013 235.83); /* Viền nhạt (~#e5e7eb) */
-  --input: oklch(0.914 0.013 235.83); /* Trường nhập liệu */
+  --input: oklch(0.914 0.013 235.83); /* Trường nhập liệu (~#e5e7eb) */
   --ring: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
-  --chart-1: oklch(0.953 0.026 159.92); /* Dùng primary-50 (~#e6f0eb) */
-  --chart-2: oklch(0.891 0.048 159.92); /* Dùng primary-100 (~#cce1d7) */
-  --chart-3: oklch(0.767 0.091 159.92); /* Dùng primary-200 (~#99c3af) */
-  --chart-4: oklch(0.642 0.134 159.92); /* Dùng primary-300 (~#66a587) */
-  --chart-5: oklch(0.518 0.177 159.92); /* Dùng primary-400 (~#33875f) */
-  --sidebar: oklch(1 0 0); /* Trắng, giống background (#ffffff) */
-  --sidebar-foreground: oklch(0.141 0.022 264.23); /* Đen đậm, giống foreground (#171717) */
-  --sidebar-primary: oklch(0.285 0.124 159.92); /* Xanh rừng, giống primary (~#024023) */
-  --sidebar-primary-foreground: oklch(0.985 0.005 234.29); /* Trắng nhạt, giống primary-foreground (~#f5f7fa) */
-  --sidebar-accent: oklch(0.914 0.026 159.92); /* Xanh nhạt, giống accent (~#d4e8e0) */
-  --sidebar-accent-foreground: oklch(0.336 0.095 159.92); /* Xanh đậm, giống accent-foreground (~#1e4b40) */
-  --sidebar-border: oklch(0.914 0.013 235.83); /* Viền nhạt, giống border (~#e5e7eb) */
-  --sidebar-ring: oklch(0.285 0.124 159.92); /* Xanh rừng, giống ring (~#024023) */
+  --chart-1: oklch(0.953 0.026 159.92); /* Primary-50 (~#e6f0eb) */
+  --chart-2: oklch(0.891 0.048 159.92); /* Primary-100 (~#cce1d7) */
+  --chart-3: oklch(0.767 0.091 159.92); /* Primary-200 (~#99c3af) */
+  --chart-4: oklch(0.642 0.134 159.92); /* Primary-300 (~#66a587) */
+  --chart-5: oklch(0.518 0.177 159.92); /* Primary-400 (~#33875f) */
+  --sidebar: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --sidebar-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --sidebar-primary: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --sidebar-primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --sidebar-accent: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --sidebar-accent-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --sidebar-border: oklch(0.914 0.013 235.83); /* Viền nhạt (~#e5e7eb) */
+  --sidebar-ring: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
   --radius: 0.5rem; /* Bán kính bo góc */
 }
 
 .dark {
-  --background: oklch(0.177 0.039 159.92); /* Xanh đen (~#0c1b1a) */
-  --foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt (~#e6f0eb) */
-  --card: oklch(0.208 0.042 159.92); /* Thẻ: xanh đen nhạt (~#112524) */
-  --card-foreground: oklch(0.953 0.013 159.92); /* Chữ trên thẻ: xanh nhạt */
-  --popover: oklch(0.177 0.039 159.92); /* Popover: xanh đen */
-  --popover-foreground: oklch(0.953 0.013 159.92); /* Chữ trên popover: xanh nhạt */
-  --primary: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
-  --primary-foreground: oklch(0.953 0.006 159.92); /* Xanh nhạt (~#e8f0ec) */
-  --primary-50: oklch(0.858 0.059 159.92); /* Xanh rừng nhạt (~#c7e2d5) */
-  --primary-100: oklch(0.796 0.081 159.92); /* Xanh rừng nhạt hơn (~#a7d3bf) */
-  --primary-200: oklch(0.672 0.124 159.92); /* Xanh rừng trung bình (~#75b696) */
-  --primary-300: oklch(0.548 0.167 159.92); /* Xanh rừng đậm nhạt (~#44986d) */
-  --primary-400: oklch(0.424 0.209 159.92); /* Xanh rừng đậm (~#1a7a44) */
-  --primary-500: oklch(0.3 0.252 159.92); /* Xanh rừng rất đậm (~#005c1c) */
-  --primary-600: oklch(0.269 0.255 159.92); /* Xanh rừng siêu đậm (~#005318) */
-  --primary-700: oklch(0.238 0.258 159.92); /* Xanh rừng tối (~#004a14) */
-  --primary-800: oklch(0.207 0.261 159.92); /* Xanh rừng rất tối (~#004210) */
-  --primary-900: oklch(0.176 0.264 159.92); /* Xanh rừng tối nhất (~#00390c) */
-  --primary-950: oklch(0.145 0 159.92); /* Đen (~#000000) */
-  --secondary: oklch(0.336 0.052 159.92); /* Xanh đậm (~#2a4b47) */
-  --secondary-foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt (~#e6f0eb) */
-  --muted: oklch(0.336 0.052 159.92); /* Xanh đậm (~#2a4b47) */
-  --muted-foreground: oklch(0.705 0.039 159.92); /* Xanh nhạt (~#94b4b0) */
-  --accent: oklch(0.336 0.052 159.92); /* Xanh đậm (~#2a4b47) */
-  --accent-foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt (~#e6f0eb) */
-  --destructive: oklch(0.553 0.177 32.47); /* Đỏ đậm (~#b91c1c) */
-  --destructive-foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt (~#e6f0eb) */
-  --border: oklch(0.424 0.048 159.92); /* Viền sáng (~#385956) */
-  --input: oklch(0.424 0.048 159.92); /* Trường nhập liệu */
-  --ring: oklch(0.455 0.177 159.92); /* Xanh rừng nhạt (~#108a53) */
-  --chart-1: oklch(0.858 0.059 159.92); /* Dùng primary-50 (~#c7e2d5) */
-  --chart-2: oklch(0.796 0.081 159.92); /* Dùng primary-100 (~#a7d3bf) */
-  --chart-3: oklch(0.672 0.124 159.92); /* Dùng primary-200 (~#75b696) */
-  --chart-4: oklch(0.548 0.167 159.92); /* Dùng primary-300 (~#44986d) */
-  --chart-5: oklch(0.424 0.209 159.92); /* Dùng primary-400 (~#1a7a44) */
-  --sidebar: oklch(0.208 0.042 159.92); /* Xanh đen nhạt, giống card (~#112524) */
-  --sidebar-foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt, giống foreground (~#e6f0eb) */
-  --sidebar-primary: oklch(0.285 0.124 159.92); /* Xanh rừng, giống primary (~#024023) */
-  --sidebar-primary-foreground: oklch(0.953 0.006 159.92); /* Xanh nhạt, giống primary-foreground (~#e8f0ec) */
-  --sidebar-accent: oklch(0.336 0.052 159.92); /* Xanh đậm, giống accent (~#2a4b47) */
-  --sidebar-accent-foreground: oklch(0.953 0.013 159.92); /* Xanh nhạt, giống accent-foreground (~#e6f0eb) */
-  --sidebar-border: oklch(0.424 0.048 159.92); /* Viền sáng, giống border (~#385956) */
-  --sidebar-ring: oklch(0.455 0.177 159.92); /* Xanh rừng nhạt, giống ring (~#108a53) */
+  --background: oklch(0.2 0.04 159.92); /* Xanh đen sáng hơn (~#1a2b2a) */
+  --foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --card: oklch(0.25 0.045 159.92); /* Xanh đen nhạt hơn (~#2a3c3a) */
+  --card-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --popover: oklch(0.25 0.045 159.92); /* Xanh đen nhạt hơn (~#2a3c3a) */
+  --popover-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --primary: oklch(0.35 0.14 159.92); /* Xanh rừng sáng hơn (~#156b45) */
+  --primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --primary-50: oklch(0.9 0.06 159.92); /* Xanh rừng nhạt (~#d0e5dc) */
+  --primary-100: oklch(0.85 0.09 159.92); /* Xanh rừng nhạt hơn (~#b5d9c8) */
+  --primary-200: oklch(0.75 0.13 159.92); /* Xanh rừng trung bình (~#8cc2a4) */
+  --primary-300: oklch(0.65 0.17 159.92); /* Xanh rừng đậm nhạt (~#64aa80) */
+  --primary-400: oklch(0.55 0.21 159.92); /* Xanh rừng đậm (~#3c925c) */
+  --primary-500: oklch(0.45 0.24 159.92); /* Xanh rừng rất đậm (~#237938) */
+  --primary-600: oklch(0.42 0.245 159.92); /* Xanh rừng siêu đậm (~#1e6f34) */
+  --primary-700: oklch(0.39 0.25 159.92); /* Xanh rừng tối (~#1a6530) */
+  --primary-800: oklch(0.36 0.255 159.92); /* Xanh rừng rất tối (~#165b2c) */
+  --primary-900: oklch(0.33 0.26 159.92); /* Xanh rừng tối nhất (~#125128) */
+  --primary-950: oklch(0.3 0.265 159.92); /* Xanh rừng cực tối (~#0e4724) */
+  --secondary: oklch(0.4 0.06 159.92); /* Xanh đậm nhạt (~#3c5a56) */
+  --secondary-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --muted: oklch(0.4 0.06 159.92); /* Xanh đậm nhạt (~#3c5a56) */
+  --muted-foreground: oklch(0.75 0.05 159.92); /* Xanh nhạt hơn (~#9cc2bc) */
+  --accent: oklch(0.4 0.06 159.92); /* Xanh đậm nhạt (~#3c5a56) */
+  --accent-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --destructive: oklch(0.65 0.2 32.47); /* Đỏ đậm nhạt hơn (~#c53030) */
+  --destructive-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --border: oklch(0.5 0.06 159.92); /* Viền sáng hơn (~#506e6a) */
+  --input: oklch(0.5 0.06 159.92); /* Trường nhập liệu (~#506e6a) */
+  --ring: oklch(0.55 0.21 159.92); /* Xanh rừng đậm (~#3c925c) */
+  --chart-1: oklch(0.9 0.06 159.92); /* Primary-50 (~#d0e5dc) */
+  --chart-2: oklch(0.85 0.09 159.92); /* Primary-100 (~#b5d9c8) */
+  --chart-3: oklch(0.75 0.13 159.92); /* Primary-200 (~#8cc2a4) */
+  --chart-4: oklch(0.65 0.17 159.92); /* Primary-300 (~#64aa80) */
+  --chart-5: oklch(0.55 0.21 159.92); /* Primary-400 (~#3c925c) */
+  --sidebar: oklch(0.25 0.045 159.92); /* Xanh đen nhạt hơn (~#2a3c3a) */
+  --sidebar-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --sidebar-primary: oklch(0.35 0.14 159.92); /* Xanh rừng sáng hơn (~#156b45) */
+  --sidebar-primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --sidebar-accent: oklch(0.4 0.06 159.92); /* Xanh đậm nhạt (~#3c5a56) */
+  --sidebar-accent-foreground: oklch(0.95 0.015 159.92); /* Xanh nhạt sáng (~#e0f0e8) */
+  --sidebar-border: oklch(0.5 0.06 159.92); /* Viền sáng hơn (~#506e6a) */
+  --sidebar-ring: oklch(0.55 0.21 159.92); /* Xanh rừng đậm (~#3c925c) */
 }
 
 @theme inline {
@@ -148,10 +147,6 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -160,6 +155,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 @layer base {
@@ -170,9 +169,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-
-/* app/globals.css (add this to your existing global CSS) */
 
 @keyframes fade-in {
   0% {
@@ -187,7 +183,6 @@
   animation: fade-in 0.3s ease-in-out;
 }
 
-/* Additional styles to prevent touch interactions from causing text selection */
 .video-container {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
