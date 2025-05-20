@@ -1,6 +1,5 @@
-import { UserFullShape } from "@/types/types";
+export const getFullName = (first_name: string, last_name: string) => {
+  if (!first_name || !last_name) return "??";
 
-export const getFullName = (userInput: UserFullShape) => {
-  if (!userInput) return "??";
-  return userInput.first_name + userInput.last_name;
+  return first_name + last_name;
 };
