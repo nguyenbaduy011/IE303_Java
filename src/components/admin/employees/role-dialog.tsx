@@ -22,7 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { mockRole } from "@/app/data/mock-data";
+import { mockRole } from "@/data/mock-data";
 import { UserFullShape } from "@/types/types";
 import { getInitials } from "@/utils/getInitials";
 import { getFullName } from "@/utils/getFullName";
@@ -152,7 +152,9 @@ export function RoleDialog({ open, onOpenChange, employee }: RoleDialogProps) {
               <TooltipTrigger asChild>
                 <Button
                   onClick={handleSubmit}
-                  disabled={!selectedRole || selectedRole === employee?.role?.name}
+                  disabled={
+                    !selectedRole || selectedRole === employee?.role?.name
+                  }
                 >
                   Update Role
                 </Button>

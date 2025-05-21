@@ -50,7 +50,7 @@ import {
 import { EmployeeFormValues, employeeSchema } from "@/lib/validations";
 import { Label } from "@/components/ui/label";
 import LoadingButton from "@/components/ui/loading-button";
-import { mockDb } from "@/app/data/mock-data";
+import { mockDb } from "@/data/mock-data";
 
 interface EmployeeDialogProps {
   open: boolean;

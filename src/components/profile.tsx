@@ -14,9 +14,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { UserType } from "@/types/types";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDateShort } from "@/utils/dateFormatter";
 import { getFullName } from "@/utils/getFullName";
 import { getInitials } from "@/utils/getInitials";
+import { logoutUser } from "@/api/logout/route";
+import { toast } from "sonner";
 
 interface ProfileProps {
   user: UserType;
@@ -24,7 +27,7 @@ interface ProfileProps {
 
 export function Profile({ user }: ProfileProps) {
   const [isOpen, setIsOpen] = useState(false);
-
+  const router = useRouter();
   const formattedHiredDate = formatDateShort(user.hire_date);
 
   return (
@@ -45,7 +48,9 @@ export function Profile({ user }: ProfileProps) {
             </AvatarFallback>
           </Avatar>
           <ChevronDown
-            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
           />
         </Button>
       </DropdownMenuTrigger>
@@ -96,7 +101,16 @@ export function Profile({ user }: ProfileProps) {
         <div className="p-1">
           <DropdownMenuItem
             className="cursor-pointer rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive-foreground focus:bg-destructive/10 focus:text-destructive-foreground transition-colors duration-150 py-2 px-3"
-            onClick={async () => {}}
+            onClick={async () => {
+              try {
+                await logoutUser();
+                toast.success("Logged out successfully!");
+                router.push("/login");
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              } catch (err) {
+                toast.error("Logout failed!");
+              }
+            }}
           >
             <LogOut className="mr-2 h-4 w-4" />
             <span>Logout</span>
