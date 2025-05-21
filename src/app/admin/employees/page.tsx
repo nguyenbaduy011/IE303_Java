@@ -45,11 +45,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PermissionType, UserFullShape } from "@/types/types";
-import {
-  departments,
-  mockEmployees,
-  roles,
-} from "@/app/data/mock-data";
+import { departments, mockEmployees, roles } from "@/data/mock-data";
 import { getFullName } from "@/utils/getFullName";
 import { EmployeeDetailDialog } from "@/components/admin/employees/employee-detail-dialog";
 import { RoleDialog } from "@/components/admin/employees/role-dialog";
@@ -327,9 +323,9 @@ export default function EmployeeManagementPage() {
                                   emp.employment.working_status === "active"
                                     ? "bg-green-500"
                                     : emp.employment.working_status ===
-                                        "inactive"
-                                      ? "bg-gray-300"
-                                      : "bg-red-200"
+                                      "inactive"
+                                    ? "bg-gray-300"
+                                    : "bg-red-200"
                                 }`}
                               />
                               {emp.employment.working_status}
@@ -832,10 +828,6 @@ export default function EmployeeManagementPage() {
     </div>
   );
 }
-
-
-
-
 
 // "use client";
 
