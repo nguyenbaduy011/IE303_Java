@@ -1,7 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { Footer } from "@/components/footer";
 import { UserAnnouncementDetail } from "@/components/user-announcements/user-announcement-detail";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle, Flag } from "lucide-react";
+import { ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function AnnouncementDetailPage({
@@ -9,6 +12,33 @@ export default function AnnouncementDetailPage({
 }: {
   params: { id: string };
 }) {
+  const [isRead, setIsRead] = useState(false);
+
+  const markAsRead = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`/api/notifications/${params.id}/read`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ is_read: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to mark as read");
+      }
+      setIsRead(true);
+    } catch (err) {
+      console.error("Error marking announcement as read:", err);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex flex-1 bg-muted/20">
@@ -22,13 +52,15 @@ export default function AnnouncementDetailPage({
                 </Button>
               </Link>
               <div className="ml-auto flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Flag className="h-4 w-4" />
-                  Mark as important
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={markAsRead}
+                  disabled={isRead}
+                >
                   <CheckCircle className="h-4 w-4" />
-                  Mark as read
+                  {isRead ? "Marked as read" : "Mark as read"}
                 </Button>
               </div>
             </div>
