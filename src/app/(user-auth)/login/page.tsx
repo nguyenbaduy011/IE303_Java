@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import LoadingButton from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { loginUser } from "@/api/login/route";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,17 +32,18 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const current_user = await loginUser({ email, password });
 
-      const isFirstTimeLogin = email.includes("new");
+      const isFirstTimeLogin = current_user.passwordChangeRequired;
 
       if (isFirstTimeLogin) {
         toast.info(
           "This is your first time login, please change your password!"
         );
-        router.push("/change-password?first=true");
+        router.push("/change-password");
       } else {
         toast.success("Login successful!");
+        console.log(current_user);
         router.push("/");
       }
     } catch (err) {
@@ -49,6 +51,7 @@ export default function LoginPage() {
       console.log(err);
       console.log(error);
       toast.error("Invalid email or password. Please try again.");
+      setIsLoading(false);
     }
   };
 
