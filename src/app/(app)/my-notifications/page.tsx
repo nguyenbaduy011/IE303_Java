@@ -10,7 +10,7 @@ import { NotiType } from "@/types/types";
 import { useState } from "react";
 
 export default function MyAnnouncementsPage() {
-    const [filterType, setFilterType] = useState<NotiType[] | null>(null);
+  const [filterType, setFilterType] = useState<NotiType[] | null>(null);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -56,20 +56,31 @@ export default function MyAnnouncementsPage() {
                   </TabsTrigger>
                 </TabsList>
                 <div className="mt-4 sm:mt-0">
-                  <AnnouncementFilters onFilterChange={(types) => setFilterType(types)} />
+                  <AnnouncementFilters
+                    onFilterChange={(types) => setFilterType(types)}
+                  />
                 </div>
               </div>
 
               <TabsContent value="all" className="space-y-4">
-                <UserAnnouncementsList filter="all" filterType={filterType ?? []}  />
+                <UserAnnouncementsList
+                  filter="all"
+                  filterType={filterType ?? []}
+                />
               </TabsContent>
 
               <TabsContent value="unread" className="space-y-4">
-                <UserAnnouncementsList filter="unread" filterType={filterType ?? []} />
+                <UserAnnouncementsList
+                  filter="unread"
+                  filterType={filterType ?? []}
+                />
               </TabsContent>
 
               <TabsContent value="important" className="space-y-4">
-                <UserAnnouncementsList filter="important" filterType={filterType ?? []} />
+                <UserAnnouncementsList
+                  filter="important"
+                  filterType={filterType ?? []}
+                />
               </TabsContent>
             </Tabs>
           </div>
