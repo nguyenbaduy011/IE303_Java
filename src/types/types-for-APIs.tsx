@@ -33,15 +33,34 @@ export type SalaryHistoryCardPropsType = {
 
 //Type cho bảng users (Thoại tin cá nhân người dùng)
 export type UserProfileCardPropsType = {
-  id: string; // UUID, khóa chính
-  first_name: string; // Tên
-  last_name: string; // Họ
-  email: string; // Email
-  birth_date: string; // Ngày sinh
-  image_url?: string | null; // URL hình ảnh
-  gender: "male" | "female"; // Giới tính
-  nationality?: string | null; // Quốc tịch
-  phone_number?: string | null; // Số điện thoại
-  hire_date: string; // Ngày tuyển dụng
-  address?: string | null; // Địa chỉ
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  hire_date: string;
+  birth_date: string;
+  gender: string;
+  nationality: string;
+  image_url: string;
+  phone_number: string;
+  address: string;
+  role: {
+    id: string;
+    name: string;
+    permissions: string[];
+  };
+  department?: {
+    id: string;
+    name: string;
+  };
+  position?: {
+    id: string;
+    name: string;
+  };
+  team?: {
+    id: string;
+    name: string;
+  };
+  working_status: string;
+  salary: number;
 };

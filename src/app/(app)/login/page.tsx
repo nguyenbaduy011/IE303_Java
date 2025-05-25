@@ -80,10 +80,11 @@ export default function LoginPage() {
           permissions: permissions,
         },
         working_status: current_user.user.working_status || "",
+        salary: 0,
       };
 
       setUser(user);
-      setCookie("user", encodeURIComponent(JSON.stringify(user))); // Lưu user vào cookie
+      setCookie("user", encodeURIComponent(JSON.stringify(user)), 86400); // Lưu user vào cookie
 
       const isFirstTimeLogin = current_user.passwordChangeRequired;
 
@@ -94,7 +95,7 @@ export default function LoginPage() {
         toast.success("Login successful!");
         router.push("/dashboard");
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Login failed:", err.message, err);
 

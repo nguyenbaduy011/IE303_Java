@@ -34,32 +34,49 @@ import {
   Users,
 } from "lucide-react";
 import { TaskList } from "@/components/profile/task-list";
-
-import { formatDateLong, formatDateShort } from "@/utils/dateFormatter";
-import { getInitials } from "@/utils/getInitials";
-import { useAuth } from "@/contexts/auth-context";
+import { PerformanceChart } from "@/components/profile/performance-chart";
+import { EmploymentHistoryCard } from "@/components/profile/employment-hitsory-card";
+import { SalaryHistoryCard } from "@/components/profile/salary-history-card";
 import {
   EmploymentHistoryCardType,
   PerformanceChartCardType,
   SalaryHistoryCardPropsType,
 } from "@/types/types-for-APIs";
-import { PerformanceChart } from "@/components/profile/performance-chart";
-import { EmploymentHistoryCard } from "@/components/profile/employment-hitsory-card";
-import { SalaryHistoryCard } from "@/components/profile/salary-history-card";
+import { formatDateLong, formatDateShort } from "@/utils/dateFormatter";
+import { getInitials } from "@/utils/getInitials";
+import { useAuth } from "@/contexts/auth-context";
 
 export type UserProfileCardPropsType = {
-  id: string; // UUID, khóa chính
-  first_name: string; // Tên
-  last_name: string; // Họ
-  email: string; // Email
-  birth_date: string; // Ngày sinh
-  image_url?: string | null; // URL hình ảnh
-  gender: "male" | "female"; // Giới tính
-  nationality?: string | null; // Quốc tịch
-  phone_number?: string | null; // Số điện thoại
-  hire_date: string; // Ngày tuyển dụng
-  address?: string | null; // Địa chỉ
-  working_status: "active" | "inactive" | "terminated";
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  hire_date: string;
+  birth_date: string;
+  gender: string;
+  nationality: string;
+  image_url: string;
+  phone_number: string;
+  address: string;
+  role: {
+    id: string;
+    name: string;
+    permissions: string[];
+  };
+  department?: {
+    id: string;
+    name: string;
+  };
+  position?: {
+    id: string;
+    name: string;
+  };
+  team?: {
+    id: string;
+    name: string;
+  };
+  working_status: string;
+  salary: number;
 };
 
 // Định nghĩa interface cho trạng thái dữ liệu
@@ -98,23 +115,49 @@ export default function ProfilePage() {
             | "active"
             | "inactive"
             | "terminated",
+          role: authUser.role,
+          salary: authUser.salary,
         }
       : null,
     loading: !isSessionUser,
     error: null,
   });
   const [employmentInfo, setEmploymentInfo] = useState<
-    DataState<EmploymentHistoryCardType>
+    DataState<UserProfileCardPropsType>
   >({
     data: isSessionUser
       ? {
           id: authUser.id,
-          salary: 0,
-          start_date: authUser?.hire_date || new Date().toISOString(),
-          end_date: "Not provided",
-          department: { name: authUser?.department?.name || "Not provided" },
-          position: { name: authUser?.position?.name || "Not provided" },
-          team: authUser?.team ? { name: authUser.team.name } : undefined,
+          email: authUser.email,
+          first_name: authUser.first_name,
+          last_name: authUser.last_name,
+          birth_date: authUser.birth_date,
+          image_url: authUser.image_url,
+          gender: authUser.gender as "male" | "female",
+          nationality: authUser.nationality,
+          phone_number: authUser.phone_number,
+          address: authUser.address,
+          salary: authUser.salary,
+          working_status: authUser.working_status as
+            | "active"
+            | "inactive"
+            | "terminated",
+          hire_date: authUser.hire_date ?? authUser.hire_date,
+          department: {
+            id: authUser.department?.id ?? "not-assigned",
+            name: authUser.department?.name ?? "Not assigned",
+          },
+          position: {
+            id: authUser.position?.id ?? "not-assigned",
+            name: authUser.position?.name ?? "Not assigned",
+          },
+          team: authUser.team
+            ? {
+                id: authUser.team.id ?? "not-assigned",
+                name: authUser.team.name ?? "Not assigned",
+              }
+            : undefined,
+          role: authUser.role,
         }
       : null,
     loading: !isSessionUser,
@@ -142,7 +185,6 @@ export default function ProfilePage() {
 
   // Xử lý lỗi session hết hạn
   const handleSessionError = useCallback(() => {
-    sessionStorage.removeItem("user");
     setUser(null);
     router.push("/login");
   }, [router, setUser]);
@@ -173,6 +215,18 @@ export default function ProfilePage() {
       }
 
       const data = await response.json();
+      // Xử lý fallback cho employmentInfo
+      if (endpoint.includes("/employment")) {
+        data.department = {
+          name: data.department?.name ?? "Not assigned",
+        };
+        data.position = {
+          name: data.position?.name ?? "Not assigned",
+        };
+        data.team = data.team
+          ? { name: data.team.name ?? "Not assigned" }
+          : undefined;
+      }
       setState({ data, loading: false, error: null });
     } catch (err: any) {
       setState({
@@ -195,7 +249,7 @@ export default function ProfilePage() {
         `/api/users/${id}/personal`,
         setPersonalInfo
       );
-      fetchData<EmploymentHistoryCardType>(
+      fetchData<UserProfileCardPropsType>(
         `/api/users/${id}/employment`,
         setEmploymentInfo
       );
@@ -249,14 +303,21 @@ export default function ProfilePage() {
           {personalInfo.error || employmentInfo.error}
         </p>
         <Button variant="link" asChild>
-          <Link href="/profiles">Back to profiles</Link>
+          <Link href="/dashboard">Back to dashboard</Link>
         </Button>
       </div>
     );
   }
 
   if (personalInfo.loading || employmentInfo.loading) {
-    return null; // Skeleton được xử lý bởi loading.tsx
+    return (
+      <div className="container mx-auto max-w-5xl flex h-40 flex-col items-center justify-center text-center">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
   }
 
   if (!personalInfo.data || !employmentInfo.data) {
@@ -266,14 +327,14 @@ export default function ProfilePage() {
           Unable to load profile data. Please try again later.
         </p>
         <Button variant="link" asChild>
-          <Link href="/profiles">Back to profiles</Link>
+          <Link href="/dashboard">Back to dashbhoard</Link>
         </Button>
       </div>
     );
   }
 
   const user = personalInfo.data;
-  const { department, position, team, salary, start_date, end_date } =
+  const { salary, working_status, department, position, team } =
     employmentInfo.data;
 
   const hireDate = new Date(user.hire_date);
@@ -282,7 +343,6 @@ export default function ProfilePage() {
 
   const formattedBirthDate = formatDateLong(user.birth_date);
   const formattedHiredDate = formatDateShort(user.hire_date);
-  const formattedStartDate = formatDateLong(start_date);
 
   const activeTasks: PerformanceChartCardType[] = isSessionUser
     ? []
@@ -318,24 +378,24 @@ export default function ProfilePage() {
               </h1>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Briefcase className="h-4 w-4" />
-                <span>{position.name}</span>
+                <span>{position?.name || "Not assigned"}</span>
                 <span className="">•</span>
                 <Building className="h-4 w-4" />
-                <span>{department.name}</span>
+                <span>{department?.name || "Not assigned"}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                {team && (
+                {team?.name && (
                   <Badge variant="outline" className="bg-primary/10">
                     {team.name}
                   </Badge>
                 )}
                 <Badge
                   variant={
-                    user.working_status === "active" ? "default" : "destructive"
+                    working_status === "active" ? "default" : "destructive"
                   }
                 >
-                  {user.working_status.charAt(0).toUpperCase() +
-                    user.working_status.slice(1)}
+                  {working_status.charAt(0).toUpperCase() +
+                    working_status.slice(1)}
                 </Badge>
               </div>
             </div>
@@ -351,7 +411,7 @@ export default function ProfilePage() {
             </Button>
             {isSessionUser && (
               <Button size="sm" className="cursor-pointer" asChild>
-                <Link href={`/profiles/${user.id}/edit`}>
+                <Link href={`/profile/${user.id}/edit`}>
                   <User className="mr-2 h-4 w-4" />
                   Edit Profile
                 </Link>
@@ -389,7 +449,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Shield className="h-4 w-4 text-muted-foreground" />
-                <span>Nationality: {user.nationality || "Not provided"}</span>
+                <span>Nationality: {user.nationality}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -399,9 +459,11 @@ export default function ProfilePage() {
                 </span>
               </div>
               <Separator />
-              <div className="flex items-center gap-3 text-sm">
-                <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span>Hired: {formattedHiredDate}</span>
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  <span>Hired: {formattedHiredDate}</span>
+                </div>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Clock className="h-4 w-4 text-muted-foreground" />
@@ -424,11 +486,11 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Department:</span>
-                  <span>{department.name}</span>
+                  <span>{department?.name || "Not assigned"}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Position:</span>
-                  <span>{position.name}</span>
+                  <span>{position?.name || "Not assigned"}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Team:</span>
@@ -438,17 +500,17 @@ export default function ProfilePage() {
                   <span className="font-medium">Status:</span>
                   <Badge
                     variant={
-                      user.working_status === "active" ? "default" : "destructive"
+                      working_status === "active" ? "default" : "destructive"
                     }
                     className="text-xs"
                   >
-                    {user.working_status.charAt(0).toUpperCase() +
-                      user.working_status.slice(1)}
+                    {working_status.charAt(0).toUpperCase() +
+                      working_status.slice(1)}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Start Date:</span>
-                  <span>{formattedStartDate}</span>
+                  <span>{formattedHiredDate}</span>
                 </div>
               </div>
               {isSessionUser && (
@@ -465,7 +527,13 @@ export default function ProfilePage() {
 
         <div className="md:col-span-2 space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList
+              className={`grid w-full ${
+                !(authUser.role?.name === "SUPER_ADMIN" || authUser.id === id)
+                  ? "grid-cols-4"
+                  : "grid-cols-5"
+              }`}
+            >
               <TabsTrigger value="overview" className="cursor-pointer">
                 Overview
               </TabsTrigger>
@@ -478,9 +546,12 @@ export default function ProfilePage() {
               <TabsTrigger value="history" className="cursor-pointer">
                 History
               </TabsTrigger>
-              <TabsTrigger value="salary" className="cursor-pointer">
-                Salary
-              </TabsTrigger>
+              {(authUser.role?.name === "SUPER_ADMIN" ||
+                authUser.id === id) && (
+                <TabsTrigger value="salary" className="cursor-pointer">
+                  Salary
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -491,12 +562,12 @@ export default function ProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
-                  Experienced {position.name} with {yearsOfExperience} years at
-                  the company. Currently working in the {department.name}{" "}
-                  department
-                  {team ? ` as part of the ${team.name} team` : ""}. Specializes
-                  in project management, team leadership, and strategic
-                  planning.
+                  Experienced {position?.name || "Not assigned"} with{" "}
+                  {yearsOfExperience} years at the company. Currently working in
+                  the {department?.name || "Not assigned"} department
+                  {team?.name ? ` as part of the ${team.name} team` : ""}.
+                  Specializes in project management, team leadership, and
+                  strategic planning.
                 </CardContent>
               </Card>
               {isSessionUser ? (
@@ -574,9 +645,10 @@ export default function ProfilePage() {
                 <CardContent>
                   <div className="h-[300px]">
                     {tasks.loading ? (
-                      <p className="text-sm text-muted-foreground">
-                        Loading performance data...
-                      </p>
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
                     ) : tasks.error ? (
                       <p className="text-sm text-muted-foreground">
                         {tasks.error}
@@ -609,9 +681,10 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {tasks.loading ? (
-                    <p className="text-sm text-muted-foreground">
-                      Loading tasks...
-                    </p>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                   ) : tasks.error ? (
                     <p className="text-sm text-muted-foreground">
                       {tasks.error}
@@ -634,9 +707,10 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {tasks.loading ? (
-                    <p className="text-sm text-muted-foreground">
-                      Loading tasks...
-                    </p>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                   ) : tasks.error ? (
                     <p className="text-sm text-muted-foreground">
                       {tasks.error}
@@ -676,9 +750,10 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {employmentHistory.loading ? (
-                    <p className="text-sm text-muted-foreground">
-                      Loading history...
-                    </p>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                   ) : employmentHistory.error ? (
                     <p className="text-sm text-muted-foreground">
                       {employmentHistory.error}
@@ -705,22 +780,20 @@ export default function ProfilePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {isSessionUser ? (
-                    <p className="text-sm text-muted-foreground">
-                      Salary data is not available yet.
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          Current Salary:
-                        </span>
-                        <span className="text-xl font-bold">
-                          ${salary.toLocaleString()}
-                        </span>
-                      </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Current Salary:
+                      </span>
+                      <span className="text-xl font-bold">
+                        {salary ? salary.toLocaleString() : "NA"}
+                      </span>
                     </div>
-                  )}
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Effective Since:</span>
+                      <span>{new Date(hireDate).toLocaleDateString()}</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
               <Card>
@@ -734,9 +807,10 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   {salaryHistory.loading ? (
-                    <p className="text-sm text-muted-foreground">
-                      Loading salary history...
-                    </p>
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                   ) : salaryHistory.error ? (
                     <p className="text-sm text-muted-foreground">
                       {salaryHistory.error}

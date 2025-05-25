@@ -32,29 +32,35 @@ export const addMemberSchema = z.object({
 export type AddMemberForm = z.infer<typeof addMemberSchema>;
 
 
+// Schema for profile form validation
 export const profileFormSchema = z.object({
-  first_name: z.string().min(2, {
-    message: "First name must be at least 2 characters.",
-  }),
-  last_name: z.string().min(2, {
-    message: "Last name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
   phone_number: z.string().optional(),
   address: z.string().optional(),
-  birth_date: z.string(),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
   nationality: z.string().optional(),
-  gender: z.enum(["male", "female"]),
+  gender: z.enum(["male", "female"], {
+    required_error: "Gender is required",
+  }),
   bio: z.string().optional(),
-  skills: z.string().optional(),
-  education: z.string().optional(),
-  certifications: z.string().optional(),
-  languages: z.string().optional(),
-  emergency_contact_name: z.string().optional(),
-  emergency_contact_phone: z.string().optional(),
-  emergency_contact_relation: z.string().optional(),
 });
 
-export type ProfileFormValues = z.infer<typeof profileFormSchema>;
+export type ProfileForm = z.infer<typeof profileFormSchema>;
+
+// Schema for password form validation
+export const changePasswordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+      .string()
+      .min(8, "New password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+  export type ChangePasswordForm = z.infer<typeof changePasswordFormSchema>;
