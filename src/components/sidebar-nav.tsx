@@ -1,6 +1,5 @@
 "use client";
 
-import { UserType } from "@/types/types";
 import {
   BarChart,
   Bell,
@@ -28,6 +27,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DialogTitle } from "@/components/ui/dialog";
 import SociusLogo from "./socius-logo";
 import { Button } from "@/components/ui/button";
+import { UserType } from "@/contexts/auth-context";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   user: UserType;
