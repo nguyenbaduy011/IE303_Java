@@ -1,6 +1,4 @@
-
-
-export default function Home() {
+export default function Dashboard() {
   return (
     <div className="p-4">
       <h1 className="text-3xl font-bold text-destructive">Welcome to Socius</h1>

@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
-import { UserType } from "@/types/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDateShort } from "@/utils/dateFormatter";
@@ -20,6 +19,7 @@ import { getFullName } from "@/utils/getFullName";
 import { getInitials } from "@/utils/getInitials";
 import { logoutUser } from "@/api/logout/route";
 import { toast } from "sonner";
+import { useAuth, UserType } from "@/contexts/auth-context";
 
 interface ProfileProps {
   user: UserType;
@@ -28,6 +28,7 @@ interface ProfileProps {
 export function Profile({ user }: ProfileProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { setUser } = useAuth();
   const formattedHiredDate = formatDateShort(user.hire_date);
 
   return (
@@ -89,7 +90,7 @@ export function Profile({ user }: ProfileProps) {
             className="cursor-pointer rounded-md text-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-150"
           >
             <Link
-              href={`/user?id=${user.id}`}
+              href={`/profile/${user.id}`}
               className="flex items-center w-full py-2 px-3"
             >
               <User className="mr-2 h-4 w-4 text-primary" />
@@ -103,12 +104,19 @@ export function Profile({ user }: ProfileProps) {
             className="cursor-pointer rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive-foreground focus:bg-destructive/10 focus:text-destructive-foreground transition-colors duration-150 py-2 px-3"
             onClick={async () => {
               try {
-                await logoutUser();
-                toast.success("Logged out successfully!");
-                router.push("/login");
+                const result = await logoutUser();
+                if (!result.success) {
+                  toast.error(result.error || "Logout failed");
+                } else {
+                  toast.success("Logged out successfully");
+                }
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              } catch (err) {
-                toast.error("Logout failed!");
+              } catch (error) {
+                toast.error("Failed to connect to server");
+              } finally {
+                sessionStorage.removeItem("user");
+                setUser(null);
+                router.push("/");
               }
             }}
           >

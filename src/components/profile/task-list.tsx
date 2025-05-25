@@ -1,7 +1,7 @@
 import { TaskType } from "@/types/types";
 import { AlertCircle, CheckCircle2, CircleEllipsis, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "./ui/separator";
+import { Separator } from "@/components/ui/separator";
 
 interface TaskListProps {
   tasks: TaskType[];

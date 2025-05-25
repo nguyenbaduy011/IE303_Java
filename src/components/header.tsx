@@ -6,14 +6,14 @@ import { SearchBar } from "@/components/search-bar";
 import { Profile } from "@/components/profile";
 import { NotificationWindow } from "@/components/notification-window";
 import { MessageWindow } from "@/components/message-window";
-import { UserType } from "@/types/types";
 import { ThemeToggle } from "@/theme/theme-toggle";
-import SociusLogo from "./socius-logo";
+import SociusLogo from "@/components/socius-logo";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { UserType } from "@/contexts/auth-context";
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   user: UserType;
@@ -52,7 +52,7 @@ export function Header({
               onClose={() => setIsSidebarOpen(false)}
             />
           </Sheet>
-          <Link href={"/"}>
+          <Link href={"/dashboard"}>
             <div className="relative h-12 w-24 md:h-10 md:w-10 object-contain">
               <SociusLogo className="dark:text-primary-foreground text-primary hover:animate-pulse" />
             </div>

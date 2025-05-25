@@ -1,9 +1,16 @@
-import type { SalaryHistoryType } from "@/types/types";
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
+export type SalaryHistoryCardPropsType = {
+  id: string; // UUID, khóa chính
+  previous_salary: number | null; // Lương cũ, có thể null
+  new_salary: number; // Lương mới, không null, phải >= 0
+  effective_date: string; // Ngày hiệu lực, không null
+  reason?: string | null; // Lý do thay đổi, có thể null
+};
+
 interface SalaryHistoryCardProps {
-  salaryHistory: SalaryHistoryType[];
+  salaryHistory: SalaryHistoryCardPropsType[];
 }
 
 export function SalaryHistoryCard({ salaryHistory }: SalaryHistoryCardProps) {

@@ -7,37 +7,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function MyAnnouncementsLoading() {
   return (
     <div className="flex min-h-screen flex-col">
-      <Header user={{
-              id: "",
-              first_name: "",
-              last_name: "",
-              email: "",
-              birth_date: "",
-              image_url: undefined,
-              gender: "male",
-              nationality: undefined,
-              phone_number: undefined,
-              hire_date: "",
-              address: undefined,
-              created_at: "",
-              updated_at: ""
-          }} />
+      <Header
+        user={{
+          id: "",
+          first_name: "",
+          last_name: "",
+          email: "",
+          birth_date: "",
+          image_url: "",
+          gender: "male",
+          nationality: "",
+          phone_number: "",
+          hire_date: "",
+          address: "",
+          session_id: "",
+          passwordChangeRequired: false,
+          role: { id: "", name: "", permissions: [] },
+          working_status: "",
+        }}
+      />
       <div className="flex flex-1 bg-muted/20">
-        <SidebarNav user={{
-                  id: "",
-                  first_name: "",
-                  last_name: "",
-                  email: "",
-                  birth_date: "",
-                  image_url: undefined,
-                  gender: "male",
-                  nationality: undefined,
-                  phone_number: undefined,
-                  hire_date: "",
-                  address: undefined,
-                  created_at: "",
-                  updated_at: ""
-              }} isAdmin={false} />
+        <SidebarNav
+          user={{
+            id: "",
+            first_name: "",
+            last_name: "",
+            email: "",
+            birth_date: "",
+            image_url: "",
+            gender: "male",
+            nationality: "",
+            phone_number: "",
+            hire_date: "",
+            address: "",
+            session_id: "",
+            passwordChangeRequired: false,
+            role: { id: "", name: "", permissions: [] },
+            working_status: "",
+          }}
+          isAdmin={false}
+        />
         <main className="flex-1 p-6">
           <div className="container mx-auto max-w-6xl space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
