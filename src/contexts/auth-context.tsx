@@ -38,6 +38,7 @@ export type UserType = {
     name: string;
   };
   working_status: string;
+  salary: number;
 };
 
 type AuthContextType = {
@@ -67,9 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const setCookie = (name: string, value: string, maxAge?: number) => {
-    document.cookie = `${name}=${value}; path=/; max-age=${maxAge || 86400}; SameSite=Strict`;
+  const setCookie = (name: string, value: string, maxAge = 86400) => {
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Strict`;
   };
 
   const deleteCookie = (name: string) => {
