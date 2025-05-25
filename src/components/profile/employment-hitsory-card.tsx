@@ -1,11 +1,26 @@
-import type { EmploymentHistoryWithAllTypes } from "@/types/types";
 import { Briefcase, Calendar } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-interface EmploymentHistoryCardProps {
-  employmentHistory: EmploymentHistoryWithAllTypes[];
-}
+export type EmploymentHistoryCardType = {
+  id: string; // UUID, khóa chính
+  start_date: string; // Ngày bắt đầu, không null
+  end_date: string; // Ngày kết thúc, không null
+  salary: number; // Lương, không null, phải >= 0
+  description?: string | null; // Mô tả, có thể null
+  department: {
+    name: string; // Tên phòng ban
+  };
+  position: {
+    name: string; // Tên vị trí
+  };
+  team: {
+    name: string | null; // Tên đội nhóm, có thể null
+  };
+};
 
+interface EmploymentHistoryCardProps {
+  employmentHistory: EmploymentHistoryCardType[];
+}
 export function EmploymentHistoryCard({
   employmentHistory,
 }: EmploymentHistoryCardProps) {
