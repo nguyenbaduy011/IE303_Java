@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import type React from "react";
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import {
   User,
   Mail,
@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -48,161 +47,216 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import LoadingButton from "@/components/ui/loading-button";
 import { useAuth } from "@/contexts/auth-context";
-
-// Form schema for validation
-const profileFormSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  phone_number: z.string().optional(),
-  address: z.string().optional(),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
-  nationality: z.string().optional(),
-  gender: z.enum(["male", "female"], {
-    required_error: "Gender is required",
-  }),
-  bio: z.string().optional(),
-});
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+import {
+  profileFormSchema,
+  changePasswordFormSchema,
+  ProfileForm,
+  ChangePasswordForm,
+} from "@/lib/validations";
+import { toast } from "sonner";
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const params = useParams();
+  const { user, setUser, logout } = useAuth();
+  const userId = params.id as string;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
+  const [formState, setFormState] = useState<{
+    error: string | null;
+    passwordError: string | null;
+    success: string | null;
+    passwordSuccess: boolean;
+  }>({
+    error: null,
+    passwordError: null,
+    success: null,
+    passwordSuccess: false,
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  // Kiểm tra user từ AuthContext
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  // Check if user is authenticated and authorized
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    } else if (user.id !== userId) {
+      setFormState((prev) => ({
+        ...prev,
+        error: "You are not authorized to edit this profile.",
+      }));
+      router.push(`/profiles/${user.id}`);
+    }
+  }, [user, router, userId]);
 
-  // Initialize form with user data from AuthContext
-  const defaultValues: Partial<ProfileFormValues> = {
-    first_name: user.first_name,
-    last_name: user.last_name,
-    email: user.email,
-    phone_number: user.phone_number || "",
-    address: user.address || "",
-    birth_date: new Date(user.birth_date).toISOString().split("T")[0],
-    nationality: user.nationality || "",
-    gender:
-      user.gender === "male" || user.gender === "female"
-        ? user.gender
-        : undefined,
-    bio: "",
-  };
-
-  const form = useForm<ProfileFormValues>({
+  // Initialize profile form
+  const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: {
+      first_name: user?.first_name || "",
+      last_name: user?.last_name || "",
+      email: user?.email || "",
+      phone_number: user?.phone_number || "",
+      address: user?.address || "",
+      birth_date:
+        user?.birth_date && !isNaN(new Date(user.birth_date).getTime())
+          ? new Date(user.birth_date).toISOString().split("T")[0]
+          : "",
+      nationality: user?.nationality || "",
+      gender:
+        user?.gender === "male" || user?.gender === "female"
+          ? user.gender
+          : "male",
+    },
     mode: "onChange",
   });
 
-  async function onSubmit(data: ProfileFormValues) {
+  // Initialize password form
+  const passwordForm = useForm<ChangePasswordForm>({
+    resolver: zodResolver(changePasswordFormSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    mode: "onChange",
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  // Handle profile form submission
+  async function onProfileSubmit(data: ProfileForm) {
     setIsLoading(true);
-    setError(null);
+    setFormState((prev) => ({
+      ...prev,
+      error: null,
+      success: null,
+    }));
 
     try {
-      // Cập nhật thông tin cá nhân
+      if (!user) {
+        setFormState((prev) => ({
+          ...prev,
+          error: "User not found. Please log in again.",
+        }));
+        setIsLoading(false);
+        return;
+      }
       const response = await fetch(
-        `http://localhost:8080/api/users/${user.id}/personal`,
+        `http://localhost:8080/api/users/${userId}/personal`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
+          body: JSON.stringify(data),
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          await logout();
+          return;
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update profile");
+      }
+
+      const updatedUser = await response.json();
+      const newUser = { ...user, ...updatedUser };
+      setUser(newUser);
+
+      setFormState((prev) => ({
+        ...prev,
+        success: "Profile updated successfully!",
+      }));
+      setTimeout(() => {
+        setFormState((prev) => ({ ...prev, success: null }));
+        router.push(`/profile/${userId}`);
+      }, 3000);
+    } catch (err: any) {
+      setFormState((prev) => ({
+        ...prev,
+        error: err.message || "Failed to update profile. Please try again.",
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Handle password form submission
+  async function onPasswordSubmit(data: ChangePasswordForm) {
+    setIsLoading(true);
+    setFormState((prev) => ({
+      ...prev,
+      passwordError: null,
+      passwordSuccess: false,
+      success: null,
+    }));
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/users/change-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone_number: data.phone_number,
-            address: data.address,
-            birth_date: data.birth_date,
-            nationality: data.nationality,
-            gender: data.gender,
-            bio: data.bio,
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword,
           }),
         }
       );
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          sessionStorage.removeItem("user");
-          setUser(null);
-          router.push("/login");
-          throw new Error("Session expired. Please log in again.");
+          await logout();
+          return;
         }
-        throw new Error("Failed to update profile");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
       }
 
-      const updatedUser = await response.json();
-      // Cập nhật AuthContext và sessionStorage
-      const newUser = {
-        ...user,
-        first_name: updatedUser.first_name,
-        last_name: updatedUser.last_name,
-        email: updatedUser.email,
-        phone_number: updatedUser.phone_number,
-        address: updatedUser.address,
-        birth_date: updatedUser.birth_date,
-        nationality: updatedUser.nationality,
-        gender: updatedUser.gender,
-      };
-      setUser(newUser);
-      sessionStorage.setItem("user", JSON.stringify(newUser));
-
-      setSuccess(true);
+      setFormState((prev) => ({
+        ...prev,
+        passwordSuccess: true,
+        success: "Password changed successfully!",
+      }));
+      toast.success("Password changed successfully!");
+      passwordForm.reset();
       setTimeout(() => {
-        setSuccess(false);
-        router.push(`/profiles/${user.id}`);
+        setFormState((prev) => ({
+          ...prev,
+          success: null,
+          passwordSuccess: false,
+        }));
       }, 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to update profile. Please try again.");
+      setFormState((prev) => ({
+        ...prev,
+        passwordError:
+          err.message || "Failed to change password. Please try again.",
+      }));
+    } finally {
       setIsLoading(false);
     }
   }
 
-  async function changePassword(currentPassword: string, newPassword: string) {
-    const response = await fetch(
-      `http://localhost:8080/api/users/change-password`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ currentPassword, newPassword }),
-      }
-    );
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        sessionStorage.removeItem("user");
-        setUser(null);
-        router.push("/login");
-        throw new Error("Session expired. Please log in again.");
-      }
-      throw new Error("Failed to change password");
-    }
-  }
-
-  const handleImageClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
+  // Handle image upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    console.log(file);
     if (file) {
-      // Hiển thị preview
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size must be less than 5MB");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
@@ -211,7 +265,6 @@ export default function EditProfilePage() {
       };
       reader.readAsDataURL(file);
 
-      // Tải ảnh lên server
       try {
         const formData = new FormData();
         formData.append("image", file);
@@ -226,29 +279,25 @@ export default function EditProfilePage() {
 
         if (!response.ok) {
           if (response.status === 401 || response.status === 403) {
-            sessionStorage.removeItem("user");
-            setUser(null);
-            router.push("/login");
-            throw new Error("Session expired. Please log in again.");
+            await logout();
+            return;
           }
-          throw new Error("Failed to upload image");
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Failed to upload image");
         }
 
         const result = await response.json();
-        // Cập nhật image_url trong AuthContext và sessionStorage
         const newUser = { ...user, image_url: result.image_url };
         setUser(newUser);
-        sessionStorage.setItem("user", JSON.stringify(newUser));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        toast.success("Image uploaded successfully!");
       } catch (err: any) {
-        setError(err.message || "Failed to upload image. Please try again.");
+        toast.error(err.message || "Failed to upload image. Please try again.");
       }
     }
   };
 
-  // Get user initials for avatar fallback
   const getInitials = () => {
-    return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`;
+    return `${user.first_name?.charAt(0) || ""}${user.last_name?.charAt(0) || ""}`;
   };
 
   return (
@@ -262,36 +311,40 @@ export default function EditProfilePage() {
             </p>
           </div>
 
-          {error && (
+          {(formState.error || formState.passwordError) && (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {success && (
-            <Alert className="mb-6 border-green-500 text-green-500">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Success</AlertTitle>
               <AlertDescription>
-                Your profile has been updated successfully!
+                {formState.error || formState.passwordError}
               </AlertDescription>
             </Alert>
           )}
 
+          {formState.success && (
+            <Alert className="mb-6 border-green-500 text-green-500">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{formState.success}</AlertDescription>
+            </Alert>
+          )}
+
           <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="settings">Account Settings</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8">
+              <TabsTrigger value="personal" className="cursor-pointer">
+                Personal Info
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="cursor-pointer">
+                Account Settings
+              </TabsTrigger>
             </TabsList>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                <TabsContent value="personal" className="space-y-6">
+            <TabsContent value="personal" className="space-y-6">
+              <Form {...profileForm}>
+                <form
+                  onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                  className="space-y-8"
+                >
                   <Card>
                     <CardHeader>
                       <CardTitle>Profile Picture</CardTitle>
@@ -302,7 +355,7 @@ export default function EditProfilePage() {
                     <CardContent className="flex flex-col items-center">
                       <div
                         className="relative cursor-pointer group"
-                        onClick={handleImageClick}
+                        onClick={() => fileInputRef.current?.click()}
                       >
                         <Avatar className="h-32 w-32 border-2 border-primary/10">
                           <AvatarImage
@@ -329,7 +382,7 @@ export default function EditProfilePage() {
                         onChange={handleImageChange}
                       />
                       <p className="text-sm text-muted-foreground mt-2">
-                        Recommended: Square image, at least 300x300px
+                        Recommended: Square image, at least 300x300px, max 5MB
                       </p>
                     </CardContent>
                   </Card>
@@ -344,7 +397,7 @@ export default function EditProfilePage() {
                     <CardContent className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
-                          control={form.control}
+                          control={profileForm.control}
                           name="first_name"
                           render={({ field }) => (
                             <FormItem>
@@ -364,7 +417,7 @@ export default function EditProfilePage() {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={profileForm.control}
                           name="last_name"
                           render={({ field }) => (
                             <FormItem>
@@ -386,7 +439,7 @@ export default function EditProfilePage() {
                       </div>
 
                       <FormField
-                        control={form.control}
+                        control={profileForm.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
@@ -407,7 +460,7 @@ export default function EditProfilePage() {
                       />
 
                       <FormField
-                        control={form.control}
+                        control={profileForm.control}
                         name="phone_number"
                         render={({ field }) => (
                           <FormItem>
@@ -428,7 +481,7 @@ export default function EditProfilePage() {
                       />
 
                       <FormField
-                        control={form.control}
+                        control={profileForm.control}
                         name="address"
                         render={({ field }) => (
                           <FormItem>
@@ -450,7 +503,7 @@ export default function EditProfilePage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FormField
-                          control={form.control}
+                          control={profileForm.control}
                           name="birth_date"
                           render={({ field }) => (
                             <FormItem>
@@ -470,7 +523,7 @@ export default function EditProfilePage() {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={profileForm.control}
                           name="nationality"
                           render={({ field }) => (
                             <FormItem>
@@ -490,7 +543,7 @@ export default function EditProfilePage() {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={profileForm.control}
                           name="gender"
                           render={({ field }) => (
                             <FormItem>
@@ -515,32 +568,47 @@ export default function EditProfilePage() {
                         />
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="bio"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Bio</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                className="min-h-[120px]"
-                                placeholder="Tell us about yourself..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              A brief description about yourself that will be
-                              visible on your profile.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </CardContent>
                   </Card>
-                </TabsContent>
 
-                <TabsContent value="settings" className="space-y-6">
+                  <div className="flex justify-end gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push(`/profile/${userId}`)}
+                      disabled={isLoading}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <LoadingButton
+                      type="submit"
+                      disabled={isLoading}
+                      loading={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save Changes
+                        </>
+                      )}
+                    </LoadingButton>
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <Form {...passwordForm}>
+                <form
+                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                  className="space-y-8"
+                >
                   <Card>
                     <CardHeader>
                       <CardTitle>Account Settings</CardTitle>
@@ -552,89 +620,93 @@ export default function EditProfilePage() {
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">Change Password</h3>
                         <div className="grid gap-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor="current-password">
-                              Current Password
-                            </Label>
-                            <div className="relative">
-                              <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="current-password"
-                                type="password"
-                                className="pl-10"
-                                placeholder="••••••••"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="new-password">New Password</Label>
-                            <div className="relative">
-                              <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="new-password"
-                                type="password"
-                                className="pl-10"
-                                placeholder="••••••••"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid gap-2">
-                            <Label htmlFor="confirm-password">
-                              Confirm New Password
-                            </Label>
-                            <div className="relative">
-                              <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                id="confirm-password"
-                                type="password"
-                                className="pl-10"
-                                placeholder="••••••••"
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full md:w-auto"
+                          <FormField
+                            control={passwordForm.control}
+                            name="currentPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Current Password</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      className="pl-10"
+                                      type="password"
+                                      placeholder="••••••••"
+                                      {...field}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={passwordForm.control}
+                            name="newPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>New Password</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      className="pl-10"
+                                      type="password"
+                                      placeholder="••••••••"
+                                      {...field}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={passwordForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Confirm New Password</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      className="pl-10"
+                                      type="password"
+                                      placeholder="••••••••"
+                                      {...field}
+                                    />
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <LoadingButton
+                            type="submit"
+                            disabled={isLoading}
+                            loading={isLoading}
                           >
-                            Change Password
-                          </Button>
+                            {isLoading ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Changing Password...
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="mr-2 h-4 w-4" />
+                                Change Password
+                              </>
+                            )}
+                          </LoadingButton>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </TabsContent>
-
-                <div className="flex justify-end gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push(`/profiles/${user.id}`)}
-                    disabled={isLoading}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Cancel
-                  </Button>
-                  <LoadingButton
-                    type="submit"
-                    disabled={isLoading}
-                    loading={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </LoadingButton>
-                </div>
-              </form>
-            </Form>
+                </form>
+              </Form>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
