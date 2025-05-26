@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/api/logout/route";
 import { checkSession } from "@/api/check-session/route";
+import Loading from "@/components/loading";
 
 export type UserType = {
   id: string;
@@ -127,14 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen">
-        <div className="loader-container">
-          <div className="spinner"></div>
-          <p className="text">Loading...</p>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
