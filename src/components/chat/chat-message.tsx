@@ -1,14 +1,15 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-interface Message {
-  id: number;
+export type Message = {
+  id: string;
   content: string;
   timestamp: string;
   sender: "user" | "contact";
   read: boolean;
   senderName?: string;
-}
+  conversationId: string;
+};
 
 interface ChatMessageProps {
   message: Message;

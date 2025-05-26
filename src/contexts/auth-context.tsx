@@ -1,4 +1,3 @@
-// src/contexts/auth-context.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
@@ -11,19 +10,24 @@ export type UserType = {
   email: string;
   first_name: string;
   last_name: string;
-  session_id: string;
+  sessionId: string;
   passwordChangeRequired: boolean;
   hire_date: string;
   birth_date: string;
   gender: string;
   nationality: string;
-  image_url: string;
+  image_url: string | null;
   phone_number: string;
   address: string;
   role: {
     id: string;
     name: string;
-    permissions: string[];
+    description?: string;
+    permissions: Array<{
+      id: string;
+      name: string;
+      description?: string;
+    }>;
   };
   department?: {
     id: string;
@@ -68,10 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  const setCookie = (name: string, value: string, maxAge = 86400) => {
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Strict`;
-  };
-
   const deleteCookie = (name: string) => {
     document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
   };
@@ -97,17 +97,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const userCookie = getCookie("user");
         if (!userCookie) {
-          setLoading(false);
-          return;
+          throw new Error("No user cookie found");
         }
 
-        const parsedUser = JSON.parse(decodeURIComponent(userCookie));
-        if (!parsedUser.id || !parsedUser.email) {
-          deleteCookie("user");
-          setUser(null);
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
+        const parsedUser: UserType = JSON.parse(decodeURIComponent(userCookie));
+        if (!parsedUser.id || !parsedUser.email || !parsedUser.sessionId) {
+          throw new Error("Invalid user data in cookie");
         }
 
         const result = await checkSession({ id: parsedUser.id });
@@ -115,11 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(parsedUser);
           setIsAuthenticated(true);
         } else {
-          console.warn("Session invalid:", result.error || "Session not valid");
-          deleteCookie("user");
-          setUser(null);
-          setIsAuthenticated(false);
-          router.push("/login");
+          throw new Error(result.error || "Session not valid");
         }
       } catch (error) {
         console.error("Error restoring session:", error);
@@ -137,8 +128,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        Loading...
+      <div className="min-h-screen">
+        <div className="loader-container">
+          <div className="spinner"></div>
+          <p className="text">Loading...</p>
+        </div>
       </div>
     );
   }

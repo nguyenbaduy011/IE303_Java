@@ -105,7 +105,7 @@ export default function ProfilePage() {
           last_name: authUser.last_name,
           email: authUser.email,
           birth_date: authUser.birth_date,
-          image_url: authUser.image_url,
+          image_url: authUser.image_url ?? "",
           gender: authUser.gender as "male" | "female",
           nationality: authUser.nationality,
           phone_number: authUser.phone_number,
@@ -115,7 +115,14 @@ export default function ProfilePage() {
             | "active"
             | "inactive"
             | "terminated",
-          role: authUser.role,
+          role: {
+            ...authUser.role,
+            permissions: Array.isArray(authUser.role.permissions)
+              ? authUser.role.permissions.map((p: any) =>
+                  typeof p === "string" ? p : p.name ?? p.id
+                )
+              : [],
+          },
           salary: authUser.salary,
         }
       : null,
@@ -132,7 +139,7 @@ export default function ProfilePage() {
           first_name: authUser.first_name,
           last_name: authUser.last_name,
           birth_date: authUser.birth_date,
-          image_url: authUser.image_url,
+          image_url: authUser.image_url ?? "",
           gender: authUser.gender as "male" | "female",
           nationality: authUser.nationality,
           phone_number: authUser.phone_number,
@@ -157,7 +164,14 @@ export default function ProfilePage() {
                 name: authUser.team.name ?? "Not assigned",
               }
             : undefined,
-          role: authUser.role,
+          role: {
+            ...authUser.role,
+            permissions: Array.isArray(authUser.role.permissions)
+              ? authUser.role.permissions.map((p: any) =>
+                  typeof p === "string" ? p : p.name ?? p.id
+                )
+              : [],
+          },
         }
       : null,
     loading: !isSessionUser,

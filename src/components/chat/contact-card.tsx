@@ -4,8 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface Contact {
-  id: number;
+export type Contact = {
+  id: string;
   name: string;
   role: string;
   avatar: string;
@@ -14,7 +14,7 @@ interface Contact {
   lastSeen: string;
   unreadCount: number;
   isGroup?: boolean;
-}
+};
 
 interface ContactCardProps {
   contact: Contact;

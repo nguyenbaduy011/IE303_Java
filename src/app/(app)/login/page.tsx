@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -52,12 +52,16 @@ export default function LoginPage() {
         throw new Error("Invalid server response: Missing user information");
       }
 
-      if (!current_user.user.role || !current_user.user.role.id) {
+      if (!current_user.role || !current_user.role.id) {
         throw new Error("Invalid server response: Missing role information");
       }
 
-      const permissions = current_user.user.role.permissions.map(
-        (perm: { name: string }) => perm.name
+      const permissions = current_user.role.permissions.map(
+        (perm: { id: string; name: string; description: string }) => ({
+          id: perm.id,
+          name: perm.name,
+          description: perm.description,
+        })
       );
 
       const user: UserType = {
@@ -65,18 +69,19 @@ export default function LoginPage() {
         email: current_user.user.email,
         first_name: current_user.user.firstName || "",
         last_name: current_user.user.lastName || "",
-        session_id: current_user.sessionId || "",
+        sessionId: current_user.sessionId || "",
         passwordChangeRequired: current_user.passwordChangeRequired || false,
         hire_date: current_user.user.hireDate || "",
         birth_date: current_user.user.birthDate || "",
         gender: current_user.user.gender || "",
         nationality: current_user.user.nationality || "",
-        image_url: current_user.user.imageUrl || "",
+        image_url: current_user.user.imageUrl || null,
         phone_number: current_user.user.phoneNumber || "",
         address: current_user.user.address || "",
         role: {
-          id: current_user.user.role.id,
-          name: current_user.user.role.name || "",
+          id: current_user.role.id,
+          name: current_user.role.name || "",
+          description: current_user.role.description,
           permissions: permissions,
         },
         working_status: current_user.user.working_status || "",
@@ -95,7 +100,6 @@ export default function LoginPage() {
         toast.success("Login successful!");
         router.push("/dashboard");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Login failed:", err.message, err);
 
@@ -109,6 +113,7 @@ export default function LoginPage() {
 
       setError(userMessage);
       toast.error(userMessage);
+    } finally {
       setIsLoading(false);
     }
   };

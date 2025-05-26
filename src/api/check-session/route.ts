@@ -1,8 +1,13 @@
+export type CheckSessionResponse = {
+  isValid: boolean;
+  error?: string;
+};
+
 export async function checkSession({
   id,
 }: {
   id: string;
-}): Promise<{ isValid: boolean; error?: string }> {
+}): Promise<CheckSessionResponse> {
   try {
     const res = await fetch(
       `http://localhost:8080/api/session/user/${id}/status`,
@@ -25,7 +30,7 @@ export async function checkSession({
     }
 
     throw new Error(`Unexpected response status: ${res.status}`);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error checking session:", error);
     return {
