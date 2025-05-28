@@ -123,60 +123,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white border-[#E9EEF6]">
-        <CardHeader className="space-y-1 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md bg-card border-border shadow-md animate-fade-in p-6">
+        <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-[#024023]/10 p-3">
-              <SociusLogo className="h-8 w-8 text-[#024023]" />
+            <div className="rounded-full bg-primary/20 p-3">
+              <SociusLogo className="h-8 w-8 text-primary dark:text-card-foreground animate-pulse" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-black">
+          <CardTitle className="text-2xl font-bold text-card-foreground">
             Socius
           </CardTitle>
-          <CardDescription className="text-[#67727e]">
+          <CardDescription className="text-muted-foreground">
             Sign in to your company account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-8">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-black">
+              <Label htmlFor="email" className="text-card-foreground">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-[#67727e]" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   placeholder="name@company.com"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 border-[#E9F1F7]"
+                  className="pl-10 border-input bg-card text-card-foreground focus:ring-2 focus:ring-ring focus:border-primary rounded-md"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-black">
+                <Label htmlFor="password" className="text-card-foreground">
                   Password
                 </Label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:text-primary-400 hover:underline transition-colors"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-[#67727e]" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 border-[#E9F1F7]"
+                  className="pl-10 border-input bg-card text-card-foreground focus:ring-2 focus:ring-ring focus:border-primary rounded-md"
                   required
                 />
               </div>
@@ -184,10 +184,10 @@ export default function LoginPage() {
 
             {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
-          <CardFooter className="pt-5">
+          <CardFooter className="pt-6">
             <LoadingButton
               type="submit"
-              className="w-full bg-[#024023] text-white"
+              className="w-full bg-[#024023] text-[#ffffff] hover:bg-[#01331b] hover:shadow-md cursor-pointer hover:scale-105 transition-all rounded-md dark:bg-[#156b45] dark:text-[#ffffff] dark:hover:bg-[#1a6530]"
               disabled={isLoading}
               loading={isLoading}
             >
@@ -195,7 +195,7 @@ export default function LoginPage() {
             </LoadingButton>
           </CardFooter>
         </form>
-        <div className="pt-3 text-center text-sm text-[#67727e]">
+        <div className="pt-4 text-center text-sm text-muted-foreground">
           Need help? Contact your IT department
         </div>
       </Card>
