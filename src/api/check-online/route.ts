@@ -1,16 +1,16 @@
-export type CheckSessionResponse = {
+export type CheckOnlineResponse = {
   isValid: boolean;
   error?: string;
 };
 
-export async function checkSession({
+export async function checkOnline({
   id,
 }: {
   id: string;
-}): Promise<CheckSessionResponse> {
+}): Promise<CheckOnlineResponse> {
   try {
     const res = await fetch(
-      `http://localhost:8080/api/session/user/${id}/valid`,
+      `http://localhost:8080/api/session/user/${id}/status`,
       {
         method: "GET",
         headers: {
@@ -32,7 +32,7 @@ export async function checkSession({
     throw new Error(`Unexpected response status: ${res.status}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.error("Error checking session:", error);
+    console.error("Error checking online status:", error);
     return {
       isValid: false,
       error: error.message || "Failed to connect to server. Please try again.",
