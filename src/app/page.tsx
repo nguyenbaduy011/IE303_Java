@@ -81,7 +81,11 @@ export default function WelcomePage() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      <StarfieldBackground theme={(resolvedTheme === "dark" ? "dark" : "light") as "light" | "dark"} />
+      <StarfieldBackground
+        theme={
+          (resolvedTheme === "dark" ? "dark" : "light") as "light" | "dark"
+        }
+      />
 
       {/* Blur background */}
       <div
@@ -146,7 +150,7 @@ export default function WelcomePage() {
             className={`px-8 py-4 text-xl font-bold rounded-lg shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 animate-fade-in ${
               isDark
                 ? "bg-[#024023] text-[#ffffff] hover:bg-[#01331b] dark:bg-[#156b45] dark:text-[#ffffff] dark:hover:bg-[#1a6530]"
-                : "bg-[#e6f3ef] text-[#024023] hover:bg-[#b8d4cb] hover:text-[#01331b]"
+                : "bg-[#e6f3ef] text-[#024023] hover:bg-[#e6f3ef] hover:text-[#01331b]"
             }`}
             style={{ animationDelay: "0.4s" }}
           >
