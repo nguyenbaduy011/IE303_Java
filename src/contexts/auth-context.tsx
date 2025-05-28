@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         deleteCookie("user");
         setUser(null);
         setIsAuthenticated(false);
-        router.push("/login");
+        router.push("/");
       } finally {
         setLoading(false);
       }
