@@ -31,7 +31,9 @@ export default function LoginPage() {
 
   // Kiểm tra session và chuyển hướng nếu đã đăng nhập
   useEffect(() => {
-    if (user) {
+    if (user && user.passwordChangeRequired) {
+      router.push("/change-password");
+    } else if (user) {
       router.push("/dashboard");
     }
   }, [user, router]);
