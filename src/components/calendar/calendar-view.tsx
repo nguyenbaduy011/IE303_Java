@@ -35,7 +35,7 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
     const loadTasks = async () => {
       if (!user) return router.push("/login");
       try {
-        const tasks = await fetchTasks(user.id, user.sessionId);
+        const tasks = await fetchTasks(user.id);
         const mappedEvents: CalendarEvent[] = tasks
           .filter((task) => task.assigned_to === user.id)
           .map((task, index) => {
