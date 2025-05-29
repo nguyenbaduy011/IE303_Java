@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  BarChart,
   Bell,
+  BookUser,
   Calendar,
   CheckSquare,
   FileText,
@@ -70,9 +70,9 @@ export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
       icon: <Bell className="h-5 w-5" />,
     },
     {
-      title: "Reports",
-      href: "/reports",
-      icon: <BarChart className="h-5 w-5" />,
+      title: "Directory",
+      href: "/directory",
+      icon: <BookUser className="h-5 w-5" />,
     },
     {
       title: "Documents",
