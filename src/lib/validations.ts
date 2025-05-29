@@ -50,17 +50,42 @@ export const profileFormSchema = z.object({
 export type ProfileForm = z.infer<typeof profileFormSchema>;
 
 // Schema for password form validation
-export const changePasswordFormSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z
-      .string()
-      .min(8, "New password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your new password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+export const PasswordSchema = z.string().superRefine((val, ctx) => {
+  if (val.length < 8) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must be at least 8 characters",
+      path: ["length"],
+    });
+  }
+  if (!/[A-Z]/.test(val)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must contain at least one uppercase letter",
+      path: ["uppercase"],
+    });
+  }
+  if (!/[a-z]/.test(val)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must contain at least one lowercase letter",
+      path: ["lowercase"],
+    });
+  }
+  if (!/[0-9]/.test(val)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must contain at least one number",
+      path: ["number"],
+    });
+  }
+  if (!/[^A-Za-z0-9]/.test(val)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password must contain at least one special character",
+      path: ["special"],
+    });
+  }
+});
 
-  export type ChangePasswordForm = z.infer<typeof changePasswordFormSchema>;
+  export type PasswordForm = z.infer<typeof PasswordSchema>;
