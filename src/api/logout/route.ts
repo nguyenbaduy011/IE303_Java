@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Hàm gọi API logout và xóa cookie ở client-side
 export async function logoutUser(): Promise<{
   success: boolean;
   error?: string;
@@ -5,19 +7,28 @@ export async function logoutUser(): Promise<{
   try {
     const res = await fetch("http://localhost:8080/api/auth/logout", {
       method: "POST",
-      credentials: "include",
+      credentials: "include", // Đảm bảo gửi cookie đến server
     });
 
-    if (res.ok) {
-      return { success: true };
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(
+        errorData.error || `Logout failed with status ${res.status}`
+      );
     }
 
-    throw new Error(`Logout failed with status ${res.status}`);
+    // Xóa cookie user, session, SOCIUS_SESSION, và XSRF-TOKEN
+    document.cookie = `user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+    document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+    document.cookie = `SOCIUS_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+    document.cookie = `XSRF-TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+
+    return { success: true };
   } catch (error: any) {
-    console.error("Error during logout:", error);
+    console.error("Failed when logout:", error);
     return {
       success: false,
-      error: error.message || "Failed to connect to server",
+      error: error.message || "Can not connect to server",
     };
   }
 }
