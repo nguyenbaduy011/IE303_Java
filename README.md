@@ -5,10 +5,7 @@
   </a>
 </p>
 
-<!-- Logo Socius -->
-<p align="center" style="background-color:white; display:inline-block; padding:10px; border-radius:8px;">
-  <img src="https://raw.githubusercontent.com/nguyenbaduy011/IE303_Java/blob/dev/public/socius.svg" alt="Socius Logo" width="200" />
-</p>
+![Image](https://github.com/user-attachments/assets/17ac92f1-f23f-4b86-bf29-1e983c8f3d73)
 
 <!-- Title -->
 <h1 align="center"><b>ĐỒ ÁN CUỐI KỲ - CÔNG NGHỆ JAVA</b></h1>
