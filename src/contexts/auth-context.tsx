@@ -1,3 +1,4 @@
+// contexts/auth-context.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Hàm lấy giá trị cookie
   const getCookie = (name: string): string | null => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -73,37 +75,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null;
   };
 
-  const deleteCookie = (name: string) => {
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
-  };
-
+  // Hàm logout: gọi API và xóa sessionStorage
   const logout = async () => {
     try {
-      const result = await logoutUser();
+      const result = await logoutUser(); // logoutUser đã xóa cookie
       if (!result.success) {
-        console.warn("Logout failed:", result.error);
+        console.warn("Logout thất bại:", result.error);
       }
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Lỗi khi logout:", error);
     } finally {
-      deleteCookie("user");
+      sessionStorage.removeItem("user"); // Xóa sessionStorage
       setUser(null);
       setIsAuthenticated(false);
       router.push("/login");
     }
   };
 
+  // Khôi phục session khi load trang
   useEffect(() => {
     const restoreSession = async () => {
       try {
         const userCookie = getCookie("user");
         if (!userCookie) {
-          throw new Error("No user cookie found");
+          throw new Error("Không tìm thấy cookie user");
         }
 
         const parsedUser: UserType = JSON.parse(decodeURIComponent(userCookie));
         if (!parsedUser.id || !parsedUser.email || !parsedUser.sessionId) {
-          throw new Error("Invalid user data in cookie");
+          throw new Error("Dữ liệu user trong cookie không hợp lệ");
         }
 
         const result = await checkSession({ id: parsedUser.id });
@@ -111,14 +111,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(parsedUser);
           setIsAuthenticated(true);
         } else {
-          throw new Error(result.error || "Session not valid");
+          throw new Error(result.error || "Session không hợp lệ");
         }
       } catch (error) {
-        console.error("Error restoring session:", error);
-        deleteCookie("user");
+        console.error("Lỗi khi khôi phục session:", error);
+        // Xóa cookie nếu session không hợp lệ
+        document.cookie = `user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+        document.cookie = `session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+        document.cookie = `SOCIUS_SESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+        document.cookie = `XSRF-TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
+        sessionStorage.removeItem("user");
         setUser(null);
         setIsAuthenticated(false);
-        router.push("/");
+        router.push("/login");
       } finally {
         setLoading(false);
       }
