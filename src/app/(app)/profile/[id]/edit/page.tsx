@@ -17,7 +17,8 @@ import {
   Save,
   X,
   AlertCircle,
-  Shield,
+  Check,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,19 +45,28 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
 import LoadingButton from "@/components/ui/loading-button";
 import { useAuth } from "@/contexts/auth-context";
 import {
   profileFormSchema,
-  changePasswordFormSchema,
   ProfileForm,
-  ChangePasswordForm,
+  PasswordSchema,
 } from "@/lib/validations";
 import { toast } from "sonner";
+import { z } from "zod";
+import { changePassword } from "@/api/change-password/route";
+
+interface ChangePasswordResponse {
+  success: boolean;
+  error?: string;
+  status?: number;
+}
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -77,6 +87,14 @@ export default function EditProfilePage() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false,
+  });
 
   // Check if user is authenticated and authorized
   useEffect(() => {
@@ -113,9 +131,23 @@ export default function EditProfilePage() {
     mode: "onChange",
   });
 
+  // Define password form schema
+  const passwordFormSchema = z
+    .object({
+      currentPassword: z.string().min(1, "Current password is required"),
+      newPassword: PasswordSchema,
+      confirmPassword: z.string().min(1, "Please confirm your new password"),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    });
+
+  type ChangePasswordForm = z.infer<typeof passwordFormSchema>;
+
   // Initialize password form
   const passwordForm = useForm<ChangePasswordForm>({
-    resolver: zodResolver(changePasswordFormSchema),
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -123,6 +155,58 @@ export default function EditProfilePage() {
     },
     mode: "onChange",
   });
+
+  // Update password strength and requirements
+  const watchedNewPassword = passwordForm.watch("newPassword");
+  useEffect(() => {
+    const newPassword = passwordForm.getValues("newPassword");
+    const result = PasswordSchema.safeParse(newPassword);
+    const requirements = {
+      length: false,
+      uppercase: false,
+      lowercase: false,
+      number: false,
+      special: false,
+    };
+
+    if (result.success) {
+      requirements.length = true;
+      requirements.uppercase = true;
+      requirements.lowercase = true;
+      requirements.number = true;
+      requirements.special = true;
+    } else {
+      result.error.issues.forEach((issue) => {
+        if (issue.path.includes("length")) requirements.length = false;
+        if (issue.path.includes("uppercase")) requirements.uppercase = false;
+        if (issue.path.includes("lowercase")) requirements.lowercase = false;
+        if (issue.path.includes("number")) requirements.number = false;
+        if (issue.path.includes("special")) requirements.special = false;
+      });
+
+      if (newPassword.length >= 8) requirements.length = true;
+      if (/[A-Z]/.test(newPassword)) requirements.uppercase = true;
+      if (/[a-z]/.test(newPassword)) requirements.lowercase = true;
+      if (/[0-9]/.test(newPassword)) requirements.number = true;
+      if (/[^A-Za-z0-9]/.test(newPassword)) requirements.special = true;
+    }
+
+    const strength =
+      (requirements.length ? 20 : 0) +
+      (requirements.uppercase ? 20 : 0) +
+      (requirements.lowercase ? 20 : 0) +
+      (requirements.number ? 20 : 0) +
+      (requirements.special ? 20 : 0);
+
+    setPasswordRequirements(requirements);
+    setPasswordStrength(strength);
+  }, [passwordForm, watchedNewPassword]);
+
+  const getStrengthColor = () => {
+    if (passwordStrength < 40) return "bg-destructive";
+    if (passwordStrength < 80) return "bg-amber-500";
+    return "bg-green-500";
+  };
 
   if (!user) {
     return null;
@@ -143,6 +227,7 @@ export default function EditProfilePage() {
           ...prev,
           error: "User not found. Please log in again.",
         }));
+        toast.error("User not found. Please log in again.");
         setIsLoading(false);
         return;
       }
@@ -175,6 +260,7 @@ export default function EditProfilePage() {
         ...prev,
         success: "Profile updated successfully!",
       }));
+      toast.success("Profile updated successfully!");
       setTimeout(() => {
         setFormState((prev) => ({ ...prev, success: null }));
         router.push(`/profile/${userId}`);
@@ -184,6 +270,7 @@ export default function EditProfilePage() {
         ...prev,
         error: err.message || "Failed to update profile. Please try again.",
       }));
+      toast.error(err.message || "Failed to update profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -199,27 +286,29 @@ export default function EditProfilePage() {
       success: null,
     }));
 
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/users/change-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            currentPassword: data.currentPassword,
-            newPassword: data.newPassword,
-          }),
-        }
-      );
+    if (passwordStrength < 60) {
+      setFormState((prev) => ({
+        ...prev,
+        passwordError: "Please create a stronger password",
+      }));
+      toast.error("Please create a stronger password");
+      setIsLoading(false);
+      return;
+    }
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
+    try {
+      const res: ChangePasswordResponse = await changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      });
+
+      if (!res.success) {
+        if (res.status === 401 || res.status === 403) {
           await logout();
           return;
         }
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to change password");
+        throw new Error(res.error || "Failed to change password");
       }
 
       setFormState((prev) => ({
@@ -229,6 +318,14 @@ export default function EditProfilePage() {
       }));
       toast.success("Password changed successfully!");
       passwordForm.reset();
+      setPasswordStrength(0);
+      setPasswordRequirements({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        special: false,
+      });
       setTimeout(() => {
         setFormState((prev) => ({
           ...prev,
@@ -242,6 +339,9 @@ export default function EditProfilePage() {
         passwordError:
           err.message || "Failed to change password. Please try again.",
       }));
+      toast.error(
+        err.message || "Failed to change password. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -250,7 +350,6 @@ export default function EditProfilePage() {
   // Handle image upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    console.log(file);
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image size must be less than 5MB");
@@ -501,6 +600,27 @@ export default function EditProfilePage() {
                         )}
                       />
 
+                      <FormField
+                        control={profileForm.control}
+                        name="bio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bio</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Textarea
+                                  className="min-h-[80px] pl-10"
+                                  placeholder="Tell us about yourself"
+                                  {...field}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <FormField
                           control={profileForm.control}
@@ -567,7 +687,6 @@ export default function EditProfilePage() {
                           )}
                         />
                       </div>
-
                     </CardContent>
                   </Card>
 
@@ -628,7 +747,7 @@ export default function EditProfilePage() {
                                 <FormLabel>Current Password</FormLabel>
                                 <FormControl>
                                   <div className="relative">
-                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
                                       className="pl-10"
                                       type="password"
@@ -649,7 +768,7 @@ export default function EditProfilePage() {
                                 <FormLabel>New Password</FormLabel>
                                 <FormControl>
                                   <div className="relative">
-                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
                                       className="pl-10"
                                       type="password"
@@ -662,6 +781,102 @@ export default function EditProfilePage() {
                               </FormItem>
                             )}
                           />
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium">
+                              Password Strength
+                            </div>
+                            <Progress
+                              value={passwordStrength}
+                              className={`h-2 ${getStrengthColor()}`}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="text-sm font-medium">
+                              Requirements
+                            </div>
+                            <ul className="space-y-1 text-sm">
+                              <li className="flex items-center gap-2">
+                                {passwordRequirements.length ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <X className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span
+                                  className={
+                                    passwordRequirements.length
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  At least 8 characters
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                {passwordRequirements.uppercase ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <X className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span
+                                  className={
+                                    passwordRequirements.uppercase
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  At least one uppercase letter
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                {passwordRequirements.lowercase ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <X className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span
+                                  className={
+                                    passwordRequirements.lowercase
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  At least one lowercase letter
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                {passwordRequirements.number ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <X className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span
+                                  className={
+                                    passwordRequirements.number
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  At least one number
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-2">
+                                {passwordRequirements.special ? (
+                                  <Check className="h-4 w-4 text-green-500" />
+                                ) : (
+                                  <X className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <span
+                                  className={
+                                    passwordRequirements.special
+                                      ? "text-foreground"
+                                      : "text-muted-foreground"
+                                  }
+                                >
+                                  At least one special character
+                                </span>
+                              </li>
+                            </ul>
+                          </div>
                           <FormField
                             control={passwordForm.control}
                             name="confirmPassword"
@@ -670,7 +885,7 @@ export default function EditProfilePage() {
                                 <FormLabel>Confirm New Password</FormLabel>
                                 <FormControl>
                                   <div className="relative">
-                                    <Shield className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
                                       className="pl-10"
                                       type="password"
@@ -683,26 +898,34 @@ export default function EditProfilePage() {
                               </FormItem>
                             )}
                           />
-                          <LoadingButton
-                            type="submit"
-                            disabled={isLoading}
-                            loading={isLoading}
-                          >
-                            {isLoading ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Changing Password...
-                              </>
-                            ) : (
-                              <>
-                                <Shield className="mr-2 h-4 w-4" />
-                                Change Password
-                              </>
-                            )}
-                          </LoadingButton>
                         </div>
                       </div>
                     </CardContent>
+                    <CardFooter className="flex flex-col gap-2 pt-6">
+                      <LoadingButton
+                        type="submit"
+                        disabled={isLoading}
+                        loading={isLoading}
+                        className="w-full"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Changing Password...
+                          </>
+                        ) : (
+                          "Change Password"
+                        )}
+                      </LoadingButton>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => router.push(`/profile/${userId}`)}
+                        disabled={isLoading}
+                      >
+                        Cancel
+                      </Button>
+                    </CardFooter>
                   </Card>
                 </form>
               </Form>
