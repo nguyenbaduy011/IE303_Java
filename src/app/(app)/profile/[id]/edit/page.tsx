@@ -550,6 +550,7 @@ export default function EditProfilePage() {
                                   className="pl-10"
                                   placeholder="john.doe@example.com"
                                   {...field}
+                                  disabled
                                 />
                               </div>
                             </FormControl>
