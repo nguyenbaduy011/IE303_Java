@@ -5,8 +5,6 @@
   </a>
 </p>
 
-![Image](https://github.com/user-attachments/assets/17ac92f1-f23f-4b86-bf29-1e983c8f3d73)
-
 <!-- Title -->
 <h1 align="center"><b>ĐỒ ÁN CUỐI KỲ - CÔNG NGHỆ JAVA</b></h1>
 
@@ -38,6 +36,10 @@
 ## 📝 Đề tài đồ án
 
 **Tên đề tài**: Xây dựng website quản lý nhân sự kết hợp mạng xã hội nội bộ – **Socius**
+
+<p align="center" style="background-color: white; display: inline-block; padding: 10px; border-radius: 8px;">
+  <img src="https://github.com/user-attachments/assets/17ac92f1-f23f-4b86-bf29-1e983c8f3d73" alt="Socius Logo" width="200" />
+</p>
 
 **Mục tiêu**:  
 Socius là một hệ thống giúp doanh nghiệp quản lý thông tin nhân sự hiệu quả, tăng cường kết nối giữa các nhân viên, và hỗ trợ công việc nội bộ thông qua các công cụ giao tiếp, quản lý task, và đặc biệt là **Assistant AI** – hỗ trợ thông minh dành cho cả **admin** (trong thao tác quản lý) và **nhân viên** (trong thao tác tìm kiếm, truy vấn dữ liệu).
