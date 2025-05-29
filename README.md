@@ -7,7 +7,7 @@
 
 <!-- Logo Socius -->
 <p align="center" style="background-color:white; display:inline-block; padding:10px; border-radius:8px;">
-  <img src="https://raw.githubusercontent.com/nguyenbaduy011/IE303_Java/main/public/socius.svg" alt="Socius Logo" width="200" />
+  <img src="https://raw.githubusercontent.com/nguyenbaduy011/IE303_Java/main/public/socius.png" alt="Socius Logo" width="200" />
 </p>
 
 <!-- Title -->
