@@ -462,7 +462,7 @@ export default function TasksPage() {
         return {
           variant: "secondary" as const,
           className: "bg-purple-500/10 text-orange-500 border-purple-500/20",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          icon: <AlertCircle className="h-3 w-3 mr-1" />,
           label: "Pending Review",
         };
       default:
