@@ -41,11 +41,13 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
       try {
         const tasks = await fetchTasks(user.id);
         console.log("Tasks loaded:", tasks); // Ghi log để debug tasks
-        const mappedEvents: CalendarEvent[] = tasks
+        const mappedEvents: CalendarEvent[] = tasks.tasks
           .map((task, index) => {
             const start = new Date(task.deadline);
             if (isNaN(start.getTime())) {
-              console.warn(`Invalid deadline for task ${task.id}: ${task.deadline}`);
+              console.warn(
+                `Invalid deadline for task ${task.id}: ${task.deadline}`
+              );
               return null;
             }
             // Chuẩn hóa thời gian bắt đầu là 8:00 sáng
@@ -70,7 +72,9 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
         setError(null);
       } catch (error) {
         console.error("Error fetching tasks:", error);
-        setError(error instanceof Error ? error.message : "Failed to load tasks");
+        setError(
+          error instanceof Error ? error.message : "Failed to load tasks"
+        );
         toast.error("Failed to load tasks. Please try again.");
         setEvents([]);
       }
@@ -82,8 +86,16 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
   useEffect(() => {
     const days: Date[] = [];
     if (view === "month") {
-      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const firstDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      const lastDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0
+      );
       const firstDayOfWeek = firstDay.getDay();
 
       for (let i = firstDayOfWeek; i > 0; i--) {
@@ -93,7 +105,9 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
       }
 
       for (let i = 1; i <= lastDay.getDate(); i++) {
-        days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+        days.push(
+          new Date(currentDate.getFullYear(), currentDate.getMonth(), i)
+        );
       }
 
       const remainingDays = 42 - days.length;
@@ -169,14 +183,16 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
           </div>
         )}
         <div className="grid grid-cols-7 text-sm">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
-            <div
-              key={index}
-              className="p-2 text-center font-medium border-b text-foreground"
-            >
-              {day}
-            </div>
-          ))}
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+            (day, index) => (
+              <div
+                key={index}
+                className="p-2 text-center font-medium border-b text-foreground"
+              >
+                {day}
+              </div>
+            )
+          )}
           {calendarDays.map((day, index) => {
             const dayEvents = getEventsForDay(day);
             return (
@@ -254,7 +270,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
               )}
             >
               <div className="text-xs text-muted-foreground">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day.getDay()]}
+                {
+                  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+                    day.getDay()
+                  ]
+                }
               </div>
               <div
                 className={cn(
@@ -285,12 +305,16 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
               {hours.map((hour, hourIndex) => (
                 <div
                   key={hourIndex}
-                  className={cn("h-16 border-b", isToday(day) && "bg-primary-50/50")}
+                  className={cn(
+                    "h-16 border-b",
+                    isToday(day) && "bg-primary-50/50"
+                  )}
                 >
                   {getEventsForDay(day).map((event, eventIndex) => {
                     // Hiển thị tất cả sự kiện của ngày, đặt ở đầu khung giờ nếu cần
                     const durationHours =
-                      (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+                      (event.end.getTime() - event.start.getTime()) /
+                      (1000 * 60 * 60);
                     const heightPercentage = Math.min(durationHours * 100, 100);
                     return (
                       <div
@@ -302,7 +326,9 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                           maxHeight: `${durationHours * 64}px`,
                         }}
                       >
-                        <div className="font-medium truncate">{event.title}</div>
+                        <div className="font-medium truncate">
+                          {event.title}
+                        </div>
                         <div className="flex items-center gap-1 text-[10px]">
                           <Clock className="h-2.5 w-2.5" />
                           <span>
@@ -346,9 +372,17 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
             )}
           >
             <div className="text-xs text-muted-foreground">
-              {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][
-                currentDate.getDay()
-              ]}
+              {
+                [
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                ][currentDate.getDay()]
+              }
             </div>
             <div
               className={cn(
@@ -385,7 +419,8 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                 {getEventsForDay(currentDate).map((event, eventIndex) => {
                   // Hiển thị tất cả sự kiện của ngày
                   const durationHours =
-                    (event.end.getTime() - event.start.getTime()) / (1000 * 60 * 60);
+                    (event.end.getTime() - event.start.getTime()) /
+                    (1000 * 60 * 60);
                   const heightPercentage = Math.min(durationHours * 100, 100);
                   return (
                     <div
@@ -405,7 +440,9 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                         </span>
                       </div>
                       {event.description && (
-                        <div className="text-[10px] mt-1 truncate">{event.description}</div>
+                        <div className="text-[10px] mt-1 truncate">
+                          {event.description}
+                        </div>
                       )}
                     </div>
                   );
