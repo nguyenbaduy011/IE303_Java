@@ -10,16 +10,13 @@ interface UsersType {
 
 export async function getOnlineUsers(): Promise<UsersType[]> {
   try {
-    const res = await fetch(
-      "http://localhost:8080/api/user-online/list-except-self",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      }
-    );
+    const res = await fetch("http://localhost:8080/api/user-online/list", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
 
     if (!res.ok) {
       if (res.status === 401) {
