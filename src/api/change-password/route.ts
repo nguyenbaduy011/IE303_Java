@@ -1,3 +1,5 @@
+import { getCookie } from "@/utils/cookie";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function changePassword({
   currentPassword,
@@ -9,18 +11,10 @@ export async function changePassword({
   confirmPassword: string;
 }) {
   try {
-    const getCookie = (name: string): string | null => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
-      return null;
-    };
     const csrfToken = getCookie("XSRF-TOKEN");
     if (!csrfToken) {
       throw new Error("CSRF token not found in cookies");
     }
-
-    console.log("CSRF Token:", csrfToken);
 
     const res = await fetch("http://localhost:8080/api/auth/change-password", {
       method: "POST",
