@@ -48,7 +48,7 @@ export async function getTeamMembers(teamId: string): Promise<MemberType[]> {
       lastName: member.lastName || "Unknown",
     }));
   } catch (error) {
-    console.error("Lỗi khi lấy thành viên nhóm:", error);
+    console.error("Error when fetch team's members:", error);
     return [];
   }
 }
