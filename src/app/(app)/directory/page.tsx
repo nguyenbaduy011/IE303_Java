@@ -40,7 +40,7 @@ export default function DirectoryPage() {
         const data: EmployeeType[] = await fetchEmployees();
         // Ánh xạ dữ liệu từ API sang định dạng hiển thị
         const mappedEmployees: DisplayEmployee[] = data.map((employee) => ({
-          id: employee.id,
+          id: employee.user.id,
           name: getFullName(employee.user.firstName, employee.user.lastName),
           position: employee.position.name,
           department: employee.department.name,
