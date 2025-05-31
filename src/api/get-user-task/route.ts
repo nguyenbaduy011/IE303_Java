@@ -6,7 +6,7 @@ export type TaskType = {
   name: string;
   description: string;
   deadline: string;
-  status: "pending" | "in_progress" | "completed" | string;
+  status: "pending" | "in_progress" | "completed" | "failed" | string;
   assignedTo: {
     id: string;
     firstName: string;
