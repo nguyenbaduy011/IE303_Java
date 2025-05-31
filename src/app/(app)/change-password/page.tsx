@@ -4,7 +4,7 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Check, Lock, Shield, X } from "lucide-react";
+import { Check, Eye, EyeOff, Lock, Shield, X } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,9 @@ export default function ChangePasswordPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword1, setShowPassword1] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
+
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     uppercase: false,
@@ -190,12 +193,24 @@ export default function ChangePasswordPage() {
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="new-password"
-                  type="password"
+                  type={showPassword1 ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pl-10"
                   required
                 />
+                <Button
+                  type="button"
+                  variant={null}
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
+                  onClick={() => setShowPassword1(!showPassword1)}
+                >
+                  {showPassword1 ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
             <div className="space-y-1">
@@ -296,12 +311,24 @@ export default function ChangePasswordPage() {
                 <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="confirm-password"
-                  type="password"
+                  type={showPassword2 ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10"
                   required
                 />
+                <Button
+                  type="button"
+                  variant={null}
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent cursor-pointer"
+                  onClick={() => setShowPassword2(!showPassword2)}
+                >
+                  {showPassword2 ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
               {confirmPassword && newPassword !== confirmPassword && (
                 <p className="text-sm text-destructive">

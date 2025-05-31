@@ -1,20 +1,25 @@
-import { TaskType } from "@/types/types";
 import { AlertCircle, CheckCircle2, CircleEllipsis, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { TaskType } from "@/api/get-user-task/route";
 
 interface TaskListProps {
   tasks: TaskType[];
 }
 
 export function TaskList({ tasks }: TaskListProps) {
-  const sortedTasks = [...tasks].sort(
-    (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-  );
+  console.log("TaskList - Received tasks:", tasks); // Debug tasks
 
-  // Hàm lấy icon của tasks
+  const sortedTasks = [...tasks]
+    .filter(
+      (task) => task.deadline && !isNaN(new Date(task.deadline).getTime())
+    )
+    .sort(
+      (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+    );
+
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "completed":
         return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case "in_progress":
@@ -27,9 +32,8 @@ export function TaskList({ tasks }: TaskListProps) {
     }
   };
 
-  //Hàm lấy variant của tasks
   const getStatusVariant = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "completed":
         return "default";
       case "in_progress":
@@ -57,16 +61,20 @@ export function TaskList({ tasks }: TaskListProps) {
                 <span className="font-medium">{task.name}</span>
               </div>
               <Badge variant={getStatusVariant(task.status)}>
-                {task.status.replace("_", " ").charAt(0).toUpperCase() +
-                  task.status.replace("_", " ").slice(1)}
+                {task.status
+                  ?.replace("_", " ")
+                  .replace(/\b\w/g, (c) => c.toUpperCase()) || "Pending"}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground line-clamp-1">
-              {task.description}
+              {task.description || "No description provided"}
             </p>
             <div className="flex items-center justify-between text-xs">
               <span>
-                Deadline: {new Date(task.deadline).toLocaleDateString()}
+                Deadline:{" "}
+                {task.deadline
+                  ? new Date(task.deadline).toLocaleDateString()
+                  : "N/A"}
               </span>
             </div>
             {index < sortedTasks.length - 1 && <Separator className="my-4" />}

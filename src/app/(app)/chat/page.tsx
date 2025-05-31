@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
@@ -8,18 +9,24 @@ import { Contact, ContactCard } from "@/components/chat/contact-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useStomp } from "@/hooks/use-stomp";
 import axios from "axios";
 import { useAuth } from "@/contexts/auth-context";
 
 export default function ChatPage() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    logout,
+    chatMessages,
+    sendChatMessage,
+    isConnected,
+    wsError,
+  } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [searchResults, setSearchResults] = useState<Message[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -29,37 +36,12 @@ export default function ChatPage() {
 
   const username = user?.email;
 
-  const { sendMessage, isConnected } = useStomp(
-    (msg: Message) => {
-      setMessages((prev) => {
-        if (!prev.some((m) => m.id === msg.id)) {
-          return [...prev, msg];
-        }
-        return prev;
-      });
-      if (
-        msg.sender === "contact" &&
-        selectedContact?.id === msg.conversationId
-      ) {
-        axios
-          .post(
-            "http://localhost:8080/api/messages/read",
-            { conversationId: msg.conversationId, messageIds: [msg.id] },
-            { headers: { Authorization: `Bearer ${user?.sessionId}` } }
-          )
-          .catch((err) => console.error("Failed to mark as read:", err));
-      }
-    },
-    user?.sessionId,
-    username
-  );
-
-  // // Redirect to login if not authenticated
-  // useEffect(() => {
-  //   if (!isAuthenticated || !username) {
-  //     window.location.href = "/login";
-  //   }
-  // }, [isAuthenticated, username]);
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !username) {
+      window.location.href = "/login";
+    }
+  }, [isAuthenticated, username]);
 
   // Setup axios interceptor for 401 errors
   useEffect(() => {
@@ -87,14 +69,23 @@ export default function ChatPage() {
           params: { page: pageNum, size: 20 },
         }
       );
+      const newMessages = res.data.content.map((msg: any) => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.createdAt || msg.timestamp,
+        sender: msg.senderId === user.id ? "user" : "contact",
+        read: msg.read || false,
+        conversationId: msg.conversationId || selectedContact.id,
+        senderName: msg.senderName,
+      }));
       setMessages((prev) =>
-        pageNum === 0 ? res.data.content : [...res.data.content, ...prev]
+        pageNum === 0 ? newMessages : [...newMessages, ...prev]
       );
       setHasMore(!res.data.last);
       if (res.data.content.length > 0 && pageNum === 0) {
         const unreadMessageIds = res.data.content
-          .filter((msg: Message) => !msg.read && msg.sender === "contact")
-          .map((msg: Message) => msg.id);
+          .filter((msg: any) => !msg.read && msg.senderId !== user.id)
+          .map((msg: any) => msg.id);
         if (unreadMessageIds.length > 0) {
           await axios.post(
             "http://localhost:8080/api/messages/read",
@@ -112,6 +103,43 @@ export default function ChatPage() {
       setIsLoading(false);
     }
   };
+
+  // Local state for messages to avoid direct manipulation of context
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Sync messages from context
+  useEffect(() => {
+    if (selectedContact) {
+      const conversationMessages = chatMessages.filter(
+        (msg) => msg.conversationId === selectedContact.id
+      );
+      setMessages((prev) => {
+        const updatedMessages = [...prev];
+        conversationMessages.forEach((newMsg) => {
+          if (!updatedMessages.some((m) => m.id === newMsg.id)) {
+            updatedMessages.push(newMsg);
+          }
+        });
+        return updatedMessages;
+      });
+      // Mark messages as read if from contact
+      const unreadMessages = conversationMessages
+        .filter((msg) => !msg.read && msg.sender === "contact")
+        .map((msg) => msg.id);
+      if (unreadMessages.length > 0 && user) {
+        axios
+          .post(
+            "http://localhost:8080/api/messages/read",
+            {
+              conversationId: selectedContact.id,
+              messageIds: unreadMessages,
+            },
+            { headers: { Authorization: `Bearer ${user.sessionId}` } }
+          )
+          .catch((err) => console.error("Failed to mark as read:", err));
+      }
+    }
+  }, [chatMessages, selectedContact, user]);
 
   // Fetch contacts
   useEffect(() => {
@@ -135,6 +163,7 @@ export default function ChatPage() {
   // Fetch messages for selected contact
   useEffect(() => {
     setPage(0);
+    setMessages([]);
     loadMessages(0);
     setSearchResults([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,6 +187,7 @@ export default function ChatPage() {
       sender: "user",
       read: false,
       conversationId: selectedContact.id,
+      senderName: `${user.first_name} ${user.last_name}`,
     };
 
     setMessages((prev) => [...prev, newMsg]);
@@ -172,23 +202,24 @@ export default function ChatPage() {
         formData.append("type", getMessageType(file));
         formData.append("file", file);
 
-        const res = await axios.post("/api/messages/file", formData, {
-          headers: { Authorization: `Bearer ${user.sessionId}` },
-        });
-        sendMessage(res.data);
+        const res = await axios.post(
+          "http://localhost:8080/api/messages/file",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${user.sessionId}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        sendChatMessage(selectedContact.id, res.data.content);
         setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? res.data : m))
+          prev.map((m) =>
+            m.id === tempId ? { ...res.data, sender: "user" } : m
+          )
         );
       } else {
-        sendMessage({
-          destination: `http://localhost:8080/app/chat/${selectedContact.id}`,
-          body: JSON.stringify({
-            content: newMessage,
-            sender: username,
-            conversationId: selectedContact.id,
-            tempId,
-          }),
-        });
+        sendChatMessage(selectedContact.id, newMessage);
         const res = await axios.post(
           "http://localhost:8080/api/messages",
           {
@@ -199,7 +230,9 @@ export default function ChatPage() {
           { headers: { Authorization: `Bearer ${user.sessionId}` } }
         );
         setMessages((prev) =>
-          prev.map((m) => (m.id === tempId ? res.data : m))
+          prev.map((m) =>
+            m.id === tempId ? { ...res.data, sender: "user" } : m
+          )
         );
       }
     } catch (err) {
@@ -209,11 +242,11 @@ export default function ChatPage() {
   };
 
   // Handle file upload
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedContact || !user) return;
-
-    setFile(file);
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
   };
 
   // Helper function to determine message type
@@ -317,8 +350,8 @@ export default function ChatPage() {
             >
               {isLoading && page === 0 ? (
                 <div>Loading messages...</div>
-              ) : error ? (
-                <div className="text-red-500">{error}</div>
+              ) : error || wsError ? (
+                <div className="text-red-500">{error || wsError}</div>
               ) : (
                 <div className="space-y-4">
                   {messages.map((msg) => (
@@ -420,7 +453,7 @@ export default function ChatPage() {
               )}
               {!isConnected && (
                 <div className="text-sm text-red-500 mt-2">
-                  Connecting to WebSocket...
+                  {wsError || "Connecting to WebSocket..."}
                 </div>
               )}
             </div>

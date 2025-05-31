@@ -1,12 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import {
-  Calendar,
-  CheckCircle,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Calendar, CheckCircle, TrendingUp, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,34 +16,32 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect, useState } from "react";
-import { fetchTasks } from "@/api/get-user-task/route";
-import { getOnlineUsers } from "@/api/online-users/route";
+import { fetchTasks, TaskType } from "@/api/get-user-task/route";
 import Link from "next/link";
+import { getOnlineUsers } from "@/api/online-users/route";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tasks, setTasks] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [activeEmployees, setActiveEmployees] = useState(0);
+  const [activeUsers, setActiveUsers] = useState<number>(0);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setError("User not authenticated. Please log in.");
+      return;
+    }
 
     const fetchData = async () => {
       try {
         // Gọi fetchTasks
         const tasksData = await fetchTasks(user.id);
-        setTasks(tasksData);
+        setTasks(tasksData.tasks);
+        console.log("task" + tasksData);
 
         // Gọi getOnlineUsers
-        const onlineUsersResponse = await getOnlineUsers();
-        const onlineUsersData = await onlineUsersResponse.json();
-        if (onlineUsersResponse.ok) {
-          setActiveEmployees(onlineUsersData.content?.length || 0);
-        } else {
-          setError(onlineUsersData.error || "Failed to fetch online users");
-        }
+        const onlineUsers = await getOnlineUsers();
+        setActiveUsers(onlineUsers.length);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Internal error");
       }
@@ -56,7 +50,11 @@ export default function DashboardPage() {
     fetchData();
   }, [user?.id]);
 
-const performanceRate = tasks.filter((task) => task.status === "completed").length / tasks.length;
+  const performanceRate =
+    tasks.length > 0
+      ? tasks.filter((task) => task.status === "completed").length /
+        tasks.length
+      : 0; // Tránh chia cho 0
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -92,6 +90,9 @@ const performanceRate = tasks.filter((task) => task.status === "completed").leng
               </Button>
             </div>
 
+            {/* Hiển thị lỗi nếu có */}
+            {error && <div className="text-red-500 p-4">Error: {error}</div>}
+
             {/* Quick Stats */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -109,7 +110,7 @@ const performanceRate = tasks.filter((task) => task.status === "completed").leng
                   </p>
                   <Progress
                     className="mt-2 h-1"
-                    value={performanceRate ? performanceRate * 100 : 0}
+                    value={performanceRate * 100}
                   />
                 </CardContent>
               </Card>
@@ -123,15 +124,12 @@ const performanceRate = tasks.filter((task) => task.status === "completed").leng
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {performanceRate ? performanceRate * 100 : "N/A"}
+                    {performanceRate
+                      ? (performanceRate * 100).toFixed(2)
+                      : "N/A"}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Latest review
-                  </p>
-                  <Progress
-                    className="mt-2 h-1"
-                    value={performanceRate ? performanceRate * 100 : 0}
-                  />
+                  <p className="text-xs text-muted-foreground">Latest review</p>
+                  <Progress className="mt-2 h-1" value={performanceRate} />
                 </CardContent>
               </Card>
 
@@ -143,8 +141,9 @@ const performanceRate = tasks.filter((task) => task.status === "completed").leng
                   <Users className="h-4 w-4 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{activeEmployees}</div>
-                  <Progress className="mt-2 h-1" value={95} />
+                  <div className="text-2xl font-bold">{activeUsers}</div>
+                  <p className="text-xs text-muted-foreground">Active users</p>
+                  <Progress className="mt-2 h-1" value={activeUsers * 100} />
                 </CardContent>
               </Card>
             </div>
