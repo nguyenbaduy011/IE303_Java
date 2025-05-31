@@ -5,7 +5,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, User, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, User, XCircle } from "lucide-react";
 import { TaskType } from "@/api/get-user-task/route";
 import { cn } from "@/lib/utils";
 
@@ -58,8 +58,8 @@ export function TaskViewDialog({
       case "pending":
         return {
           variant: "secondary" as const,
-          className: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-          icon: <Clock className="h-3 w-3 mr-1" />,
+          className: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+          icon: <AlertCircle className="h-3 w-3 mr-1" />,
           label: "Pending Review",
         };
       default:
