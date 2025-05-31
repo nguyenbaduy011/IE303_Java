@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import SociusLogo from "@/components/socius-logo";
 import { cn } from "@/lib/utils";
-import { fetchTasks } from "@/api/get-user-task/route";
+import { TaskType, fetchTasks } from "@/api/get-user-task/route";
+import { TaskViewDialog } from "../task/task-view-dialog";
 
 interface CalendarViewProps {
   view: string;
@@ -29,8 +30,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -39,9 +43,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
         return;
       }
       try {
-        const tasks = await fetchTasks(user.id);
-        console.log("Tasks loaded:", tasks); // Ghi log để debug tasks
-        const mappedEvents: CalendarEvent[] = tasks.tasks
+        const taskResponse = await fetchTasks(user.id);
+        console.log("Tasks loaded:", taskResponse);
+        setTasks(taskResponse.tasks);
+
+        const mappedEvents: CalendarEvent[] = taskResponse.tasks
           .map((task, index) => {
             const start = new Date(task.deadline);
             if (isNaN(start.getTime())) {
@@ -50,7 +56,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
               );
               return null;
             }
-            // Chuẩn hóa thời gian bắt đầu là 8:00 sáng
             start.setHours(8, 0, 0, 0);
 
             const end = new Date(start);
@@ -77,6 +82,7 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
         );
         toast.error("Failed to load tasks. Please try again.");
         setEvents([]);
+        setTasks([]);
       }
     };
 
@@ -140,8 +146,16 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
         event.start.getMonth() === day.getMonth() &&
         event.start.getFullYear() === day.getFullYear()
     );
-    console.log(`Events for day ${day.toDateString()}:`, dayEvents); // Ghi log để debug
+    console.log(`Events for day ${day.toDateString()}:`, dayEvents);
     return dayEvents;
+  };
+
+  const handleEventClick = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setIsDialogOpen(true);
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -176,7 +190,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
           </div>
           <h1 className="text-2xl font-medium text-foreground">My Tasks</h1>
         </div>
-        {/* Hiển thị lỗi nếu có */}
         {error && (
           <div className="p-4 text-red-600 bg-red-100 rounded-md">
             Lỗi: {error}
@@ -224,7 +237,8 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                   {dayEvents.slice(0, 3).map((event, eventIndex) => (
                     <div
                       key={eventIndex}
-                      className="w-full rounded-md border px-2 py-1 text-left text-xs truncate bg-primary-400/10 text-primary-400 border-primary-400/30"
+                      className="w-full rounded-md border px-2 py-1 text-left text-xs truncate bg-primary-400/10 text-primary-400 border-primary-400/30 cursor-pointer hover:bg-primary-400/20"
+                      onClick={() => handleEventClick(event.taskId)}
                     >
                       {formatTime(event.start)} {event.title}
                     </div>
@@ -239,6 +253,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
             );
           })}
         </div>
+        <TaskViewDialog
+          task={selectedTask}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
       </div>
     );
   }
@@ -253,7 +272,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
           </div>
           <h1 className="text-2xl font-medium text-foreground">My Tasks</h1>
         </div>
-        {/* Hiển thị lỗi nếu có */}
         {error && (
           <div className="p-4 text-red-600 bg-red-100 rounded-md">
             Lỗi: {error}
@@ -311,7 +329,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                   )}
                 >
                   {getEventsForDay(day).map((event, eventIndex) => {
-                    // Hiển thị tất cả sự kiện của ngày, đặt ở đầu khung giờ nếu cần
                     const durationHours =
                       (event.end.getTime() - event.start.getTime()) /
                       (1000 * 60 * 60);
@@ -319,12 +336,13 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                     return (
                       <div
                         key={eventIndex}
-                        className="absolute w-[calc(100%-8px)] left-1 rounded-md border p-1 text-xs overflow-hidden bg-primary-400/10 text-primary-400 border-primary-400/30"
+                        className="absolute w-[calc(100%-8px)] left-1 rounded-md border p-1 text-xs overflow-hidden bg-primary-400/10 text-primary-400 border-primary-400/30 cursor-pointer hover:bg-primary-400/20"
                         style={{
                           top: `${(event.start.getMinutes() / 60) * 100}%`,
                           height: `${heightPercentage}%`,
                           maxHeight: `${durationHours * 64}px`,
                         }}
+                        onClick={() => handleEventClick(event.taskId)}
                       >
                         <div className="font-medium truncate">
                           {event.title}
@@ -343,6 +361,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
             </div>
           ))}
         </div>
+        <TaskViewDialog
+          task={selectedTask}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
       </div>
     );
   }
@@ -357,7 +380,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
           </div>
           <h1 className="text-2xl font-medium text-foreground">My Tasks</h1>
         </div>
-        {/* Hiển thị lỗi nếu có */}
         {error && (
           <div className="p-4 text-red-600 bg-red-100 rounded-md">
             Lỗi: {error}
@@ -417,7 +439,6 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                 )}
               >
                 {getEventsForDay(currentDate).map((event, eventIndex) => {
-                  // Hiển thị tất cả sự kiện của ngày
                   const durationHours =
                     (event.end.getTime() - event.start.getTime()) /
                     (1000 * 60 * 60);
@@ -425,12 +446,13 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
                   return (
                     <div
                       key={eventIndex}
-                      className="absolute w-[calc(100%-8px)] left-1 rounded-md border p-2 text-xs overflow-hidden bg-primary-400/10 text-primary-400 border-primary-400/30"
+                      className="absolute w-[calc(100%-8px)] left-1 rounded-md border p-2 text-xs overflow-hidden bg-primary-400/10 text-primary-400 border-primary-400/30 cursor-pointer hover:bg-primary-400/20"
                       style={{
                         top: `${(event.start.getMinutes() / 60) * 100}%`,
                         height: `${heightPercentage}%`,
                         maxHeight: `${durationHours * 96}px`,
                       }}
+                      onClick={() => handleEventClick(event.taskId)}
                     >
                       <div className="font-medium">{event.title}</div>
                       <div className="flex items-center gap-1 text-[10px] mt-1">
@@ -451,6 +473,11 @@ export default function CalendarView({ view, currentDate }: CalendarViewProps) {
             ))}
           </div>
         </div>
+        <TaskViewDialog
+          task={selectedTask}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
       </div>
     );
   }
