@@ -909,14 +909,7 @@ export default function EditProfilePage() {
                         loading={isLoading}
                         className="w-full"
                       >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Changing Password...
-                          </>
-                        ) : (
-                          "Change Password"
-                        )}
+                        {isLoading ? "Changing Password..." : "Change Password"}
                       </LoadingButton>
                       <Button
                         variant="outline"
