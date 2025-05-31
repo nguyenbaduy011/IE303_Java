@@ -1,5 +1,6 @@
 "use client";
 
+import { TaskType } from "@/api/get-user-task/route";
 import {
   Chart as ChartJS,
   LineElement,
@@ -30,13 +31,13 @@ ChartJS.register(
 );
 
 interface PerformanceChartProps {
-  tasks: PerformanceChartCardType[];
+  tasks: TaskType[];
 }
 
 export function PerformanceChart({ tasks }: PerformanceChartProps) {
   // Nhóm task theo tháng dựa trên created_at
-  const groupTasksByMonth = (tasks: PerformanceChartCardType[]) => {
-    const grouped: { [key: string]: PerformanceChartCardType[] } = {};
+  const groupTasksByMonth = (tasks: TaskType[]) => {
+    const grouped: { [key: string]: TaskType[] } = {};
     tasks.forEach((task) => {
       const date = new Date(task.created_at);
       const monthYear = date.toLocaleString("default", {
