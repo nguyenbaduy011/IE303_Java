@@ -75,6 +75,9 @@ type AuthContextType = {
   sendChatMessage: (conversationId: string, content: string) => void;
   isConnected: boolean;
   wsError: string | null;
+  setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  setWsError: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -87,6 +90,9 @@ const AuthContext = createContext<AuthContextType>({
   sendChatMessage: () => {},
   isConnected: false,
   wsError: null,
+  setNotifications: () => {},
+  setChatMessages: () => {},
+  setWsError: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -99,12 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [wsError, setWsError] = useState<string | null>(null);
   const router = useRouter();
 
-  // STOMP client và heartbeat refs
+  // STOMP client refs - Bỏ heartbeatIntervalRef vì dùng STOMP built-in heartbeat
   const stompClientRef = useRef<Client | null>(null);
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
-  const maxReconnectAttempts = 5;
+  const maxReconnectAttempts = 3; // Giảm số lần thử reconnect
+  const isConnectingRef = useRef<boolean>(false);
 
   // Hàm lấy giá trị cookie
   const getCookie = (name: string): string | null => {
@@ -163,9 +169,144 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Khởi tạo STOMP connection
+  // Hàm refresh trạng thái online
+  const refreshOnlineStatus = async () => {
+    if (!user?.id) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/user-online/refresh/${user.id}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        console.log("Online status refreshed successfully");
+      } else {
+        console.warn("Failed to refresh online status:", response.status);
+      }
+    } catch (error) {
+      console.error("Error refreshing online status:", error);
+    }
+  };
+
+  // API để mark user offline
+  const markUserOfflineAPI = async () => {
+    if (!user?.id) return;
+
+    try {
+      await fetch(`http://localhost:8080/api/user-online/offline/${user.id}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("User marked offline via API");
+    } catch (error) {
+      console.error("Error marking user offline:", error);
+    }
+  };
+
+  // Tách riêng việc đăng ký subscribers
+  const subscribeToChannels = (client: Client) => {
+    if (!user) return;
+
+    // Đăng ký nhận thông báo
+    client.subscribe(`/topic/user/${user.id}`, (message) => {
+      try {
+        const parsedMessage = JSON.parse(message.body);
+        if (parsedMessage.type === "NOTIFICATION") {
+          setNotifications((prev) => [
+            ...prev,
+            {
+              id: parsedMessage.id || Date.now().toString(),
+              message: parsedMessage.data.message,
+              timestamp: parsedMessage.data.timestamp,
+            },
+          ]);
+        } else {
+          handleWebSocketMessage(parsedMessage);
+        }
+      } catch (error) {
+        console.error("Error parsing STOMP message:", error);
+      }
+    });
+
+    // Đăng ký nhận tin nhắn chat
+    client.subscribe(`/user/${user.id}/queue/messages`, (message) => {
+      try {
+        const parsedMessage = JSON.parse(message.body);
+        if (parsedMessage.type === "CHAT_MESSAGE") {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: parsedMessage.id || Date.now().toString(),
+              content: parsedMessage.data.content,
+              timestamp: parsedMessage.data.timestamp,
+              sender:
+                parsedMessage.data.senderId === user.id ? "user" : "contact",
+              read: parsedMessage.data.read || false,
+              senderName: parsedMessage.data.senderName,
+              conversationId: parsedMessage.data.conversationId,
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error parsing chat message:", error);
+      }
+    });
+
+    // Đăng ký nhận session invalidation
+    client.subscribe(`/user/queue/session-invalidation`, (message) => {
+      try {
+        const parsedMessage = JSON.parse(message.body);
+        console.log("Session invalidated:", parsedMessage);
+        handleWebSocketMessage(parsedMessage);
+      } catch (error) {
+        console.error("Error parsing session invalidation:", error);
+      }
+    });
+
+    // Đăng ký nhận offline messages
+    client.subscribe(`/user/${user.id}/queue/offline-messages`, (message) => {
+      try {
+        const parsedMessage = JSON.parse(message.body);
+        console.log("Received offline message:", parsedMessage);
+
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: parsedMessage.id || Date.now().toString(),
+            content: parsedMessage.content,
+            timestamp: parsedMessage.createdAt,
+            sender: parsedMessage.sender.id === user.id ? "user" : "contact",
+            read: false,
+            senderName: parsedMessage.sender.fullName,
+            conversationId: parsedMessage.conversationId,
+          },
+        ]);
+      } catch (error) {
+        console.error("Error parsing offline message:", error);
+      }
+    });
+  };
+
+  // Khởi tạo STOMP connection với heartbeat tự động
   const initializeWebSocket = async () => {
-    if (!user?.sessionId || !user?.id || stompClientRef.current?.active) return;
+    if (
+      !user?.sessionId ||
+      !user?.id ||
+      stompClientRef.current?.active ||
+      isConnectingRef.current
+    ) {
+      return;
+    }
 
     if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
       console.warn(
@@ -176,14 +317,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    isConnectingRef.current = true;
+
     try {
-      // Lấy CSRF token trước khi kết nối
       const csrfToken = await getCsrfToken();
       if (!csrfToken) {
         throw new Error("Không thể lấy CSRF token");
       }
 
-      // Sử dụng endpoint chuẩn cho WebSocket heartbeat
       const wsUrl = "http://localhost:8080/ws-heartbeat";
       console.log("Attempting STOMP connection to:", wsUrl);
 
@@ -195,82 +336,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: user.id,
           "X-CSRF-TOKEN": csrfToken,
         },
-        heartbeatIncoming: 30000, // 30 giây
-        heartbeatOutgoing: 30000, // 30 giây
-        reconnectDelay: 5000,
+        // Sử dụng STOMP built-in heartbeat - đơn giản và hiệu quả
+        heartbeatIncoming: 30000, // Expect heartbeat từ server mỗi 30s
+        heartbeatOutgoing: 30000, // Gửi heartbeat đến server mỗi 30s
+        reconnectDelay: 0, // Tắt auto-reconnect của STOMP, tự quản lý
         onConnect: (frame) => {
           console.log("STOMP connected:", frame);
           stompClientRef.current = client;
           reconnectAttemptsRef.current = 0;
+          isConnectingRef.current = false;
           setIsConnected(true);
           setWsError(null);
 
-          // Đăng ký nhận thông báo
-          client.subscribe(`/topic/user/${user.id}`, (message) => {
-            try {
-              const parsedMessage = JSON.parse(message.body);
-              if (parsedMessage.type === "NOTIFICATION") {
-                setNotifications((prev) => [
-                  ...prev,
-                  {
-                    id: parsedMessage.id || Date.now().toString(),
-                    message: parsedMessage.data.message,
-                    timestamp: parsedMessage.data.timestamp,
-                  },
-                ]);
-              } else {
-                handleWebSocketMessage(parsedMessage);
-              }
-            } catch (error) {
-              console.error("Error parsing STOMP message:", error);
-            }
-          });
+          // Đăng ký subscribers
+          subscribeToChannels(client);
 
-          // Đăng ký nhận tin nhắn chat
-          client.subscribe(`/user/${user.id}/queue/messages`, (message) => {
-            try {
-              const parsedMessage = JSON.parse(message.body);
-              if (parsedMessage.type === "CHAT_MESSAGE") {
-                setChatMessages((prev) => [
-                  ...prev,
-                  {
-                    id: parsedMessage.id || Date.now().toString(),
-                    content: parsedMessage.data.content,
-                    timestamp: parsedMessage.data.timestamp,
-                    sender:
-                      parsedMessage.data.senderId === user.id
-                        ? "user"
-                        : "contact",
-                    read: parsedMessage.data.read || false,
-                    senderName: parsedMessage.data.senderName,
-                    conversationId: parsedMessage.data.conversationId,
-                  },
-                ]);
-              }
-            } catch (error) {
-              console.error("Error parsing chat message:", error);
-            }
-          });
-
-          // Đăng ký nhận session invalidation
-          client.subscribe(`/user/queue/session-invalidation`, (message) => {
-            try {
-              const parsedMessage = JSON.parse(message.body);
-              console.log("Session invalidated:", parsedMessage);
-              handleWebSocketMessage(parsedMessage);
-            } catch (error) {
-              console.error("Error parsing session invalidation:", error);
-            }
-          });
-
-          startHeartbeat();
+          // Refresh trạng thái online ngay sau khi connect
+          refreshOnlineStatus();
         },
         onDisconnect: () => {
           console.log("STOMP disconnected");
+          isConnectingRef.current = false;
           setIsConnected(false);
-          setWsError("Ngắt kết nối với server WebSocket");
-          stopHeartbeat();
-          scheduleReconnect();
+
+          // Không reconnect nữa, chuyển user sang offline luôn
+          if (user?.id) {
+            // Call API để mark user offline
+            markUserOfflineAPI();
+          }
+
+          setWsError("Mất kết nối với server");
         },
         onStompError: (frame) => {
           console.error("STOMP error:", {
@@ -280,12 +375,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             url: wsUrl,
             attempt: reconnectAttemptsRef.current + 1,
           });
+          isConnectingRef.current = false;
           setWsError("Không thể kết nối với server WebSocket");
-          stopHeartbeat();
-          scheduleReconnect();
+
+          // Mark user offline khi có lỗi
+          if (user?.id) {
+            markUserOfflineAPI();
+          }
         },
         onWebSocketError: (error) => {
           console.error("WebSocket error:", error);
+          isConnectingRef.current = false;
           setWsError("Lỗi kết nối WebSocket");
         },
         debug: (str) => {
@@ -296,72 +396,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       client.activate();
     } catch (error) {
       console.error("Error creating STOMP connection:", error);
+      isConnectingRef.current = false;
       setWsError("Lỗi khi khởi tạo kết nối WebSocket");
-      scheduleReconnect();
     }
-  };
-
-  // Gửi heartbeat định kỳ theo backend API
-  const startHeartbeat = () => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-    }
-
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (stompClientRef.current?.active && user) {
-        try {
-          // Gửi heartbeat theo format backend mong đợi
-          stompClientRef.current.publish({
-            destination: "/app/heartbeat",
-            headers: {
-              sessionId: user.sessionId,
-              userId: user.id,
-            },
-            body: JSON.stringify({
-              timestamp: Date.now(),
-              sessionId: user.sessionId,
-            }),
-          });
-          console.log("Heartbeat sent");
-        } catch (error) {
-          console.error("Error sending heartbeat:", error);
-          stopHeartbeat();
-          scheduleReconnect();
-        }
-      }
-    }, 30000); // 30 giây theo config backend
-  };
-
-  const stopHeartbeat = () => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-      heartbeatIntervalRef.current = null;
-    }
-  };
-
-  // Tự động reconnect
-  const scheduleReconnect = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-
-    reconnectAttemptsRef.current += 1;
-    if (reconnectAttemptsRef.current > maxReconnectAttempts) {
-      console.warn(
-        "Max STOMP reconnect attempts reached. Stopping reconnection."
-      );
-      setWsError("Không thể kết nối với server. Vui lòng kiểm tra mạng.");
-      return;
-    }
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      if (user && isAuthenticated) {
-        console.log("Attempting to reconnect STOMP...", {
-          attempt: reconnectAttemptsRef.current,
-        });
-        initializeWebSocket();
-      }
-    }, 5000);
   };
 
   // Xử lý tin nhắn từ WebSocket
@@ -382,7 +419,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       case "USER_OFFLINE":
         console.log("User marked offline:", message);
-        // Có thể thêm logic xử lý khi user bị đánh dấu offline
         break;
 
       default:
@@ -392,11 +428,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Đóng STOMP connection
   const disconnectWebSocket = () => {
-    stopHeartbeat();
+    isConnectingRef.current = false;
+
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
+
     if (stompClientRef.current) {
       try {
         stompClientRef.current.deactivate();
@@ -405,6 +443,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       stompClientRef.current = null;
     }
+
     reconnectAttemptsRef.current = 0;
     setIsConnected(false);
   };
@@ -453,6 +492,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Hàm logout
   const logout = async () => {
     try {
+      // Mark user offline trước khi disconnect
+      if (user?.id) {
+        await markUserOfflineAPI();
+      }
+
       disconnectWebSocket();
       const result = await logoutUser();
       if (!result.success) {
@@ -479,7 +523,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (
         user &&
         isAuthenticated &&
-        (!stompClientRef.current || !stompClientRef.current.active)
+        (!stompClientRef.current || !stompClientRef.current.active) &&
+        !isConnectingRef.current
       ) {
         reconnectAttemptsRef.current = 0;
         setWsError(null);
@@ -493,12 +538,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setWsError("Không có kết nối mạng");
     };
 
+    // Xử lý khi user đóng tab/browser
+    const handleBeforeUnload = () => {
+      if (user?.id) {
+        // Sử dụng sendBeacon để đảm bảo request được gửi ngay cả khi browser đóng
+        navigator.sendBeacon(
+          `http://localhost:8080/api/user-online/offline/${user.id}`,
+          JSON.stringify({ sessionId: user.sessionId })
+        );
+      }
+    };
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [user, isAuthenticated]);
 
@@ -521,6 +579,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(parsedUser);
           setIsAuthenticated(true);
           console.log("Session restored successfully");
+
+          // Refresh trạng thái online ngay sau khi restore session
+          setTimeout(() => {
+            refreshOnlineStatus();
+          }, 500);
         } else {
           throw new Error(result.error || "Session không hợp lệ");
         }
@@ -545,13 +608,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Khởi tạo WebSocket khi user được authenticate
   useEffect(() => {
-    if (user && isAuthenticated) {
+    if (user && isAuthenticated && !isConnectingRef.current) {
       console.log("User authenticated, initializing WebSocket...");
       const timer = setTimeout(() => {
         initializeWebSocket();
-      }, 1000); // Tăng delay để đảm bảo session đã ổn định
+      }, 1000);
       return () => clearTimeout(timer);
-    } else {
+    } else if (!user || !isAuthenticated) {
       disconnectWebSocket();
     }
   }, [user, isAuthenticated]);
@@ -559,6 +622,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Cleanup khi component unmount
   useEffect(() => {
     return () => {
+      if (user?.id) {
+        markUserOfflineAPI();
+      }
       disconnectWebSocket();
     };
   }, []);
@@ -579,6 +645,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sendChatMessage,
         isConnected,
         wsError,
+        setNotifications,
+        setChatMessages,
+        setWsError,
       }}
     >
       {children}
