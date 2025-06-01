@@ -47,7 +47,7 @@ export function TaskCard({
   const statusBadge = getStatusBadge(task.status);
   const daysUntilDeadline = getDaysUntilDeadline(task.deadline);
   const isOverdue = daysUntilDeadline < 0;
-  const isAssignedToCurrentUser = task.assignedTo.id === currentUserId;
+  const isAssignedToCurrentUser = task.assigned_to.id === currentUserId;
 
   return (
     <Card className="h-full">
@@ -83,10 +83,10 @@ export function TaskCard({
               <Avatar className="h-6 w-6">
                 <AvatarImage
                   src={getUserAvatar() || "/placeholder.svg"}
-                  alt={`${task.assignedTo.firstName} ${task.assignedTo.lastName}`}
+                  alt={`${task.assigned_to.first_name} ${task.assigned_to.last_name}`}
                 />
                 <AvatarFallback>
-                  {`${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                  {`${task.assigned_to.first_name} ${task.assigned_to.last_name}`
                     .split(" ")
                     .map((n) => n[0])
                     .join("")}
