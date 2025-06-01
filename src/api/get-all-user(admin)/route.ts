@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface UserType {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
 }
 
 export interface PositionType {
@@ -22,14 +22,30 @@ export interface TeamType {
   name: string;
 }
 
+export interface PermissionType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface RoleType {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+  permissions: PermissionType[];
+}
+
 export interface EmployeeType {
   id: string;
   user: UserType;
   position: PositionType;
   department: DepartmentType;
-  team?: TeamType; // Optional vì không phải nhân viên nào cũng có team
-  startDate: string;
-  workingStatus: string;
+  team?: TeamType; // Optional
+  role: RoleType;
+  start_date: string;
+  working_status: string;
 }
 
 export const fetchEmployees = async (): Promise<EmployeeType[]> => {
@@ -58,14 +74,14 @@ export const fetchEmployees = async (): Promise<EmployeeType[]> => {
     }
 
     const data = await response.json();
-    // Xử lý cấu trúc API linh hoạt
     const employeesArray = Array.isArray(data.employees) ? data.employees : [];
+
     return employeesArray.map((employee: any) => ({
       id: employee.id,
       user: {
         id: employee.user.id,
-        firstName: employee.user.firstName,
-        lastName: employee.user.lastName,
+        first_name: employee.user.firstName,
+        last_name: employee.user.lastName,
       },
       position: {
         id: employee.position.id,
@@ -83,8 +99,20 @@ export const fetchEmployees = async (): Promise<EmployeeType[]> => {
             name: employee.team.name,
           }
         : undefined,
-      startDate: employee.startDate,
-      workingStatus: employee.workingStatus,
+      role: {
+        id: employee.role.id,
+        name: employee.role.name,
+        description: employee.role.description,
+        created_at: employee.role.createdAt,
+        updated_at: employee.role.updatedAt,
+        permissions: employee.role.permissions.map((perm: any) => ({
+          id: perm.id,
+          name: perm.name,
+          description: perm.description,
+        })),
+      },
+      start_date: employee.startDate,
+      working_status: employee.workingStatus,
     }));
   } catch (error) {
     throw new Error(
