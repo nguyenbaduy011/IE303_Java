@@ -50,7 +50,7 @@ import {
   SalaryHistoryResponse,
   fetchSalaryHistory,
 } from "@/api/salary-history/route";
-import { UserType, fetchUserById } from "@/api/get-user-infor/route";
+import { UserType, fetchUserById } from "@/api/get-user-information/route";
 import {
   EmploymentDetailType,
   EmploymentDetailResponse,
@@ -131,7 +131,7 @@ export default function ProfilePage() {
             ...authUser.role,
             permissions: Array.isArray(authUser.role.permissions)
               ? authUser.role.permissions.map((p: any) =>
-                  typeof p === "string" ? p : (p.name ?? p.id)
+                  typeof p === "string" ? p : p.name ?? p.id
                 )
               : [],
           },
@@ -302,8 +302,9 @@ export default function ProfilePage() {
               loading: true,
               error: null,
             }));
-            const data: EmploymentDetailResponse =
-              await fetchEmploymentDetail(id);
+            const data: EmploymentDetailResponse = await fetchEmploymentDetail(
+              id
+            );
             if (data.employment_detail) {
               setEmploymentDetail({
                 data: data.employment_detail,
