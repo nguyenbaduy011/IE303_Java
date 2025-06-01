@@ -141,10 +141,10 @@ export default function EmployeeManagementPage() {
 
   // Render table content for a specific tab
   const renderTableContent = (statusFilter?: string) => (
-    <Card className="border-0 shadow-none">
+    <Card className="border-0 shadow-none p-0">
       <CardContent className="p-0">
         <div className="rounded-md border">
-          <Table>
+          <Table >
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
@@ -327,6 +327,7 @@ export default function EmployeeManagementPage() {
             setCurrentEmployee(null);
             setIsEmployeeDialogOpen(true);
           }}
+          className="cursor-pointer"
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Employee
