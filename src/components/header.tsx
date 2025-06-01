@@ -17,12 +17,10 @@ import { UserType } from "@/contexts/auth-context";
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   user: UserType;
-  isAdmin?: boolean;
 }
 
 export function Header({
   user,
-  isAdmin = true,
   className,
   ...rest
 }: HeaderProps) {
@@ -48,7 +46,6 @@ export function Header({
             </SheetTrigger>
             <SidebarNav
               user={user}
-              isAdmin={isAdmin}
               onClose={() => setIsSidebarOpen(false)}
             />
           </Sheet>

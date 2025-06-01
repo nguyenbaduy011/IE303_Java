@@ -27,16 +27,16 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DialogTitle } from "@/components/ui/dialog";
 import SociusLogo from "./socius-logo";
 import { Button } from "@/components/ui/button";
-import { UserType } from "@/contexts/auth-context";
+import { useAuth, UserType } from "@/contexts/auth-context";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   user: UserType;
-  isAdmin: boolean;
   onClose?: () => void;
 }
 
-export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
+export function SidebarNav({ onClose }: SidebarNavProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   const navItems = [
     {
@@ -168,7 +168,7 @@ export function SidebarNav({ isAdmin, onClose }: SidebarNavProps) {
         <div className="flex-1 overflow-auto py-4 px-3">
           <nav className="flex flex-col gap-6">
             {renderNavItems(navItems)}
-            {isAdmin && (
+            {user?.role.name === "SUPER_ADMIN" && (
               <>
                 <div className="relative">
                   <div className="absolute inset-x-0 -top-3 h-px bg-border" />
