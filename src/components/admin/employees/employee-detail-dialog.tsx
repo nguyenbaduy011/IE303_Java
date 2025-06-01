@@ -4,7 +4,6 @@ import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -38,7 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { UserFullShape } from "@/types/types";
 import {
   Form,
   FormControl,
@@ -50,12 +48,14 @@ import {
 import { EmployeeFormValues, employeeSchema } from "@/lib/validations";
 import { Label } from "@/components/ui/label";
 import LoadingButton from "@/components/ui/loading-button";
-import { mockDb } from "@/data/mock-data";
+import { EmployeeType } from "@/api/get-all-user(admin)/route";
+import { useEffect, useState } from "react";
+import { fetchUserById, UserType } from "@/api/get-user-information/route";
 
 interface EmployeeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employee: UserFullShape;
+  employee: EmployeeType;
 }
 
 export function EmployeeDetailDialog({
@@ -63,22 +63,47 @@ export function EmployeeDetailDialog({
   onOpenChange,
   employee,
 }: EmployeeDialogProps) {
-  const data = mockDb;
+  const [userInformation, setUserInformation] = useState<UserType | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+      async function fetchData() {
+        setLoading(true);
+        setError(null);
+        try {
+          // Fetch user information
+          const userData = await fetchUserById(employee.user.id);
+          setUserInformation(userData);
+  
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to load data");
+        } finally {
+          setLoading(false);
+        }
+      }
+  
+      if (open) {
+        fetchData();
+      }
+    }, [employee, open]);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
-      first_name: employee?.first_name ?? "",
-      last_name: employee?.last_name ?? "",
-      email: employee?.email ?? "",
+      first_name: employee?.user.first_name ?? "",
+      last_name: employee?.user.last_name ?? "",
+      email: userInformation?.email ?? "",
       department: employee?.department?.name ?? "",
       role: employee?.role?.name ?? "",
-      working_status: employee.employment?.working_status ?? "active",
-      start_date: employee.employment?.start_date
-        ? new Date(employee.employment.start_date)
+      working_status:
+        (employee.working_status as "active" | "inactive" | "terminated") ??
+        "active",
+      start_date: employee.start_date
+        ? new Date(employee.start_date)
         : undefined,
-      phone_number: employee?.phone_number ?? "",
-      address: employee?.address ?? "",
+      phone_number: userInformation?.phoneNumber ?? "",
+      address: userInformation?.address ?? "",
     },
   });
 
