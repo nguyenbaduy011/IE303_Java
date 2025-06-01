@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -19,14 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar, User, FileText, Target } from "lucide-react";
+import { Member } from "@/api/get-team-member/route";
+import { TaskType } from "@/api/get-user-task/route";
+import { toast } from "sonner";
 
 interface CreateTaskCardProps {
-  teamMembers: UserType[];
+  teamMembers: Member[];
   onCreateTask: (
     task: Omit<TaskType, "id" | "created_at" | "updated_at">
-  ) => void;
+  ) => Promise<void>;
   className?: string;
 }
 
@@ -41,66 +44,74 @@ export function CreateTaskCard({
     description: "",
     assigned_to: "",
     deadline: "",
-    priority: "medium" as "low" | "medium" | "high",
   });
   const [isCreating, setIsCreating] = useState(false);
 
+  // Hàm xử lý tạo task mới
   const handleCreateTask = async () => {
     if (!newTask.name || !newTask.assigned_to || !newTask.deadline) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
+    const deadlineDate = new Date(newTask.deadline);
+    if (isNaN(deadlineDate.getTime())) {
+      toast.error("Invalid deadline date.");
       return;
     }
 
     setIsCreating(true);
 
     try {
+      const deadlineISO = deadlineDate.toISOString();
+      const assignedMember = teamMembers.find(
+        (member) => member.user.id === newTask.assigned_to
+      );
+      if (!assignedMember) {
+        toast.error("Assigned member not found.");
+        setIsCreating(false);
+        return;
+      }
       await onCreateTask({
         name: newTask.name,
-        description: newTask.description || null,
-        deadline: newTask.deadline,
-        status: "pending",
-        assigned_to: newTask.assigned_to,
+        description: newTask.description || "",
+        deadline: deadlineISO,
+        status: "in_progress",
+        assigned_to: {
+          id: assignedMember.user.id,
+          first_name: assignedMember.user.first_name,
+          last_name: assignedMember.user.last_name,
+        },
       });
 
-      // Reset form
+      toast.success("Task created successfully!");
       setNewTask({
         name: "",
         description: "",
         assigned_to: "",
         deadline: "",
-        priority: "medium",
       });
       setIsExpanded(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating task:", error);
+      toast.error(error.message || "Failed to create task. Please try again.");
     } finally {
       setIsCreating(false);
     }
   };
 
+  // Hàm xử lý hủy tạo task
   const handleCancel = () => {
     setNewTask({
       name: "",
       description: "",
       assigned_to: "",
       deadline: "",
-      priority: "medium",
     });
     setIsExpanded(false);
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "medium":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "low":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
-    }
-  };
-
+  // Kiểm tra tính hợp lệ của form
   const isFormValid = newTask.name && newTask.assigned_to && newTask.deadline;
 
   if (!isExpanded) {
@@ -132,21 +143,13 @@ export function CreateTaskCard({
             </div>
             <CardTitle className="text-lg">Create New Task</CardTitle>
           </div>
-          <Badge
-            variant="outline"
-            className={getPriorityColor(newTask.priority)}
-          >
-            {newTask.priority.charAt(0).toUpperCase() +
-              newTask.priority.slice(1)}{" "}
-            Priority
-          </Badge>
         </div>
         <CardDescription>
           Fill in the details below to create and assign a new task
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Task Name */}
+        {/* Tên task */}
         <div className="space-y-2">
           <Label htmlFor="task-name" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
@@ -161,7 +164,7 @@ export function CreateTaskCard({
           />
         </div>
 
-        {/* Task Description */}
+        {/* Mô tả task */}
         <div className="space-y-2">
           <Label htmlFor="task-description" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -178,80 +181,38 @@ export function CreateTaskCard({
           />
         </div>
 
-        {/* Assignment and Priority Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="assign-to" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Assign To
-            </Label>
-            <Select
-              value={newTask.assigned_to}
-              onValueChange={(value) =>
-                setNewTask({ ...newTask, assigned_to: value })
-              }
+        {/* Phân công */}
+        <div className="space-y-2">
+          <Label htmlFor="assign-to" className="flex items-center gap-2">
+            <User className="h-4 w-4" />
+            Assign To
+          </Label>
+          <Select
+            value={newTask.assigned_to}
+            onValueChange={(value) =>
+              setNewTask({ ...newTask, assigned_to: value })
+            }
+          >
+            <SelectTrigger
+              id="assign-to"
+              className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
             >
-              <SelectTrigger
-                id="assign-to"
-                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-              >
-                <SelectValue placeholder="Select team member" />
-              </SelectTrigger>
-              <SelectContent>
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
-                        {member.first_name[0]}
-                        {member.last_name[0]}
-                      </div>
-                      {member.first_name} {member.last_name}
+              <SelectValue placeholder="Select team member" />
+            </SelectTrigger>
+            <SelectContent>
+              {teamMembers.map((member) => (
+                <SelectItem key={member.user.id} value={member.user.id}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs">
+                      {member.user.first_name[0]}
+                      {member.user.last_name[0]}
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="priority" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Priority
-            </Label>
-            <Select
-              value={newTask.priority}
-              onValueChange={(value: "low" | "medium" | "high") =>
-                setNewTask({ ...newTask, priority: value })
-              }
-            >
-              <SelectTrigger
-                id="priority"
-                className="transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    Low Priority
+                    {member.user.first_name} {member.user.last_name}
                   </div>
                 </SelectItem>
-                <SelectItem value="medium">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                    Medium Priority
-                  </div>
-                </SelectItem>
-                <SelectItem value="high">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    High Priority
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Deadline */}
@@ -272,7 +233,7 @@ export function CreateTaskCard({
           />
         </div>
 
-        {/* Action Buttons */}
+        {/* Nút hành động */}
         <div className="flex gap-3 pt-4">
           <Button
             variant="outline"
@@ -301,7 +262,7 @@ export function CreateTaskCard({
           </Button>
         </div>
 
-        {/* Form Validation Helper */}
+        {/* Trợ giúp xác thực form */}
         {!isFormValid && (
           <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
             <p className="font-medium mb-1">Required fields:</p>

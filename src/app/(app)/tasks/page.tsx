@@ -58,7 +58,7 @@ export default function TasksPage() {
               return task;
             })
           );
-          setTasks(updatedTasks);
+          setTasks(updatedTasks as TaskType[]);
         })
         .catch((error) => {
           console.error("Error fetching tasks:", error);
@@ -93,26 +93,26 @@ export default function TasksPage() {
   }, []);
 
   // Get all tasks for the user
-  const allTasks = tasks.filter((task) => task.assignedTo.id === user?.id);
+  const allTasks = tasks.filter((task) => task.assigned_to.id === user?.id);
 
   // Get ongoing tasks for the user
   const ongoingTasks = tasks.filter(
-    (task) => task.status === "in_progress" && task.assignedTo.id === user?.id
+    (task) => task.status === "in_progress" && task.assigned_to.id === user?.id
   );
 
   // Get pending review tasks for the user
   const pendingReviewTasks = tasks.filter(
-    (task) => task.status === "pending" && task.assignedTo.id === user?.id
+    (task) => task.status === "pending" && task.assigned_to.id === user?.id
   );
 
   // Get completed tasks
   const completedTasks = tasks.filter(
-    (task) => task.status === "completed" && task.assignedTo.id === user?.id
+    (task) => task.status === "completed" && task.assigned_to.id === user?.id
   );
 
   // Get failed tasks
   const failedTasks = tasks.filter(
-    (task) => task.status === "failed" && task.assignedTo.id === user?.id
+    (task) => task.status === "failed" && task.assigned_to.id === user?.id
   );
 
   // Filter tasks based on search
