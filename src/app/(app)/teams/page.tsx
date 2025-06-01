@@ -16,12 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Search,
   Users,
   AlertCircle,
@@ -35,7 +29,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { getTeam, Member, TeamType } from "@/api/get-team-member/route";
-import { TaskType, fetchTeamTasks } from "@/api/get-team-task/route";
+import { fetchTeamTasks } from "@/api/get-team-task/route";
 import {
   EmploymentDetailResponse,
   fetchEmploymentDetail,
@@ -43,7 +37,11 @@ import {
 import { fetchUserById } from "@/api/get-user-information/route";
 import { Separator } from "@/components/ui/separator";
 import { TaskViewDialog } from "@/components/task/task-view-dialog";
+import { CreateTaskCard } from "@/components/task/create-task-card";
 import { cn } from "@/lib/utils";
+import { TaskType } from "@/api/get-user-task/route";
+import { createTask } from "@/api/create-task/route";
+import { toast } from "sonner";
 
 interface ExtendedMember extends Member {
   email: string;
@@ -101,18 +99,46 @@ export default function TeamsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  // Trạng thái cho dialog
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Kiểm tra nếu user là team leader
-  const isTeamLeader = userTeam?.leader.id === user?.id;
+  const isTeamLeader = userTeam && user && userTeam.leader.id === user.id;
+
+  // Hàm xử lý tạo task
+  const handleCreateTask = useCallback(
+    async (task: Omit<TaskType, "id" | "created_at" | "updated_at">) => {
+      try {
+        const newTask = await createTask({
+          name: task.name,
+          description: task.description,
+          deadline: task.deadline,
+          status: task.status as
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "failed",
+          assignedToId: task.assigned_to.id,
+        });
+
+        if (!newTask.id || !newTask.assigned_to.id) {
+          throw new Error("Invalid task data.");
+        }
+
+        toast.success("Task created successfully!");
+        setTeamTasks((prevTasks) => [...prevTasks, newTask]);
+      } catch (err: any) {
+        setError(err.message || "Failed to create task.");
+        toast.error(err.message || "Failed to create task.");
+      }
+    },
+    []
+  );
 
   // Hàm tính toán thống kê đội nhóm
   const calculateTeamStats = useMemo(() => {
-    // Lọc các task liên quan đến thành viên của team
     const relevantTasks = teamTasks.filter((task) =>
-      teamMembers.some((member) => member.user.id === task.assignedTo.id)
+      teamMembers.some((member) => member.user.id === task.assigned_to.id)
     );
     const totalTasks = relevantTasks.length;
 
@@ -163,7 +189,7 @@ export default function TeamsPage() {
   const sortedTasks = useMemo(() => {
     return teamTasks
       .filter((task) =>
-        teamMembers.some((member) => member.user.id === task.assignedTo.id)
+        teamMembers.some((member) => member.user.id === task.assigned_to.id)
       )
       .sort(
         (a, b) =>
@@ -173,7 +199,6 @@ export default function TeamsPage() {
 
   // Lấy thông tin team của user
   const fetchUserTeams = useCallback(async () => {
-    // Kiểm tra user trước khi gọi API
     if (!user) {
       router.push("/login");
       setError("User not authenticated. Please log in.");
@@ -185,7 +210,6 @@ export default function TeamsPage() {
       setLoading(true);
       setError(null);
 
-      // Lấy employment detail để lấy team id
       const employmentResponse: EmploymentDetailResponse =
         await fetchEmploymentDetail(user.id);
       if (
@@ -227,7 +251,6 @@ export default function TeamsPage() {
 
       let extendedMembers: ExtendedMember[] = [];
       if (teamData?.members) {
-        // Lấy thông tin user và employment detail cho từng thành viên
         extendedMembers = await Promise.all(
           teamData.members.map(async (member) => {
             const userResponse = await fetchUserById(member.user.id);
@@ -336,7 +359,6 @@ export default function TeamsPage() {
     <div className="container mx-auto px-4 py-6">
       {userTeam && (
         <div className="space-y-6">
-          {/* Card thông tin tổng quan team */}
           <Card className="bg-background">
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -381,7 +403,6 @@ export default function TeamsPage() {
             </CardContent>
           </Card>
 
-          {/* Tabs điều hướng */}
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -399,7 +420,6 @@ export default function TeamsPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* Tab Tổng quan */}
             <TabsContent value="overview" className="space-y-4">
               <Card className="bg-background">
                 <CardHeader>
@@ -456,7 +476,6 @@ export default function TeamsPage() {
               </Card>
             </TabsContent>
 
-            {/* Tab Thành viên */}
             <TabsContent value="members" className="space-y-4">
               <Card className="bg-background">
                 <CardHeader className="pb-3">
@@ -553,7 +572,6 @@ export default function TeamsPage() {
               </Card>
             </TabsContent>
 
-            {/* Tab Nhiệm vụ */}
             <TabsContent value="tasks" className="space-y-4">
               <Card>
                 <CardHeader className="pb-3">
@@ -565,24 +583,6 @@ export default function TeamsPage() {
                       </CardDescription>
                     </div>
                     <div className="flex items-center space-x-2 mt-2 md:mt-0">
-                      {isTeamLeader ? (
-                        <Button size="sm" onClick={() => router.push("/tasks")}>
-                          Create Task
-                        </Button>
-                      ) : (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button size="sm" disabled>
-                                Create Task
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Only team leaders can create tasks.
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -594,7 +594,16 @@ export default function TeamsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Thống kê nhiệm vụ */}
+                  {isTeamLeader ? (
+                    <CreateTaskCard
+                      teamMembers={teamMembers}
+                      onCreateTask={handleCreateTask}
+                      className="mb-6"
+                    />
+                  ) : (
+                    <></>
+                  )}
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-3 bg-muted/50 rounded-lg">
                       <p className="text-2xl font-bold text-blue-600">
@@ -624,7 +633,6 @@ export default function TeamsPage() {
                     </div>
                   </div>
 
-                  {/* Danh sách nhiệm vụ */}
                   <div className="space-y-4">
                     {sortedTasks.length === 0 ? (
                       <div className="text-center py-8">
@@ -634,20 +642,12 @@ export default function TeamsPage() {
                         <p className="text-sm text-muted-foreground mt-1">
                           This team has no assigned tasks yet.
                         </p>
-                        {isTeamLeader && (
-                          <Button
-                            className="mt-4"
-                            onClick={() => router.push("/tasks")}
-                          >
-                            Create First Task
-                          </Button>
-                        )}
                       </div>
                     ) : (
                       <div className="grid gap-4">
                         {sortedTasks.map((task) => {
                           const assignedMember = teamMembers.find(
-                            (member) => member.user.id === task.assignedTo.id
+                            (member) => member.user.id === task.assigned_to.id
                           );
                           const now = new Date();
                           const isFailed =
@@ -754,6 +754,7 @@ export default function TeamsPage() {
                                         setSelectedTask(task);
                                         setIsDialogOpen(true);
                                       }}
+                                      className="cursor-p"
                                     >
                                       View Details
                                     </Button>
@@ -771,7 +772,6 @@ export default function TeamsPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Dialog hiển thị chi tiết task */}
           <TaskViewDialog
             task={selectedTask}
             open={isDialogOpen}
