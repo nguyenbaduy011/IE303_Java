@@ -325,7 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Không thể lấy CSRF token");
       }
 
-      const wsUrl = "http://localhost:8080/ws-heartbeat";
+      const wsUrl = `http://localhost:8080/ws-heartbeat?X-CSRF-TOKEN=${encodeURIComponent(csrfToken)}`;
       console.log("Attempting STOMP connection to:", wsUrl);
 
       const socket = new SockJS(wsUrl);
@@ -337,8 +337,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "X-CSRF-TOKEN": csrfToken,
         },
         // Sử dụng STOMP built-in heartbeat - đơn giản và hiệu quả
-        heartbeatIncoming: 30000, // Expect heartbeat từ server mỗi 30s
-        heartbeatOutgoing: 30000, // Gửi heartbeat đến server mỗi 30s
+        heartbeatIncoming: 25000, // Expect heartbeat từ server mỗi 30s
+        heartbeatOutgoing: 25000, // Gửi heartbeat đến server mỗi 30s
         reconnectDelay: 0, // Tắt auto-reconnect của STOMP, tự quản lý
         onConnect: (frame) => {
           console.log("STOMP connected:", frame);
@@ -618,6 +618,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       disconnectWebSocket();
     }
   }, [user, isAuthenticated]);
+
+  useEffect(() => {
+    if (user && isAuthenticated && isConnected) {
+      // Refresh online status mỗi 2 phút
+      const refreshInterval = setInterval(
+        () => {
+          refreshOnlineStatus();
+        },
+        2 * 60 * 1000
+      );
+
+      return () => clearInterval(refreshInterval);
+    }
+  }, [user, isAuthenticated, isConnected]);
 
   // Cleanup khi component unmount
   useEffect(() => {
