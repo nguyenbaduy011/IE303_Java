@@ -1,6 +1,7 @@
-import { getCookie } from "@/utils/cookie";
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { getCookie } from "@/utils/cookie";
+import { TaskType } from "@/api/get-user-task/route";
+
 export async function createTask({
   name,
   description,
@@ -10,8 +11,8 @@ export async function createTask({
 }: {
   name: string;
   description: string;
-  deadline: string; // dạng ISO string: "2025-06-01T23:59:59.000Z"
-  status: string;
+  deadline: string;
+  status: "pending" | "in_progress" | "completed" | "failed";
   assignedToId: string;
 }) {
   try {
@@ -44,8 +45,21 @@ export async function createTask({
       );
     }
 
-    //Trả về task đã tạo
-    return await res.json(); 
+    const data = await res.json();
+    return {
+      id: data.id ?? "",
+      created_at: data.createdAt ?? "",
+      updated_at: data.updatedAt ?? "",
+      name: data.name ?? "",
+      description: data.description ?? "",
+      deadline: data.deadline ?? "",
+      status: data.status ?? "",
+      assigned_to: {
+        id: data.assignedTo?.id ?? "",
+        first_name: data.assignedTo?.firstName ?? "",
+        last_name: data.assignedTo?.lastName ?? "",
+      },
+    } as TaskType;
   } catch (error: any) {
     console.error("Create task error:", error);
     throw new Error(
