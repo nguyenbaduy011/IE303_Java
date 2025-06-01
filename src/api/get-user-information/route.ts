@@ -6,6 +6,7 @@ export interface UserType {
   lastName: string;
   email: string;
   birthDate: string;
+  image_url: string;
   gender: "male" | "female" | string;
   nationality: string;
   phoneNumber: string;
@@ -39,6 +40,7 @@ export const fetchUserById = async (
       lastName: data.lastName ?? "",
       email: data.email ?? "",
       birthDate: data.birthDate ?? "",
+      image_url: data.image_url ?? "",
       gender: data.gender ?? "",
       nationality: data.nationality ?? "",
       phoneNumber: data.phoneNumber ?? "",
