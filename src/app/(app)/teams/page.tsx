@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -14,268 +15,285 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Search,
   Users,
-  Calendar,
-  MessageSquare,
+  AlertCircle,
   Mail,
   Phone,
-  CheckCircle2,
-  AlertCircle,
-  ListTodo,
+  Calendar,
   CheckCircle,
-  MoreHorizontal,
-  UserMinus,
-  UserCheck,
+  Clock,
+  XCircle,
+  MessageSquare,
 } from "lucide-react";
-import { AddMemberDialog } from "@/components/teams/add-member-dialog";
+import { useAuth } from "@/contexts/auth-context";
+import { getTeam, Member, TeamType } from "@/api/get-team-member/route";
+import { TaskType, fetchTeamTasks } from "@/api/get-team-task/route";
 import {
-  TeamView,
-  UserFullView,
-  EmploymentDetailView,
-  UpdateEmploymentPayload,
-} from "@/types/teams-page";
+  EmploymentDetailResponse,
+  fetchEmploymentDetail,
+} from "@/api/employment-detail/route";
+import { fetchUserById } from "@/api/get-user-information/route";
+import { Separator } from "@/components/ui/separator";
+import { TaskViewDialog } from "@/components/task/task-view-dialog";
+import { cn } from "@/lib/utils";
 
-// Mock current user data (giả định từ auth context hoặc API)
-const currentUser: UserFullView = {
-  id: "member-1",
-  first_name: "Alex",
-  last_name: "Morgan",
-  email: "alex.morgan@socius.com",
-  phone_number: "+1 (555) 123-4567",
-  image_url: "/placeholder.svg?height=40&width=40",
-  hire_date: "2023-01-01",
-  employment: {
-    id: "emp-1",
-    user_id: "member-1",
-    team_id: "team-1",
-    position_id: "pos-1",
-    department_id: "dept-1",
-  },
-  position: { id: "pos-1", name: "Software Engineer" },
-  department: { id: "dept-1", name: "Engineering" },
+interface ExtendedMember extends Member {
+  email: string;
+  phone_number: string;
+}
+
+// Hàm lấy màu sắc và nhãn cho trạng thái task
+const getStatusBadge = (status: TaskType["status"]) => {
+  switch (status) {
+    case "completed":
+      return {
+        variant: "default" as const,
+        className: "bg-green-500/10 text-green-500 border-green-500/20",
+        icon: <CheckCircle className="h-3 w-3 mr-1" />,
+        label: "Completed",
+      };
+    case "in_progress":
+      return {
+        variant: "secondary" as const,
+        className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+        icon: <Clock className="h-3 w-3 mr-1" />,
+        label: "In Progress",
+      };
+    case "failed":
+      return {
+        variant: "destructive" as const,
+        className: "bg-red-500/10 text-red-500 border-red-500/20",
+        icon: <XCircle className="h-3 w-3 mr-1" />,
+        label: "Failed",
+      };
+    case "pending":
+      return {
+        variant: "secondary" as const,
+        className: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+        icon: <AlertCircle className="h-3 w-3 mr-1" />,
+        label: "Pending Review",
+      };
+    default:
+      return {
+        variant: "secondary" as const,
+        className: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+        icon: <Clock className="h-3 w-3 mr-1" />,
+        label: "Unknown",
+      };
+  }
 };
 
 export default function TeamsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [userTeams, setUserTeams] = useState<TeamView[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<TeamView | null>(null);
+  const [userTeam, setUserTeam] = useState<TeamType | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [teamMembers, setTeamMembers] = useState<UserFullView[]>([]);
-  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
-  const [isRemoveMemberOpen, setIsRemoveMemberOpen] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<UserFullView | null>(
-    null
-  );
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [teamMembers, setTeamMembers] = useState<ExtendedMember[]>([]);
+  const [teamTasks, setTeamTasks] = useState<TaskType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  // Trạng thái cho dialog
+  const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Lấy danh sách đội nhóm và thành viên
-  useEffect(() => {
-    const fetchUserTeams = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Kiểm tra nếu user là team leader
+  const isTeamLeader = userTeam?.leader.id === user?.id;
 
-        // Lấy employment_details của người dùng
-        const employmentResponse = await fetch(
-          `/api/employment-details?user_id=${currentUser.id}`
-        );
-        if (!employmentResponse.ok) {
-          throw new Error("Failed to fetch employment details");
-        }
-        const userEmployments: EmploymentDetailView[] =
-          await employmentResponse.json();
+  // Hàm tính toán thống kê đội nhóm
+  const calculateTeamStats = useMemo(() => {
+    // Lọc các task liên quan đến thành viên của team
+    const relevantTasks = teamTasks.filter((task) =>
+      teamMembers.some((member) => member.user.id === task.assignedTo.id)
+    );
+    const totalTasks = relevantTasks.length;
 
-        // Lấy danh sách team_id duy nhất
-        const teamIds = [
-          ...new Set(
-            userEmployments
-              .map((employment) => employment.team_id)
-              .filter((id): id is string => id !== null && id !== undefined)
-          ),
-        ];
-
-        // Lấy danh sách đội nhóm
-        const teamsResponse = await fetch("/api/teams");
-        if (!teamsResponse.ok) {
-          throw new Error("Failed to fetch teams");
-        }
-        const teams: TeamView[] = await teamsResponse.json();
-
-        // Lọc các đội nhóm mà người dùng là thành viên
-        const userTeams = teams.filter((team) => teamIds.includes(team.id));
-        setUserTeams(userTeams);
-
-        // Nếu có đội nhóm, chọn đội nhóm đầu tiên và lấy thành viên
-        if (userTeams.length > 0) {
-          setSelectedTeam(userTeams[0]);
-          const membersResponse = await fetch(
-            `/api/users?team_id=${userTeams[0].id}`
-          );
-          if (!membersResponse.ok) {
-            throw new Error("Failed to fetch team members");
-          }
-          const members: UserFullView[] = await membersResponse.json();
-          setTeamMembers(members);
-        } else {
-          setSelectedTeam(null);
-          setTeamMembers([]);
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        setError("Failed to load team data. Please try again later.");
-        setUserTeams([]);
-        setSelectedTeam(null);
-        setTeamMembers([]);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      activeTasksCount: relevantTasks.filter(
+        (task) => task.status === "pending" || task.status === "in_progress"
+      ).length,
+      completedTasksCount: relevantTasks.filter(
+        (task) => task.status === "completed"
+      ).length,
+      pendingReviewTasksCount: relevantTasks.filter(
+        (task) => task.status === "pending"
+      ).length,
+      failedTasksCount: relevantTasks.filter(
+        (task) =>
+          new Date(task.deadline) < new Date() && task.status !== "completed"
+      ).length,
+      completionRate:
+        totalTasks > 0
+          ? Math.round(
+              (relevantTasks.filter((task) => task.status === "completed")
+                .length /
+                totalTasks) *
+                100
+            )
+          : 0,
     };
+  }, [teamTasks, teamMembers]);
 
-    fetchUserTeams();
-  }, []);
+  // Lọc members dựa trên search query
+  const filteredMembers = useMemo(() => {
+    return teamMembers.filter(
+      (member) =>
+        searchQuery === "" ||
+        `${member.user.first_name} ${member.user.last_name}`
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        member.employment_detail.position.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        member.employment_detail.department.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
+  }, [teamMembers, searchQuery]);
 
-  // Cập nhật thành viên khi đội nhóm thay đổi
-  useEffect(() => {
-    const fetchTeamMembers = async () => {
-      if (selectedTeam) {
-        try {
-          const response = await fetch(`/api/users?team_id=${selectedTeam.id}`);
-          if (!response.ok) {
-            throw new Error("Failed to fetch team members");
-          }
-          const members: UserFullView[] = await response.json();
-          setTeamMembers(members);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (err) {
-          setError("Failed to load team members.");
-          setTeamMembers([]);
-        }
-      }
-    };
+  // Sắp xếp tasks theo deadline
+  const sortedTasks = useMemo(() => {
+    return teamTasks
+      .filter((task) =>
+        teamMembers.some((member) => member.user.id === task.assignedTo.id)
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      );
+  }, [teamTasks, teamMembers]);
 
-    fetchTeamMembers();
-  }, [selectedTeam]);
-
-  // Lọc thành viên dựa trên tìm kiếm
-  const filteredMembers = teamMembers.filter(
-    (member) =>
-      searchQuery === "" ||
-      `${member.first_name} ${member.last_name}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      member.position.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Xóa thành viên khỏi đội nhóm
-  const handleRemoveMember = async () => {
-    if (!memberToRemove) return;
+  // Lấy thông tin team của user
+  const fetchUserTeams = useCallback(async () => {
+    // Kiểm tra user trước khi gọi API
+    if (!user) {
+      router.push("/login");
+      setError("User not authenticated. Please log in.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await fetch(
-        `/api/employment-details/${memberToRemove.employment.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ team_id: null } as UpdateEmploymentPayload),
-        }
-      );
+      setLoading(true);
+      setError(null);
 
-      if (!response.ok) {
-        throw new Error("Failed to remove member from team");
+      // Lấy employment detail để lấy team id
+      const employmentResponse: EmploymentDetailResponse =
+        await fetchEmploymentDetail(user.id);
+      if (
+        !employmentResponse.employment_detail ||
+        !employmentResponse.employment_detail.team
+      ) {
+        throw new Error("No team information found for your account.");
       }
 
-      // Cập nhật danh sách thành viên
-      setTeamMembers(
-        teamMembers.filter((member) => member.id !== memberToRemove.id)
-      );
-      setSuccessMessage(
-        `${memberToRemove.first_name} ${memberToRemove.last_name} has been removed from the team`
-      );
-      setShowSuccessAlert(true);
-      setTimeout(() => setShowSuccessAlert(false), 5000);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      setError("Failed to remove member. Please try again.");
+      const teamId = employmentResponse.employment_detail.team.id;
+      const teamData = await getTeam(teamId);
+      if (!teamData) {
+        throw new Error("Failed to load team data.");
+      }
+
+      setUserTeam(teamData);
+    } catch (err: any) {
+      const errorMessage = err.message.includes("Network")
+        ? "Network error. Please check your connection."
+        : err.message || "Failed to load team data.";
+      setError(errorMessage);
+      setUserTeam(null);
+      setTeamMembers([]);
     } finally {
-      setMemberToRemove(null);
-      setIsRemoveMemberOpen(false);
+      setLoading(false);
     }
-  };
+  }, [user, router]);
 
-  const navigateToTasks = () => {
-    if (selectedTeam) {
-      router.push(`/tasks?team=${selectedTeam.id}`);
+  // Lấy thông tin members và tasks của team
+  const fetchTeamData = useCallback(async (teamId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [teamData, tasksResponse] = await Promise.all([
+        getTeam(teamId),
+        fetchTeamTasks(teamId),
+      ]);
+
+      let extendedMembers: ExtendedMember[] = [];
+      if (teamData?.members) {
+        // Lấy thông tin user và employment detail cho từng thành viên
+        extendedMembers = await Promise.all(
+          teamData.members.map(async (member) => {
+            const userResponse = await fetchUserById(member.user.id);
+            return {
+              ...member,
+              email: userResponse?.email || "N/A",
+              phone_number: userResponse?.phoneNumber || "N/A",
+            };
+          })
+        );
+        setTeamMembers(extendedMembers);
+      } else {
+        setTeamMembers([]);
+        setError("No members found in this team.");
+      }
+
+      setTeamTasks(tasksResponse.tasks || []);
+    } catch (err: any) {
+      const errorMessage = err.message.includes("Network")
+        ? "Network error. Please check your connection."
+        : err.message || "Failed to load team data.";
+      setError(errorMessage);
+      setTeamMembers([]);
+      setTeamTasks([]);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const isTeamLeader =
-    selectedTeam && selectedTeam.leader_id === currentUser.id;
+  // Gọi fetchUserTeams khi component mount
+  useEffect(() => {
+    fetchUserTeams();
+  }, [fetchUserTeams]);
 
+  // Gọi fetchTeamData khi có userTeam
+  useEffect(() => {
+    if (userTeam) {
+      fetchTeamData(userTeam.id);
+    }
+  }, [userTeam, fetchTeamData]);
+
+  // Giao diện khi đang tải
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
-            <p className="text-muted-foreground mt-1">
-              Loading your team information...
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-6">
-          <Card>
-            <CardContent className="p-8 flex items-center justify-center">
-              <div className="flex flex-col items-center">
-                <div className="animate-pulse rounded-full bg-muted h-12 w-12 mb-4"></div>
-                <div className="animate-pulse rounded-md bg-muted h-6 w-48 mb-2"></div>
-                <div className="animate-pulse rounded-md bg-muted h-4 w-32"></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
+        <p className="text-muted-foreground mt-1">Loading...</p>
+        <Card>
+          <CardContent className="p-8 flex items-center justify-center">
+            <div className="animate-pulse">
+              <div className="rounded-full bg-background h-12 w-12 mb-4"></div>
+              <div className="rounded-md bg-background h-6 w-48 mb-2"></div>
+              <div className="rounded-md bg-background h-4 w-32"></div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  // Giao diện khi có lỗi
   if (error) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
-            <p className="text-muted-foreground mt-1">
-              Error loading team data
-            </p>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
+        <p className="text-muted-foreground mt-1">Error loading team data</p>
         <Card>
           <CardContent className="p-8 flex flex-col items-center justify-center">
             <AlertCircle className="h-16 w-16 text-destructive mb-4" />
@@ -283,31 +301,27 @@ export default function TeamsPage() {
             <p className="text-center text-muted-foreground mb-6 max-w-md">
               {error}
             </p>
-            <Button onClick={() => window.location.reload()}>Try Again</Button>
+            <Button onClick={() => fetchUserTeams()}>Try Again</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (userTeams.length === 0) {
+  // Giao diện khi không có team
+  if (!userTeam) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
-            <p className="text-muted-foreground mt-1">
-              You are not currently a member of any team
-            </p>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
+        <p className="text-muted-foreground mt-1">
+          You are not currently a member of any team
+        </p>
         <Card>
           <CardContent className="p-8 flex flex-col items-center justify-center">
             <Users className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No Team Found</h2>
             <p className="text-center text-muted-foreground mb-6 max-w-md">
-              You are not currently assigned to any team. Please contact your
-              administrator if you believe this is an error.
+              Please contact your administrator to be assigned to a team.
             </p>
             <Button onClick={() => router.push("/")}>
               Return to Dashboard
@@ -320,157 +334,103 @@ export default function TeamsPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {showSuccessAlert && (
-        <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-900/20">
-          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
-          <p className="text-muted-foreground mt-1">
-            {userTeams.length > 1
-              ? `You are a member of ${userTeams.length} teams`
-              : `${selectedTeam?.name}`}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          {userTeams.length > 1 && (
-            <Select
-              value={selectedTeam?.id}
-              onValueChange={(value) => {
-                const team = userTeams.find((t) => t.id === value);
-                setSelectedTeam(team || null);
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select team" />
-              </SelectTrigger>
-              <SelectContent>
-                {userTeams.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <Button variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule
-          </Button>
-          <Button size="sm" onClick={navigateToTasks}>
-            <ListTodo className="h-4 w-4 mr-2" />
-            Tasks
-          </Button>
-        </div>
-      </div>
-
-      {selectedTeam && (
+      {userTeam && (
         <div className="space-y-6">
-          <Card>
+          {/* Card thông tin tổng quan team */}
+          <Card className="bg-background">
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-4">
-                    <AvatarImage
-                      src="/placeholder.svg"
-                      alt={selectedTeam.name}
-                    />
+                    <AvatarImage src="/placeholder.svg" alt={userTeam.name} />
                     <AvatarFallback>
-                      {selectedTeam.name.substring(0, 2)}
+                      {userTeam.name.substring(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <CardTitle>{selectedTeam.name}</CardTitle>
+                    <CardTitle>{userTeam.name}</CardTitle>
                     <CardDescription className="flex items-center mt-1">
                       <Users className="h-3 w-3 mr-1" />
-                      {teamMembers.length} members
+                      {teamMembers.length} members • {teamTasks.length} tasks
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex space-x-2 mt-4 md:mt-0">
-                  <Button variant="outline" size="sm">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Team Chat
-                  </Button>
-                  {isTeamLeader && (
-                    <AddMemberDialog
-                      isOpen={isAddMemberOpen}
-                      onOpenChange={setIsAddMemberOpen}
-                      teamId={selectedTeam.id}
-                      onAddMember={(newMember: UserFullView) =>
-                        setTeamMembers([...teamMembers, newMember])
-                      }
-                      setSuccessMessage={setSuccessMessage}
-                      setShowSuccessAlert={setShowSuccessAlert}
-                    />
-                  )}
-                </div>
+                <Button variant="outline" size="sm" className="cursor-pointer">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Team Chat
+                </Button>
               </div>
             </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="flex flex-col items-center justify-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-2xl font-bold">
+                    {calculateTeamStats.activeTasksCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Active Tasks</p>
+                </div>
+                <div className="flex flex-col items-center justify-center p-3 bg-muted/50 rounded-lg">
+                  <p className="text-2xl font-bold">
+                    {calculateTeamStats.completionRate}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Completion Rate
+                  </p>
+                </div>
+              </div>
+            </CardContent>
           </Card>
 
+          {/* Tabs điều hướng */}
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="overview" className="cursor-pointer">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="members" className="cursor-pointer">
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="cursor-pointer">
+                Tasks
+              </TabsTrigger>
             </TabsList>
 
+            {/* Tab Tổng quan */}
             <TabsContent value="overview" className="space-y-4">
-              <Card>
+              <Card className="bg-background">
                 <CardHeader>
-                  <CardTitle>Team Overview</CardTitle>
+                  <CardTitle className="text-2xl">Team Overview</CardTitle>
                   <CardDescription>
-                    Key information about the {selectedTeam.name} team
+                    Key information about the {userTeam.name} team
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-sm font-medium">Team Lead</h3>
+                      <h3 className="text-sm font-medium">Team Leader</h3>
                       <div className="flex items-center mt-2">
                         <Avatar className="h-10 w-10 mr-2">
                           <AvatarImage
-                            src={
-                              teamMembers.find(
-                                (m) => m.id === selectedTeam.leader_id
-                              )?.image_url || "/placeholder.svg"
-                            }
-                            alt={
-                              teamMembers.find(
-                                (m) => m.id === selectedTeam.leader_id
-                              )?.first_name || "Team Lead"
-                            }
+                            src="/placeholder.svg"
+                            alt={userTeam.leader.first_name}
                           />
                           <AvatarFallback>
-                            {teamMembers
-                              .find((m) => m.id === selectedTeam.leader_id)
-                              ?.first_name?.substring(0, 2) || "TL"}
+                            {userTeam.leader.first_name.substring(0, 2)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="text-sm font-medium">
-                            {teamMembers.find(
-                              (m) => m.id === selectedTeam.leader_id
-                            )?.first_name || "Not assigned"}{" "}
-                            {
-                              teamMembers.find(
-                                (m) => m.id === selectedTeam.leader_id
-                              )?.last_name
-                            }
+                            {userTeam.leader.first_name}{" "}
+                            {userTeam.leader.last_name}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {teamMembers.find(
-                              (m) => m.id === selectedTeam.leader_id
-                            )?.position.name || ""}
+                              (m) => m.user.id === userTeam.leader.id
+                            )?.employment_detail.position.name || "Team Leader"}
                           </p>
                         </div>
                       </div>
@@ -479,50 +439,37 @@ export default function TeamsPage() {
                     <Separator />
 
                     <div>
-                      <h3 className="text-sm font-medium">Team Goals</h3>
-                      <ul className="mt-2 space-y-2">
-                        {[
-                          "Complete project milestones",
-                          "Enhance team collaboration",
-                          "Meet deadlines",
-                        ].map((goal, i) => (
-                          <li key={i} className="text-sm flex items-start">
-                            <CheckCircle2 className="h-4 w-4 mr-2 text-primary shrink-0 mt-0.5" />
-                            <span>{goal}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <h3 className="text-sm font-medium">Team Statistics</h3>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Total Members: {teamMembers.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Active Tasks: {calculateTeamStats.activeTasksCount}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Completed Tasks:{" "}
+                        {calculateTeamStats.completedTasksCount}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
+            {/* Tab Thành viên */}
             <TabsContent value="members" className="space-y-4">
-              <Card>
+              <Card className="bg-background">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <CardTitle>Team Members</CardTitle>
-                    <div className="flex items-center space-x-2">
-                      <div className="relative w-full md:w-64 mt-2 md:mt-0">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search members..."
-                          className="pl-8"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                      </div>
-                      {isTeamLeader && (
-                        <Button
-                          size="sm"
-                          className="mt-2 md:mt-0"
-                          onClick={() => setIsAddMemberOpen(true)}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          Add
-                        </Button>
-                      )}
+                    <div className="relative w-full md:w-64 mt-2 md:mt-0">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search members..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
                     </div>
                   </div>
                 </CardHeader>
@@ -536,132 +483,67 @@ export default function TeamsPage() {
                       <p className="text-sm text-muted-foreground mt-1">
                         {searchQuery
                           ? "No members match your search criteria"
-                          : "This team doesn't have any members yet"}
+                          : "This team has no members yet. Please contact your administrator."}
                       </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {filteredMembers.map((member) => (
                         <div
-                          key={member.id}
+                          key={member.user.id}
                           className="border rounded-lg p-4 flex flex-col"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center">
                               <Avatar className="h-10 w-10 mr-3">
                                 <AvatarImage
-                                  src={member.image_url || "/placeholder.svg"}
-                                  alt={`${member.first_name} ${member.last_name}`}
+                                  src="/placeholder.svg"
+                                  alt={`${member.user.first_name} ${member.user.last_name}`}
                                 />
                                 <AvatarFallback>
-                                  {member.first_name.substring(0, 2)}
+                                  {member.user.first_name.substring(0, 2)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium text-sm">
-                                  {member.first_name} {member.last_name}
+                                  {member.user.first_name}{" "}
+                                  {member.user.last_name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {member.position.name}
+                                  {member.employment_detail.position.name}
                                 </p>
                               </div>
                             </div>
-                            {isTeamLeader && member.id !== currentUser.id && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-56" align="end">
-                                  <div className="grid gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="justify-start"
-                                    >
-                                      <UserCheck className="h-4 w-4 mr-2" />
-                                      View Profile
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="justify-start"
-                                    >
-                                      <MessageSquare className="h-4 w-4 mr-2" />
-                                      Message
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="justify-start"
-                                    >
-                                      <Mail className="h-4 w-4 mr-2" />
-                                      Email
-                                    </Button>
-                                    <Separator className="my-1" />
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="justify-start text-destructive hover:text-destructive"
-                                      onClick={() => {
-                                        setMemberToRemove(member);
-                                        setIsRemoveMemberOpen(true);
-                                      }}
-                                    >
-                                      <UserMinus className="h-4 w-4 mr-2" />
-                                      Remove from Team
-                                    </Button>
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
-                            )}
                           </div>
 
                           <div className="mt-3 space-y-2">
-                            <div className="flex items-center text-xs">
-                              <Mail className="h-3 w-3 mr-2 text-muted-foreground" />
-                              <span>{member.email}</span>
-                            </div>
-                            <div className="flex items-center text-xs">
-                              <Phone className="h-3 w-3 mr-2 text-muted-foreground" />
-                              <span>{member.phone_number || "N/A"}</span>
-                            </div>
+                            {member.email !== "N/A" && (
+                              <div className="flex items-center text-xs">
+                                <Mail className="h-3 w-3 mr-2 text-muted-foreground" />
+                                <span>{member.email}</span>
+                              </div>
+                            )}
+                            {member.phone_number !== "N/A" && (
+                              <div className="flex items-center text-xs">
+                                <Phone className="h-3 w-3 mr-2 text-muted-foreground" />
+                                <span>{member.phone_number}</span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="mt-3 flex flex-wrap gap-1">
                             <Badge variant="secondary" className="text-xs">
-                              {member.position.name}
+                              {member.employment_detail.position.name}
                             </Badge>
                             <Badge variant="secondary" className="text-xs">
-                              {member.department.name}
+                              {member.employment_detail.department.name}
                             </Badge>
                           </div>
 
                           <div className="mt-auto pt-3 flex justify-between items-center">
                             <p className="text-xs text-muted-foreground">
-                              Joined {member.hire_date}
+                              Joined {member.employment_detail.start_date}
                             </p>
-                            <div className="flex space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <Mail className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -670,63 +552,231 @@ export default function TeamsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
 
-          <Dialog
-            open={isRemoveMemberOpen}
-            onOpenChange={setIsRemoveMemberOpen}
-          >
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Remove Team Member</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to remove this member from the team?
-                  This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              {memberToRemove && (
-                <div className="py-4">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={memberToRemove.image_url || "/placeholder.svg"}
-                        alt={`${memberToRemove.first_name} ${memberToRemove.last_name}`}
-                      />
-                      <AvatarFallback>
-                        {memberToRemove.first_name.substring(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+            {/* Tab Nhiệm vụ */}
+            <TabsContent value="tasks" className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <div>
-                      <p className="font-medium">
-                        {memberToRemove.first_name} {memberToRemove.last_name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {memberToRemove.position.name}
-                      </p>
+                      <CardTitle>Team Tasks</CardTitle>
+                      <CardDescription>
+                        Tasks assigned to {userTeam.name} team members
+                      </CardDescription>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-2 md:mt-0">
+                      {isTeamLeader ? (
+                        <Button size="sm" onClick={() => router.push("/tasks")}>
+                          Create Task
+                        </Button>
+                      ) : (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" disabled>
+                                Create Task
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Only team leaders can create tasks.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push("/tasks")}
+                      >
+                        View All Tasks
+                      </Button>
                     </div>
                   </div>
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Warning</AlertTitle>
-                    <AlertDescription>
-                      This will remove the member from all team resources.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsRemoveMemberOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={handleRemoveMember}>
-                  Remove Member
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                </CardHeader>
+                <CardContent>
+                  {/* Thống kê nhiệm vụ */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {calculateTeamStats.activeTasksCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Active</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-green-600">
+                        {calculateTeamStats.completedTasksCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Completed</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-amber-600">
+                        {calculateTeamStats.pendingReviewTasksCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Pending Review
+                      </p>
+                    </div>
+                    <div className="text-center p-3 bg-muted/50 rounded-lg">
+                      <p className="text-2xl font-bold text-red-600">
+                        {calculateTeamStats.failedTasksCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Failed</p>
+                    </div>
+                  </div>
+
+                  {/* Danh sách nhiệm vụ */}
+                  <div className="space-y-4">
+                    {sortedTasks.length === 0 ? (
+                      <div className="text-center py-8">
+                        <h3 className="mt-2 text-lg font-medium">
+                          No Tasks Found
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This team has no assigned tasks yet.
+                        </p>
+                        {isTeamLeader && (
+                          <Button
+                            className="mt-4"
+                            onClick={() => router.push("/tasks")}
+                          >
+                            Create First Task
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid gap-4">
+                        {sortedTasks.map((task) => {
+                          const assignedMember = teamMembers.find(
+                            (member) => member.user.id === task.assignedTo.id
+                          );
+                          const now = new Date();
+                          const isFailed =
+                            new Date(task.deadline) < now &&
+                            task.status !== "completed";
+                          const daysUntilDeadline = Math.ceil(
+                            (new Date(task.deadline).getTime() -
+                              now.getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                          const statusBadge = getStatusBadge(task.status);
+
+                          return (
+                            <div
+                              key={task.id}
+                              className={cn(
+                                "border rounded-lg p-4",
+                                isFailed
+                                  ? "border-red-200 bg-red-50 dark:bg-red-900/10"
+                                  : statusBadge.className
+                              )}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h4 className="font-medium">{task.name}</h4>
+                                    <Badge
+                                      variant={statusBadge.variant}
+                                      className={cn(
+                                        "gap-1",
+                                        statusBadge.className
+                                      )}
+                                    >
+                                      {statusBadge.icon}
+                                      {statusBadge.label}
+                                    </Badge>
+                                    {isFailed && (
+                                      <Badge variant="destructive">
+                                        <AlertCircle className="h-3 w-3 mr-1" />
+                                        Failed
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <p className="text-sm text-muted-foreground mb-3">
+                                    {task.description}
+                                  </p>
+
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                      {assignedMember && (
+                                        <div className="flex items-center gap-2">
+                                          <Avatar className="h-6 w-6">
+                                            <AvatarImage
+                                              src="/placeholder.svg"
+                                              alt={`${assignedMember.user.first_name} ${assignedMember.user.last_name}`}
+                                            />
+                                            <AvatarFallback>
+                                              {assignedMember.user.first_name.substring(
+                                                0,
+                                                2
+                                              )}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <span className="text-sm">
+                                            {assignedMember.user.first_name}{" "}
+                                            {assignedMember.user.last_name}
+                                          </span>
+                                        </div>
+                                      )}
+
+                                      <div className="flex items-center text-sm text-muted-foreground">
+                                        <Calendar className="h-4 w-4 mr-1" />
+                                        <span
+                                          className={
+                                            isFailed
+                                              ? "text-red-600 font-medium"
+                                              : ""
+                                          }
+                                        >
+                                          {new Date(
+                                            task.deadline
+                                          ).toLocaleDateString()}
+                                          {!isFailed &&
+                                            daysUntilDeadline >= 0 && (
+                                              <span className="ml-1">
+                                                (
+                                                {daysUntilDeadline === 0
+                                                  ? "Today"
+                                                  : daysUntilDeadline === 1
+                                                  ? "Tomorrow"
+                                                  : `${daysUntilDeadline} days`}
+                                                )
+                                              </span>
+                                            )}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedTask(task);
+                                        setIsDialogOpen(true);
+                                      }}
+                                    >
+                                      View Details
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Dialog hiển thị chi tiết task */}
+          <TaskViewDialog
+            task={selectedTask}
+            open={isDialogOpen}
+            onOpenChange={setIsDialogOpen}
+          />
         </div>
       )}
     </div>

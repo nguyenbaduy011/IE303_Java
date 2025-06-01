@@ -1,21 +1,51 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export interface MemberType {
+export interface UserType {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
 }
 
-export interface TeamType {
+export interface PositionType {
   id: string;
   name: string;
-  leader: MemberType;
-  members: MemberType[];
-  memberCount: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export async function getTeamMembers(teamId: string): Promise<MemberType[]> {
+export interface UserTeamType {
+  id: string;
+  name: string;
+}
+
+export interface DepartmentType {
+  id: string;
+  name: string;
+}
+
+export interface EmploymentDetail {
+  position: PositionType;
+  team: UserTeamType;
+  department: DepartmentType;
+  working_status: "active" | "inactive" | "terminated" | string;
+  start_date: string;
+}
+
+export type Member = {
+  user: UserType;
+  employment_detail: EmploymentDetail;
+};
+
+export type TeamType = {
+  id: string;
+  name: string;
+  leader: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  member_count: number;
+  members: Member[];
+};
+
+export async function getTeam(teamId: string): Promise<TeamType | null> {
   try {
     const res = await fetch(
       `http://localhost:8080/api/team/${teamId}/members`,
@@ -34,21 +64,51 @@ export async function getTeamMembers(teamId: string): Promise<MemberType[]> {
       if (res.status === 403)
         throw new Error("You do not have permission to view this team.");
       if (res.status === 404) throw new Error("Team not found.");
-      throw new Error(`HTTP ${res.status}: Failed to fetch team members`);
+      throw new Error(`HTTP ${res.status}: Failed to fetch team`);
     }
 
-    const data = await res.json();
+    const rawData: any = await res.json();
+    const membersArray = Array.isArray(rawData.members) ? rawData.members : [];
 
-    const membersArray: any[] = Array.isArray(data.members) ? data.members : [];
+    const processedTeam: TeamType = {
+      id: rawData.id || "",
+      name: rawData.name || "",
+      leader: {
+        id: rawData.leader?.id || "",
+        first_name: rawData.leader?.firstName || "",
+        last_name: rawData.leader?.lastName || "",
+      },
+      member_count: rawData.memberCount ?? membersArray.length,
+      members: membersArray.map(
+        (member: any) => ({
+          user: {
+            id: member.user?.id || "",
+            first_name: member.user?.firstName || "",
+            last_name: member.user?.lastName || "",
+          },
+          employment_detail: {
+            position: {
+              id: member.employmentDetail?.position?.id || "",
+              name: member.employmentDetail?.position?.name || "",
+            },
+            team: {
+              id: member.employmentDetail?.team?.id || "",
+              name: member.employmentDetail?.team?.name || "",
+            },
+            department: {
+              id: member.employmentDetail?.department?.id || "",
+              name: member.employmentDetail?.department?.name || "",
+            },
+            working_status: member.employmentDetail?.workingStatus || "active",
+            start_date: member.employmentDetail?.startDate || "",
+          },
+        })
+      ),
+    };
 
-    // Ánh xạ và kiểm tra dữ liệu
-    return membersArray.map((member: any) => ({
-      id: member.id || "",
-      firstName: member.firstName || "Unknown",
-      lastName: member.lastName || "Unknown",
-    }));
+    return processedTeam;
   } catch (error) {
-    console.error("Error when fetch team's members:", error);
-    return [];
+    console.error("Error when fetching team:", error);
+    return null;
   }
 }

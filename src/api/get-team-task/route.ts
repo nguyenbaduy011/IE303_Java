@@ -1,7 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TaskType } from "@/types/types";
+export type TaskType = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string;
+  deadline: string;
+  status: "pending" | "in_progress" | "completed" | "failed" | string;
+  assignedTo: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+};
 
-export const fetchTasks = async (teamId: string): Promise<TaskType[]> => {
+export interface TaskListResponse {
+  tasks: TaskType[];
+  totalPages: number;
+  totalTaskCount: number;
+  totalElements: number;
+}
+
+export const fetchTeamTasks = async (
+  teamId: string
+): Promise<TaskListResponse> => {
   try {
     const response = await fetch(
       `http://localhost:8080/api/team/${teamId}/tasks`,
@@ -28,26 +50,37 @@ export const fetchTasks = async (teamId: string): Promise<TaskType[]> => {
     }
 
     const data = await response.json();
-    console.log("Tasks API response:", data); // Ghi log để debug dữ liệu thô
-    const tasksArray = Array.isArray(data) ? data : data.content || [];
-    return tasksArray.map((task: any) => {
-      const deadline = task.deadline;
-      if (!deadline || isNaN(new Date(deadline).getTime())) {
-        console.warn(`Invalid deadline in task ${task.id}: ${deadline}`);
-      }
-      return {
-        id: task.id,
-        name: task.name,
-        description: task.description,
-        deadline: deadline,
-        status: task.status,
-        assigned_to: task.assignedTo ? task.assignedTo.id : null,
-        created_at: task.createdAt,
-        updated_at: task.updatedAt,
-      };
-    });
+
+    const tasks: TaskType[] = Array.isArray(data.task)
+      ? data.task.map((item: any) => ({
+          id: item.id ?? "",
+          createdAt: item.createdAt ?? "",
+          updatedAt: item.updatedAt ?? "",
+          name: item.name ?? "",
+          description: item.description ?? "",
+          deadline: item.deadline ?? "",
+          status: item.status ?? "",
+          assignedTo: {
+            id: item.assignedTo?.id ?? "",
+            firstName: item.assignedTo?.firstName ?? "",
+            lastName: item.assignedTo?.lastName ?? "",
+          },
+        }))
+      : [];
+
+    return {
+      tasks: tasks,
+      totalPages: data.totalPages ?? 0,
+      totalTaskCount: data.totalTaskCount ?? 0,
+      totalElements: data.totalElements ?? 0,
+    };
   } catch (error) {
-    console.error("Error in fetchTasks:", error); // Ghi chi tiết lỗi
-    throw error;
+    console.error("Error fetching team tasks:", error);
+    return {
+      tasks: [],
+      totalPages: 0,
+      totalTaskCount: 0,
+      totalElements: 0,
+    };
   }
 };
