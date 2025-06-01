@@ -119,7 +119,7 @@ export function TaskViewDialog({
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-foreground">
-                {task.assignedTo.firstName} {task.assignedTo.lastName}
+                {task.assigned_to.first_name} {task.assigned_to.last_name}
               </p>
             </div>
           </div>
