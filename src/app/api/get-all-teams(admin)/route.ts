@@ -21,7 +21,7 @@ export interface TeamWithLeaderType {
 
 export const fetchTeams = async (): Promise<TeamWithLeaderType[]> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/admin/teams`, {
+    const response = await fetch(`http://localhost:8080/api/team`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

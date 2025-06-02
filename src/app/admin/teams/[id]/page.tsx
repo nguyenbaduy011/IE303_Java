@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Edit, MoreHorizontal, UserPlus } from "lucide-react";
-
+import { ArrowLeft, Edit, MoreHorizontal, UserPlus } from "lucide-react";
+import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -33,7 +32,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -51,125 +49,120 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DonutChart } from "@/components/donut-chart";
+import { getTeam, Member, TeamType } from "@/app/api/get-team-member/route";
+import { fetchTeamTasks, TaskType } from "@/app/api/get-team-task/route";
+import { AddMemberDialog } from "@/components/teams/add-member-dialog";
+import { DonutChart } from "@/components/teams/team-progress-donut-chart";
+import { getFullName } from "@/utils/getFullName";
+import { Badge } from "@/components/ui/badge";
 
-import { mockTeams, mockTeamMembers } from "@/lib/mock-team-data";
-
-export default function TeamDetailsPage({ params }) {
-  const teamId = params.id;
-  const team = mockTeams.find((t) => t.id === teamId);
-  const teamMembers = mockTeamMembers.filter(
-    (member) => member.teamId === teamId
-  );
-
+export default function TeamDetailsPage() {
+  const params = useParams();
+  const teamId = params.id as string;
+  const [team, setTeam] = useState<TeamType | null>(null);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [isEditTeamDialogOpen, setIsEditTeamDialogOpen] = useState(false);
   const [isRemoveMemberDialogOpen, setIsRemoveMemberDialogOpen] =
     useState(false);
-  const [memberToRemove, setMemberToRemove] = useState(null);
-  const [newMemberForm, setNewMemberForm] = useState({
-    name: "",
-    email: "",
-    position: "",
-    role: "member",
-    notes: "",
-  });
-  const [formErrors, setFormErrors] = useState({});
-  const [teamName, setTeamName] = useState(team.name);
-  const [teamDescription, setTeamDescription] = useState(team.description);
-  const [teamDepartment, setTeamDepartment] = useState(team.department);
-  const [teamLead, setTeamLead] = useState(team.lead.name);
-  const [teamStatus, setTeamStatus] = useState(team.status);
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+  const [teamName, setTeamName] = useState("");
+  const [teamDescription, setTeamDescription] = useState("");
+  const [teamLead, setTeamLead] = useState("");
 
-  const handleFormChange = (field, value) => {
-    setNewMemberForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    if (formErrors[field]) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleAddMember = () => {
-    const errors = {};
-    if (!newMemberForm.name.trim()) errors.name = "Name is required";
-    if (!newMemberForm.email.trim()) errors.email = "Email is required";
-    if (!/^\S+@\S+\.\S+$/.test(newMemberForm.email))
-      errors.email = "Valid email is required";
-    if (!newMemberForm.position.trim())
-      errors.position = "Position is required";
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    const newMemberId = `member-${Date.now()}`;
-    const newMember = {
-      id: newMemberId,
-      teamId: team.id,
-      name: newMemberForm.name,
-      position: newMemberForm.position,
-      email: newMemberForm.email,
-      phone: "+1 (555) 000-0000",
-      avatar: "/placeholder.svg?height=40&width=40",
-      joinDate: new Date().toLocaleDateString(),
-      skills: [newMemberForm.position],
+  // Fetch team and tasks on mount
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      try {
+        setLoading(true);
+        const [teamData, taskResponse] = await Promise.all([
+          getTeam(teamId),
+          fetchTeamTasks(teamId),
+        ]);
+        if (teamData) {
+          setTeam(teamData);
+          setTeamName(teamData.name);
+          setTeamDescription(""); // API doesn't provide description
+          setTeamLead(
+            teamData.leader
+              ? `${teamData.leader.first_name} ${teamData.leader.last_name}`
+              : "Not assigned"
+          );
+          setTasks(taskResponse.tasks);
+        } else {
+          setError("Team not found");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load team");
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchTeamData();
+  }, [teamId]);
 
-    console.log(`Adding new member to team: ${team.name}`, newMember);
-
-    setNewMemberForm({
-      name: "",
-      email: "",
-      position: "",
-      role: "member",
-      notes: "",
-    });
-    setFormErrors({});
-    setIsAddMemberDialogOpen(false);
-
-    alert(`${newMemberForm.name} has been added to the team`);
+  const handleEditTeam = async () => {
+    try {
+      console.log(`Updating team ${team?.name}:`, {
+        name: teamName,
+        description: teamDescription,
+        lead: teamLead,
+      });
+      setIsEditTeamDialogOpen(false);
+      alert(`Team ${teamName} has been updated`);
+    } catch (error) {
+      console.error("Error updating team:", error);
+    }
   };
 
-  const handleRemoveMember = (member) => {
+  const handleRemoveMember = (member: Member) => {
     setMemberToRemove(member);
     setIsRemoveMemberDialogOpen(true);
   };
 
-  const confirmRemoveMember = () => {
-    console.log(
-      `Removing member: ${memberToRemove.name} from team: ${team.name}`
-    );
-    setIsRemoveMemberDialogOpen(false);
-    setMemberToRemove(null);
+  const confirmRemoveMember = async () => {
+    try {
+      console.log(
+        `Removing member: ${memberToRemove?.user.first_name} ${memberToRemove?.user.last_name} from team: ${team?.name}`
+      );
+      if (team && memberToRemove) {
+        const updatedTeam: TeamType = {
+          ...team,
+          members: team.members.filter(
+            (m) => m.user.id !== memberToRemove.user.id
+          ),
+          member_count: (team.member_count || 0) - 1,
+        };
+        setTeam(updatedTeam);
+      }
+      setIsRemoveMemberDialogOpen(false);
+      setMemberToRemove(null);
+    } catch (error) {
+      console.error("Error removing member:", error);
+    }
   };
 
-  const handleEditTeam = () => {
-    const updatedTeam = {
-      ...team,
-      name: teamName,
-      description: teamDescription,
-      department: teamDepartment,
-      lead: { ...team.lead, name: teamLead },
-      status: teamStatus,
-    };
-    console.log(`Updating team: ${team.name}`, updatedTeam);
-    setIsEditTeamDialogOpen(false);
-    alert(`Team ${team.name} has been updated`);
-  };
+  // Calculate task metrics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(
+    (task) => task.status === "completed"
+  ).length;
+  const completionRate =
+    totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  if (!team) {
+  if (loading) {
+    return <div className="container mx-auto p-6">Loading...</div>;
+  }
+
+  if (error || !team) {
     return (
       <div className="container mx-auto p-6 flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-2xl font-bold mb-4">Team Not Found</h1>
         <p className="text-muted-foreground mb-6">
-          The team you're looking for doesn't exist or has been removed.
+          {error ||
+            "The team you're looking for doesn't exist or has been removed."}
         </p>
         <Button asChild>
           <Link href="/admin/teams">
@@ -193,14 +186,9 @@ export default function TeamDetailsPage({ params }) {
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               {teamName}
-              <Badge
-                variant={teamStatus === "active" ? "default" : "secondary"}
-              >
-                {teamStatus === "active" ? "Active" : "Pending"}
-              </Badge>
             </h1>
             <p className="text-muted-foreground">
-              {teamDepartment} • {teamMembers.length} members
+              {team.members.length} members
             </p>
           </div>
         </div>
@@ -223,33 +211,25 @@ export default function TeamDetailsPage({ params }) {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Team Overview</CardTitle>
-            <CardDescription>{teamDescription}</CardDescription>
+            <CardDescription>
+              {teamDescription || "No description available"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <div className="text-sm font-medium text-muted-foreground mb-1">
-                    Projects
+                    Tasks
                   </div>
-                  <div className="text-2xl font-bold">
-                    {team.metrics.projects}
-                  </div>
+                  <div className="text-2xl font-bold">{totalTasks}</div>
                 </div>
                 <div className="bg-muted/50 p-4 rounded-lg">
                   <div className="text-sm font-medium text-muted-foreground mb-1">
                     Completion Rate
                   </div>
                   <div className="text-2xl font-bold">
-                    {team.metrics.completion}%
-                  </div>
-                </div>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <div className="text-sm font-medium text-muted-foreground mb-1">
-                    Satisfaction
-                  </div>
-                  <div className="text-2xl font-bold">
-                    {team.metrics.satisfaction}/10
+                    {completionRate.toFixed(1)}%
                   </div>
                 </div>
               </div>
@@ -258,14 +238,9 @@ export default function TeamDetailsPage({ params }) {
 
               <div>
                 <h3 className="text-lg font-medium mb-2">Team Goals</h3>
-                <ul className="space-y-2">
-                  {team.goals.map((goal, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-primary mt-0.5" />
-                      <span>{goal}</span>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-sm text-muted-foreground">
+                  No goals available
+                </p>
               </div>
 
               <Separator />
@@ -273,15 +248,12 @@ export default function TeamDetailsPage({ params }) {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-medium mb-4">Team Performance</h3>
-                  <DonutChart
-                    completed={team.metrics.completedTasks}
-                    total={team.metrics.totalTasks}
-                  />
+                  <DonutChart completed={completedTasks} total={totalTasks} />
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <div>Total Tasks: {team.metrics.totalTasks}</div>
-                  <div>Completed: {team.metrics.completedTasks}</div>
-                  <div>Pending: {team.metrics.pendingTasks}</div>
+                  <div>Total Tasks: {totalTasks}</div>
+                  <div>Completed: {completedTasks}</div>
+                  <div>Pending: {totalTasks - completedTasks}</div>
                 </div>
               </div>
             </div>
@@ -295,71 +267,24 @@ export default function TeamDetailsPage({ params }) {
           <CardContent>
             <div className="flex items-center gap-4 mb-6">
               <Avatar className="h-16 w-16">
-                <AvatarImage
-                  src={team.lead.avatar || "/placeholder.svg"}
-                  alt={team.lead.name}
-                />
-                <AvatarFallback>{team.lead.name.charAt(0)}</AvatarFallback>
+                <AvatarImage src="/placeholder.svg" alt={teamLead} />
+                <AvatarFallback>{teamLead.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-medium">{teamLead}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {team.lead.position}
-                </p>
+                <p className="text-sm text-muted-foreground">Team Lead</p>
               </div>
             </div>
 
             <Separator className="my-4" />
 
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Active Projects</h3>
-              {team.projects.map((project) => (
-                <Card key={project.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium">{project.name}</h4>
-                      <Badge
-                        variant={
-                          project.status === "completed"
-                            ? "default"
-                            : project.status === "in-progress"
-                              ? "secondary"
-                              : "outline"
-                        }
-                      >
-                        {project.status === "in-progress"
-                          ? "In Progress"
-                          : project.status === "planning"
-                            ? "Planning"
-                            : "Completed"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {project.description}
-                    </p>
-                    <div className="flex justify-between text-sm">
-                      <span>Deadline: {project.deadline}</span>
-                      <span>{project.members.length} members</span>
-                    </div>
-                    <div className="flex -space-x-2 mt-2">
-                      {project.members.map((member, i) => (
-                        <Avatar
-                          key={i}
-                          className="h-6 w-6 border-2 border-background"
-                        >
-                          <AvatarImage
-                            src={member.avatar || "/placeholder.svg"}
-                            alt={member.name}
-                          />
-                          <AvatarFallback>
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <h3 className="text-lg font-medium">Active Tasks</h3>
+              <p className="text-sm text-muted-foreground">
+                {totalTasks > 0
+                  ? `${totalTasks} tasks in progress`
+                  : "No tasks available"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -368,59 +293,78 @@ export default function TeamDetailsPage({ params }) {
       <Tabs defaultValue="members">
         <TabsList>
           <TabsTrigger value="members">Team Members</TabsTrigger>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          <TabsTrigger value="events">Upcoming Events</TabsTrigger>
         </TabsList>
 
         <TabsContent value="members" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Team Members ({teamMembers.length})</CardTitle>
+              <CardTitle>Team Members ({team.members.length})</CardTitle>
               <CardDescription>
                 Manage all members of the {teamName} team
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {teamMembers.map((member) => (
+                {team.members.map((member) => (
                   <div
-                    key={member.id}
+                    key={member.user.id}
                     className="flex justify-between items-center p-4 rounded-lg border"
                   >
                     <div className="flex items-center gap-4">
                       <Avatar>
                         <AvatarImage
-                          src={member.avatar || "/placeholder.svg"}
-                          alt={member.name}
+                          src="/placeholder.svg"
+                          alt={getFullName(
+                            member.user.first_name,
+                            member.user.last_name
+                          )}
                         />
-                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>
+                          {member.user.first_name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium">{member.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">
+                            {getFullName(
+                              member.user.first_name,
+                              member.user.last_name
+                            )}
+                          </h4>
+                          {team.leader.id === member.user.id && (
+                            <Badge>Leader</Badge>
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">
-                          {member.position}
+                          {member.employment_detail.position.name}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-sm text-right">
-                        <div>{member.email}</div>
                         <div className="text-muted-foreground">
-                          Joined {member.joinDate}
+                          Joined {member.employment_detail.start_date}
                         </div>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="cursor-pointer"
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Role</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Link href={`/profile/${member.user.id}`}>
+                              View Profile
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            className="text-destructive"
+                            className="text-destructive cursor-pointer"
                             onClick={() => handleRemoveMember(member)}
                           >
                             Remove from Team
@@ -444,32 +388,9 @@ export default function TeamDetailsPage({ params }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {team.recentActivity.map((activity, index) => (
-                  <div key={index} className="flex gap-4 p-4 rounded-lg border">
-                    <Avatar>
-                      <AvatarImage
-                        src={activity.user.avatar || "/placeholder.svg"}
-                        alt={activity.user.name}
-                      />
-                      <AvatarFallback>
-                        {activity.user.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p>
-                        <span className="font-medium">
-                          {activity.user.name}
-                        </span>{" "}
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-muted-foreground">
+                No recent activity available
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -483,135 +404,19 @@ export default function TeamDetailsPage({ params }) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {team.upcomingEvents.map((event, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <div className="flex justify-between text-sm mt-1">
-                        <span>{event.date}</span>
-                        <span>{event.time}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {event.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <p className="text-sm text-muted-foreground">
+                No upcoming events available
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <Dialog
-        open={isAddMemberDialogOpen}
-        onOpenChange={setIsAddMemberDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
-            <DialogDescription>
-              Add a new member to the {teamName} team.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={newMemberForm.name}
-                onChange={(e) => handleFormChange("name", e.target.value)}
-                placeholder="John Doe"
-                className={formErrors.name ? "border-destructive" : ""}
-              />
-              {formErrors.name && (
-                <p className="text-sm text-destructive">{formErrors.name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={newMemberForm.email}
-                onChange={(e) => handleFormChange("email", e.target.value)}
-                placeholder="john.doe@example.com"
-                className={formErrors.email ? "border-destructive" : ""}
-              />
-              {formErrors.email && (
-                <p className="text-sm text-destructive">{formErrors.email}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Input
-                id="position"
-                value={newMemberForm.position}
-                onChange={(e) => handleFormChange("position", e.target.value)}
-                placeholder="Software Engineer"
-                className={formErrors.position ? "border-destructive" : ""}
-              />
-              {formErrors.position && (
-                <p className="text-sm text-destructive">
-                  {formErrors.position}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role in Team</Label>
-              <Select
-                value={newMemberForm.role}
-                onValueChange={(value) => handleFormChange("role", value)}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Team Member</SelectItem>
-                  <SelectItem value="admin">Team Admin</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Textarea
-                id="notes"
-                placeholder="Add any additional information about this team member"
-                rows={3}
-                value={newMemberForm.notes}
-                onChange={(e) => handleFormChange("notes", e.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsAddMemberDialogOpen(false);
-                setFormErrors({});
-                setNewMemberForm({
-                  name: "",
-                  email: "",
-                  position: "",
-                  role: "member",
-                  notes: "",
-                });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleAddMember}>Add to Team</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddMemberDialog
+        isOpen={isAddMemberDialogOpen}
+        onClose={() => setIsAddMemberDialogOpen(false)}
+        team={team}
+      />
 
       <Dialog
         open={isEditTeamDialogOpen}
@@ -636,34 +441,6 @@ export default function TeamDetailsPage({ params }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="team-description">Description</Label>
-              <Textarea
-                id="team-description"
-                value={teamDescription}
-                rows={3}
-                onChange={(e) => setTeamDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="team-department">Department</Label>
-              <Select
-                value={teamDepartment}
-                onValueChange={(value) => setTeamDepartment(value)}
-              >
-                <SelectTrigger id="team-department">
-                  <SelectValue placeholder="Select department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Engineering">Engineering</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Operations">Operations</SelectItem>
-                  <SelectItem value="Finance">Finance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="team-lead">Team Lead</Label>
               <Select
                 value={teamLead}
@@ -673,27 +450,14 @@ export default function TeamDetailsPage({ params }) {
                   <SelectValue placeholder="Select team lead" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.name}>
-                      {member.name}
+                  {team.members.map((member) => (
+                    <SelectItem
+                      key={member.user.id}
+                      value={`${member.user.first_name} ${member.user.last_name}`}
+                    >
+                      {`${member.user.first_name} ${member.user.last_name}`}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="team-status">Status</Label>
-              <Select
-                value={teamStatus}
-                onValueChange={(value) => setTeamStatus(value)}
-              >
-                <SelectTrigger id="team-status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -722,7 +486,7 @@ export default function TeamDetailsPage({ params }) {
               {memberToRemove && (
                 <>
                   Are you sure you want to remove{" "}
-                  <span className="font-medium">{memberToRemove.name}</span>{" "}
+                  <span className="font-medium">{`${memberToRemove.user.first_name} ${memberToRemove.user.last_name}`}</span>{" "}
                   from the {teamName} team? This action cannot be undone.
                 </>
               )}

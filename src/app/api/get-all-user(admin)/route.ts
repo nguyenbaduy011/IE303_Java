@@ -50,7 +50,7 @@ export interface EmployeeType {
 
 export const fetchEmployees = async (): Promise<EmployeeType[]> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/admin/employees`, {
+    const response = await fetch(`http://localhost:8080/api/employee/admin/all`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

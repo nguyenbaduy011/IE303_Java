@@ -18,7 +18,7 @@ export const fetchUserById = async (
   userId: string
 ): Promise<UserType | null> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+    const response = await fetch(`http://localhost:8080/api/user/${userId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
