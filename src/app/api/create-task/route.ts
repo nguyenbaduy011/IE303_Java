@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCookie } from "@/utils/cookie";
-import { TaskType } from "@/api/get-user-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 
 export async function createTask({
   name,

@@ -12,9 +12,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { TaskCard } from "@/components/task/task-card";
-import { TaskType, fetchTasks } from "@/api/get-user-task/route";
+import { TaskType, fetchTasks } from "@/app/api/get-user-task/route";
 import { useAuth } from "@/contexts/auth-context";
-import { updateTaskStatus } from "@/api/change-task-status/route";
+import { updateTaskStatus } from "@/app/api/change-task-status/route";
 import { toast } from "sonner";
 
 export default function TasksPage() {

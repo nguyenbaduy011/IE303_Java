@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { SalaryHistoryType } from "@/api/salary-history/route";
+import { SalaryHistoryType } from "@/app/api/salary-history/route";
 import { useEffect } from "react";
 
 interface SalaryHistoryCardProps {
@@ -10,7 +10,10 @@ interface SalaryHistoryCardProps {
   onChange: (currentSalary: number, effectiveDate: string) => void;
 }
 
-export function SalaryHistoryCard({ salaryHistory, onChange }: SalaryHistoryCardProps) {
+export function SalaryHistoryCard({
+  salaryHistory,
+  onChange,
+}: SalaryHistoryCardProps) {
   // Debug: Log the salaryHistory prop
 
   const sortedHistory = [...(salaryHistory || [])].sort(
@@ -104,8 +107,8 @@ export function SalaryHistoryCard({ salaryHistory, onChange }: SalaryHistoryCard
                     isIncrease
                       ? "text-green-500"
                       : isSame
-                        ? "text-muted-foreground"
-                        : "text-red-500"
+                      ? "text-muted-foreground"
+                      : "text-red-500"
                   }`}
                 >
                   {isIncrease ? (

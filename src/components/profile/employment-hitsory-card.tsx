@@ -1,6 +1,6 @@
 import { Briefcase, Calendar } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { EmploymentHistoryType } from "@/api/employment-history/route";
+import { EmploymentHistoryType } from "@/app/api/employment-history/route";
 
 interface EmploymentHistoryCardProps {
   employmentHistory: EmploymentHistoryType[];

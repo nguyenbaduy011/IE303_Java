@@ -48,9 +48,9 @@ import {
 import { EmployeeFormValues, employeeSchema } from "@/lib/validations";
 import { Label } from "@/components/ui/label";
 import LoadingButton from "@/components/ui/loading-button";
-import { EmployeeType } from "@/api/get-all-user(admin)/route";
+import { EmployeeType } from "@/app/api/get-all-user(admin)/route";
 import { useEffect, useState } from "react";
-import { fetchUserById, UserType } from "@/api/get-user-information/route";
+import { fetchUserById, UserType } from "@/app/api/get-user-information/route";
 
 interface EmployeeDialogProps {
   open: boolean;
@@ -68,25 +68,24 @@ export function EmployeeDetailDialog({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-      async function fetchData() {
-        setLoading(true);
-        setError(null);
-        try {
-          // Fetch user information
-          const userData = await fetchUserById(employee.user.id);
-          setUserInformation(userData);
-  
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to load data");
-        } finally {
-          setLoading(false);
-        }
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch user information
+        const userData = await fetchUserById(employee.user.id);
+        setUserInformation(userData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      } finally {
+        setLoading(false);
       }
-  
-      if (open) {
-        fetchData();
-      }
-    }, [employee, open]);
+    }
+
+    if (open) {
+      fetchData();
+    }
+  }, [employee, open]);
 
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeSchema),

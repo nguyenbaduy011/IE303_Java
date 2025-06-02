@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Plus, Calendar, User, FileText, Target } from "lucide-react";
-import { Member } from "@/api/get-team-member/route";
-import { TaskType } from "@/api/get-user-task/route";
+import { Member } from "@/app/api/get-team-member/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 import { toast } from "sonner";
 
 interface CreateTaskCardProps {

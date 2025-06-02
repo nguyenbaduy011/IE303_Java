@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {  Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { fetchUserById, UserType } from "@/api/get-user-information/route";
-import { EmployeeType, PositionType } from "@/api/get-all-user(admin)/route";
+import { fetchUserById, UserType } from "@/app/api/get-user-information/route";
+import {
+  EmployeeType,
+  PositionType,
+} from "@/app/api/get-all-user(admin)/route";
 
 // Hypothetical API to fetch all positions
 const fetchPositions = async (): Promise<PositionType[]> => {
@@ -230,9 +233,9 @@ export function RoleDialog({ open, onOpenChange, employee }: RoleDialogProps) {
                     Position Change Implications
                   </p>
                   <p>
-                    Changing a user&apos;s position may affect their responsibilities
-                    within the system. This action will be logged for audit
-                    purposes.
+                    Changing a user&apos;s position may affect their
+                    responsibilities within the system. This action will be
+                    logged for audit purposes.
                   </p>
                 </div>
               </div>

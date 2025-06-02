@@ -5,8 +5,8 @@ import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import { logoutUser } from "@/api/logout/route";
-import { checkSession } from "@/api/check-session/route";
+import { logoutUser } from "@/app/api/logout/route";
+import { checkSession } from "@/app/api/check-session/route";
 import Loading from "@/components/loading";
 
 export type UserType = {
@@ -325,7 +325,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error("Không thể lấy CSRF token");
       }
 
-      const wsUrl = `http://localhost:8080/ws-heartbeat?X-CSRF-TOKEN=${encodeURIComponent(csrfToken)}`;
+      const wsUrl = `http://localhost:8080/ws-heartbeat?X-CSRF-TOKEN=${encodeURIComponent(
+        csrfToken
+      )}`;
       console.log("Attempting STOMP connection to:", wsUrl);
 
       const socket = new SockJS(wsUrl);
@@ -622,12 +624,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && isAuthenticated && isConnected) {
       // Refresh online status mỗi 2 phút
-      const refreshInterval = setInterval(
-        () => {
-          refreshOnlineStatus();
-        },
-        2 * 60 * 1000
-      );
+      const refreshInterval = setInterval(() => {
+        refreshOnlineStatus();
+      }, 2 * 60 * 1000);
 
       return () => clearInterval(refreshInterval);
     }

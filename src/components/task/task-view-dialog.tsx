@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle, Clock, User, XCircle } from "lucide-react";
-import { TaskType } from "@/api/get-user-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 import { cn } from "@/lib/utils";
 
 interface TaskViewDialogProps {

@@ -18,7 +18,7 @@ import Link from "next/link";
 import LoadingButton from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { loginUser } from "@/api/login/route";
+import { loginUser } from "@/app/api/login/route";
 import { useAuth, UserType } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 
@@ -41,7 +41,9 @@ export default function LoginPage() {
   }, [user, router]);
 
   const setCookie = (name: string, value: string, maxAge?: number) => {
-    document.cookie = `${name}=${value}; path=/; max-age=${maxAge || 86400}; SameSite=Strict`;
+    document.cookie = `${name}=${value}; path=/; max-age=${
+      maxAge || 86400
+    }; SameSite=Strict`;
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -112,8 +114,8 @@ export default function LoginPage() {
       const userMessage = isFetchError
         ? "Unable to connect to the server. Please check your internet connection or try again shortly."
         : err.message === "Sai mật khẩu"
-          ? "Invalid password. Please try again."
-          : "Invalid email or password. Please try again.";
+        ? "Invalid password. Please try again."
+        : "Invalid email or password. Please try again.";
 
       setError(userMessage);
       toast.error(userMessage);

@@ -16,9 +16,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/auth-context";
 import { useEffect, useState } from "react";
-import { fetchTasks, TaskType } from "@/api/get-user-task/route";
+import { fetchTasks, TaskType } from "@/app/api/get-user-task/route";
 import Link from "next/link";
-import { getOnlineUsers } from "@/api/online-users/route";
+import { getOnlineUsers } from "@/app/api/online-users/route";
+import { Chat } from "@/components/chatbot/chat-bot";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -179,8 +180,8 @@ export default function DashboardPage() {
                               task.status === "completed"
                                 ? "default"
                                 : task.status === "in_progress"
-                                  ? "secondary"
-                                  : "outline"
+                                ? "secondary"
+                                : "outline"
                             }
                           >
                             {task.status.replace("_", " ")}

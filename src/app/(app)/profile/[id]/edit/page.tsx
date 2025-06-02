@@ -60,7 +60,7 @@ import {
 } from "@/lib/validations";
 import { toast } from "sonner";
 import { z } from "zod";
-import { changePassword } from "@/api/change-password/route";
+import { changePassword } from "@/app/api/change-password/route";
 
 interface ChangePasswordResponse {
   success: boolean;
@@ -396,7 +396,9 @@ export default function EditProfilePage() {
   };
 
   const getInitials = () => {
-    return `${user.first_name?.charAt(0) || ""}${user.last_name?.charAt(0) || ""}`;
+    return `${user.first_name?.charAt(0) || ""}${
+      user.last_name?.charAt(0) || ""
+    }`;
   };
 
   return (

@@ -47,7 +47,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { EmployeeDetailDialog } from "@/components/admin/employees/employee-detail-dialog";
 import { RoleDialog } from "@/components/admin/employees/role-dialog";
-import { EmployeeType, fetchEmployees } from "@/api/get-all-user(admin)/route";
+import {
+  EmployeeType,
+  fetchEmployees,
+} from "@/app/api/get-all-user(admin)/route";
 import { DepartmentType, PositionType } from "@/types/types";
 
 // Utility function to get full name from user
@@ -144,7 +147,7 @@ export default function EmployeeManagementPage() {
     <Card className="border-0 shadow-none p-0">
       <CardContent className="p-0">
         <div className="rounded-md border">
-          <Table >
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
@@ -249,8 +252,8 @@ export default function EmployeeManagementPage() {
                               emp.working_status === "active"
                                 ? "bg-green-500"
                                 : emp.working_status === "inactive"
-                                  ? "bg-gray-300"
-                                  : "bg-red-500"
+                                ? "bg-gray-300"
+                                : "bg-red-500"
                             }`}
                           />
                           {emp.working_status}

@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { formatDateShort } from "@/utils/dateFormatter";
 import { getFullName } from "@/utils/getFullName";
 import { getInitials } from "@/utils/getInitials";
-import { logoutUser } from "@/api/logout/route";
+import { logoutUser } from "@/app/api/logout/route";
 import { toast } from "sonner";
 import { useAuth, UserType } from "@/contexts/auth-context";
 

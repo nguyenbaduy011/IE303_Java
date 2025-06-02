@@ -28,19 +28,19 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
-import { getTeam, Member, TeamType } from "@/api/get-team-member/route";
-import { fetchTeamTasks } from "@/api/get-team-task/route";
+import { getTeam, Member, TeamType } from "@/app/api/get-team-member/route";
+import { fetchTeamTasks } from "@/app/api/get-team-task/route";
 import {
   EmploymentDetailResponse,
   fetchEmploymentDetail,
-} from "@/api/employment-detail/route";
-import { fetchUserById } from "@/api/get-user-information/route";
+} from "@/app/api/employment-detail/route";
+import { fetchUserById } from "@/app/api/get-user-information/route";
 import { Separator } from "@/components/ui/separator";
 import { TaskViewDialog } from "@/components/task/task-view-dialog";
 import { CreateTaskCard } from "@/components/task/create-task-card";
 import { cn } from "@/lib/utils";
-import { TaskType } from "@/api/get-user-task/route";
-import { createTask } from "@/api/create-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
+import { createTask } from "@/app/api/create-task/route";
 import { toast } from "sonner";
 
 interface ExtendedMember extends Member {

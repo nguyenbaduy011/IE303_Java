@@ -1,7 +1,7 @@
 import { AlertCircle, CheckCircle2, CircleEllipsis, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { TaskType } from "@/api/get-user-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 
 interface TaskListProps {
   tasks: TaskType[];

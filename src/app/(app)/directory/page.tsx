@@ -8,7 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Building, MapPin } from "lucide-react";
-import { EmployeeType, fetchEmployees } from "@/api/get-all-user(user)/route";
+import {
+  EmployeeType,
+  fetchEmployees,
+} from "@/app/api/get-all-user(user)/route";
 import { getFullName } from "@/utils/getFullName";
 
 interface DisplayEmployee {

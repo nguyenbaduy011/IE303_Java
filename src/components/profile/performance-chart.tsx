@@ -1,6 +1,6 @@
 "use client";
 
-import { TaskType } from "@/api/get-user-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 import {
   Chart as ChartJS,
   LineElement,

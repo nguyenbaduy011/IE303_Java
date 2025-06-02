@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 import { Calendar, AlertCircle, Flag } from "lucide-react";
-import { TaskType } from "@/api/get-user-task/route";
+import { TaskType } from "@/app/api/get-user-task/route";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,7 +61,9 @@ export function TaskCard({
             {statusBadge.label}
           </Badge>
           <div
-            className={`flex items-center text-sm ${isOverdue ? "text-red-500" : "text-muted-foreground"}`}
+            className={`flex items-center text-sm ${
+              isOverdue ? "text-red-500" : "text-muted-foreground"
+            }`}
           >
             <Calendar className="mr-1 h-4 w-4" />
             {isOverdue
@@ -118,7 +120,11 @@ export function TaskCard({
                 {task.status === "in_progress" && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1 cursor-pointer">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 cursor-pointer"
+                      >
                         <Flag className="h-4 w-4 mr-1" />
                         Request Review
                       </Button>

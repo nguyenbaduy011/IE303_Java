@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { ThemeToggle } from "@/theme/theme-toggle";
 import { PasswordSchema } from "@/lib/validations";
-import { changePassword } from "@/api/change-password/route";
+import { changePassword } from "@/app/api/change-password/route";
 import { toast } from "sonner";
 
 export default function ChangePasswordPage() {

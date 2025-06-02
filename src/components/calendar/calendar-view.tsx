@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import SociusLogo from "@/components/socius-logo";
 import { cn } from "@/lib/utils";
-import { TaskType, fetchTasks } from "@/api/get-user-task/route";
+import { TaskType, fetchTasks } from "@/app/api/get-user-task/route";
 import { TaskViewDialog } from "@/components/task/task-view-dialog";
 
 interface CalendarViewProps {

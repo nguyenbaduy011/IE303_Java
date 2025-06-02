@@ -39,23 +39,23 @@ import { SalaryHistoryCard } from "@/components/profile/salary-history-card";
 import { formatDateLong, formatDateShort } from "@/utils/dateFormatter";
 import { getInitials } from "@/utils/getInitials";
 import { useAuth } from "@/contexts/auth-context";
-import { fetchTasks, TaskType } from "@/api/get-user-task/route";
+import { fetchTasks, TaskType } from "@/app/api/get-user-task/route";
 import {
   EmploymentHistoryType,
   EmploymentHistoryResponse,
   fetchEmploymentHistory,
-} from "@/api/employment-history/route";
+} from "@/app/api/employment-history/route";
 import {
   SalaryHistoryType,
   SalaryHistoryResponse,
   fetchSalaryHistory,
-} from "@/api/salary-history/route";
-import { UserType, fetchUserById } from "@/api/get-user-information/route";
+} from "@/app/api/salary-history/route";
+import { UserType, fetchUserById } from "@/app/api/get-user-information/route";
 import {
   EmploymentDetailType,
   EmploymentDetailResponse,
   fetchEmploymentDetail,
-} from "@/api/employment-detail/route";
+} from "@/app/api/employment-detail/route";
 import { EmploymentHistoryCard } from "@/components/profile/employment-hitsory-card";
 
 export type UserProfileCardPropsType = {
