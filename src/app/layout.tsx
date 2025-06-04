@@ -32,7 +32,30 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
-            <Toaster />
+            <Toaster
+              toastOptions={{
+                unstyled: true,
+                classNames: {
+                  toast:
+                    "rounded-lg p-4 shadow-lg flex items-center gap-2 border border-border bg-card text-card-foreground transition-all duration-300 animate-fade-in",
+                  title: "font-semibold text-base",
+                  description: "text-sm opacity-90",
+
+                  error:
+                    "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive-foreground border-destructive/50",
+                  success:
+                    "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground border-primary/50",
+                  warning:
+                    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200 border-yellow-300/50 dark:border-yellow-700/50",
+                  info: "bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent-foreground border-accent/50",
+
+                  actionButton:
+                    "text-primary dark:text-primary-foreground text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-ring",
+                  cancelButton:
+                    "text-muted-foreground dark:text-muted-foreground text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-ring",
+                },
+              }}
+            />
           </ThemeProvider>
         </AuthProvider>
       </body>
