@@ -2,9 +2,9 @@ import { tool } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import z from "zod";
-import { fetchUserById } from "../get-user-information/route";
+import { fetchUserById } from "@/app/api/get-user-information/route";
 import { getCookie } from "@/utils/cookie";
-import { getOnlineUsers } from "../online-users/route";
+import { getOnlineUsers } from "@/app/api/online-users/route";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         description: "người dùng online",
         parameters: z.object({}),
         execute: async () => {
-          return await getOnlineUsers();
+          return await "hahaa";
         },
       }),
     },
