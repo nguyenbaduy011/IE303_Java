@@ -41,6 +41,7 @@ import { CreateTaskCard } from "@/components/task/create-task-card";
 import { cn } from "@/lib/utils";
 import { TaskType } from "@/app/api/get-user-task/route";
 import { createTask } from "@/app/api/create-task/route";
+import { updateTaskStatus } from "@/app/api/change-task-status/route";
 import { toast } from "sonner";
 
 interface ExtendedMember extends Member {
@@ -124,12 +125,33 @@ export default function TeamsPage() {
         if (!newTask.id || !newTask.assigned_to.id) {
           throw new Error("Invalid task data.");
         }
-
-        toast.success("Task created successfully!");
         setTeamTasks((prevTasks) => [...prevTasks, newTask]);
       } catch (err: any) {
         setError(err.message || "Failed to create task.");
         toast.error(err.message || "Failed to create task.");
+      }
+    },
+    []
+  );
+
+  // Hàm xử lý cập nhật trạng thái task
+  const handleUpdateTaskStatus = useCallback(
+    async (taskId: string, status: TaskType["status"]) => {
+      try {
+        const updatedTask = await updateTaskStatus(taskId, "completed");
+        if (!updatedTask) {
+          throw new Error("Failed to update task status.");
+        }
+
+        toast.success("Task status updated successfully!");
+        setTeamTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.id === taskId ? { ...task, status } : task
+          )
+        );
+      } catch (err: any) {
+        setError(err.message || "Failed to update task status.");
+        toast.error(err.message || "Failed to update task status.");
       }
     },
     []
@@ -184,6 +206,20 @@ export default function TeamsPage() {
           .includes(searchQuery.toLowerCase())
     );
   }, [teamMembers, searchQuery]);
+
+  // Lọc tasks pending review
+  const pendingReviewTasks = useMemo(() => {
+    return teamTasks
+      .filter(
+        (task) =>
+          task.status === "pending" &&
+          teamMembers.some((member) => member.user.id === task.assigned_to.id)
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      );
+  }, [teamTasks, teamMembers]);
 
   // Sắp xếp tasks theo deadline
   const sortedTasks = useMemo(() => {
@@ -408,7 +444,12 @@ export default function TeamsPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-3 mb-4">
+            <TabsList
+              className={cn(
+                "grid mb-4",
+                isTeamLeader ? "grid-cols-4" : "grid-cols-3"
+              )}
+            >
               <TabsTrigger value="overview" className="cursor-pointer">
                 Overview
               </TabsTrigger>
@@ -418,6 +459,11 @@ export default function TeamsPage() {
               <TabsTrigger value="tasks" className="cursor-pointer">
                 Tasks
               </TabsTrigger>
+              {isTeamLeader && (
+                <TabsTrigger value="pending-review" className="cursor-pointer">
+                  Pending Review
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -573,7 +619,7 @@ export default function TeamsPage() {
             </TabsContent>
 
             <TabsContent value="tasks" className="space-y-4">
-              <Card>
+              <Card className="bg-background">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <div>
@@ -587,8 +633,9 @@ export default function TeamsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => router.push("/tasks")}
+                        className="cursor-pointer"
                       >
-                        View All Tasks
+                        View Your Tasks
                       </Button>
                     </div>
                   </div>
@@ -738,8 +785,8 @@ export default function TeamsPage() {
                                                 {daysUntilDeadline === 0
                                                   ? "Today"
                                                   : daysUntilDeadline === 1
-                                                  ? "Tomorrow"
-                                                  : `${daysUntilDeadline} days`}
+                                                    ? "Tomorrow"
+                                                    : `${daysUntilDeadline} days`}
                                                 )
                                               </span>
                                             )}
@@ -754,7 +801,7 @@ export default function TeamsPage() {
                                         setSelectedTask(task);
                                         setIsDialogOpen(true);
                                       }}
-                                      className="cursor-p"
+                                      className="cursor-pointer"
                                     >
                                       View Details
                                     </Button>
@@ -770,6 +817,137 @@ export default function TeamsPage() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {isTeamLeader && (
+              <TabsContent value="pending-review" className="space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle>Pending Review Tasks</CardTitle>
+                    <CardDescription>
+                      Review and mark tasks as complete for {userTeam.name} team
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {pendingReviewTasks.length === 0 ? (
+                        <div className="text-center py-8">
+                          <h3 className="mt-2 text-lg font-medium">
+                            No Pending Review Tasks
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            There are no tasks pending review for this team.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {pendingReviewTasks.map((task) => {
+                            const assignedMember = teamMembers.find(
+                              (member) => member.user.id === task.assigned_to.id
+                            );
+                            const statusBadge = getStatusBadge(task.status);
+
+                            return (
+                              <div
+                                key={task.id}
+                                className={cn(
+                                  "border rounded-lg p-4",
+                                  statusBadge.className
+                                )}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <h4 className="font-medium">
+                                        {task.name}
+                                      </h4>
+                                      <Badge
+                                        variant={statusBadge.variant}
+                                        className={cn(
+                                          "gap-1",
+                                          statusBadge.className
+                                        )}
+                                      >
+                                        {statusBadge.icon}
+                                        {statusBadge.label}
+                                      </Badge>
+                                    </div>
+
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                      {task.description}
+                                    </p>
+
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-4">
+                                        {assignedMember && (
+                                          <div className="flex items-center gap-2">
+                                            <Avatar className="h-6 w-6">
+                                              <AvatarImage
+                                                src="/placeholder.svg"
+                                                alt={`${assignedMember.user.first_name} ${assignedMember.user.last_name}`}
+                                              />
+                                              <AvatarFallback>
+                                                {assignedMember.user.first_name.substring(
+                                                  0,
+                                                  2
+                                                )}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <span className="text-sm">
+                                              {assignedMember.user.first_name}{" "}
+                                              {assignedMember.user.last_name}
+                                            </span>
+                                          </div>
+                                        )}
+
+                                        <div className="flex items-center text-sm text-muted-foreground">
+                                          <Calendar className="h-4 w-4 mr-1" />
+                                          <span>
+                                            {new Date(
+                                              task.deadline
+                                            ).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="default"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleUpdateTaskStatus(
+                                              task.id,
+                                              "completed"
+                                            )
+                                          }
+                                          className="cursor-pointer"
+                                        >
+                                          Mark as Complete
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => {
+                                            setSelectedTask(task);
+                                            setIsDialogOpen(true);
+                                          }}
+                                          className="cursor-pointer"
+                                        >
+                                          View Details
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
 
           <TaskViewDialog
