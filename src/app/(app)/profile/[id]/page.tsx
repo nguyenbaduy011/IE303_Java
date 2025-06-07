@@ -27,7 +27,6 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
-  FileText,
   Mail,
   MapPin,
   Phone,

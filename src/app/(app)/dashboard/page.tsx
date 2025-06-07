@@ -263,17 +263,8 @@ export default function DashboardPage() {
                   Welcome back, {user?.first_name}
                 </h1>
                 <p className="text-muted-foreground">
-                  {user
-                    ? typeof user.position === "string"
-                      ? user.position
-                      : user.position?.name || "Employee"
-                    : "Employee"}{" "}
-                  •{" "}
-                  {user
-                    ? typeof user.department === "string"
-                      ? user.department
-                      : user.department?.name || "Department"
-                    : "Department"}
+                  {user ? user.position?.name || "Employee" : "Employee"} •{" "}
+                  {user ? user.department?.name || "Department" : "Department"}
                 </p>
               </div>
               <Button variant="outline" size="sm" className="gap-2" asChild>
@@ -577,24 +568,26 @@ export default function DashboardPage() {
                             className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                  src="/placeholder.svg"
-                                  alt={`${member.user.first_name} ${member.user.last_name}`}
-                                />
-                                <AvatarFallback>
-                                  {member.user.first_name.substring(0, 2)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium text-primary">
-                                  {member.user.first_name}{" "}
-                                  {member.user.last_name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {member.employment_detail.position.name}
-                                </p>
-                              </div>
+                              <Link href={`/profile/${member.user.id}`}>
+                                <Avatar className="h-8 w-8">
+                                  <AvatarImage
+                                    src="/placeholder.svg"
+                                    alt={`${member.user.first_name} ${member.user.last_name}`}
+                                  />
+                                  <AvatarFallback>
+                                    {member.user.first_name.substring(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <p className="text-sm font-medium text-primary">
+                                    {member.user.first_name}{" "}
+                                    {member.user.last_name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {member.employment_detail.position.name}
+                                  </p>
+                                </div>
+                              </Link>
                             </div>
                             <Badge
                               variant={

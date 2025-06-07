@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
 import LoadingButton from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -168,12 +167,6 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-card-foreground">
                   Password
                 </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:text-primary-400 hover:underline transition-colors"
-                >
-                  Forgot password?
-                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
