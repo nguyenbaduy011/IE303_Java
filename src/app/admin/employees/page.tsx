@@ -7,6 +7,7 @@ import {
   Filter,
   MoreHorizontal,
   Plus,
+  RotateCcwKey,
   Search,
   Shield,
   Trash2,
@@ -52,6 +53,8 @@ import {
   fetchEmployees,
 } from "@/app/api/get-all-user(admin)/route";
 import { DepartmentType, PositionType } from "@/types/types";
+import { ResetPasswordDialog } from "@/components/admin/employees/reset-password-alert-dialog";
+import { useAuth } from "@/contexts/auth-context";
 
 // Utility function to get full name from user
 const getFullName = (employee: EmployeeType) =>
@@ -65,6 +68,9 @@ export default function EmployeeManagementPage() {
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const { user } = useAuth();
+
   const [currentEmployee, setCurrentEmployee] = useState<EmployeeType | null>(
     null
   );
@@ -140,6 +146,11 @@ export default function EmployeeManagementPage() {
   const handleManageRole = (employee: EmployeeType) => {
     setCurrentEmployee(employee);
     setIsRoleDialogOpen(true);
+  };
+
+  const handleChangePassword = (employee: EmployeeType) => {
+    setCurrentEmployee(employee);
+    setIsPasswordDialogOpen(true);
   };
 
   // Render table content for a specific tab
@@ -252,8 +263,8 @@ export default function EmployeeManagementPage() {
                               emp.working_status === "active"
                                 ? "bg-green-500"
                                 : emp.working_status === "inactive"
-                                ? "bg-gray-300"
-                                : "bg-red-500"
+                                  ? "bg-gray-300"
+                                  : "bg-red-500"
                             }`}
                           />
                           {emp.working_status}
@@ -277,6 +288,7 @@ export default function EmployeeManagementPage() {
                               variant="ghost"
                               size="icon"
                               className="cursor-pointer"
+                              disabled={emp.user.id === user?.id}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -297,6 +309,13 @@ export default function EmployeeManagementPage() {
                             >
                               <Users className="mr-2 h-4 w-4" />
                               Manage Position
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleChangePassword(emp)}
+                              className="cursor-pointer"
+                            >
+                              <RotateCcwKey className="mr-2 h-4 w-4" />
+                              Reset Password
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive cursor-pointer">
@@ -550,6 +569,14 @@ export default function EmployeeManagementPage() {
         <RoleDialog
           open={isRoleDialogOpen}
           onOpenChange={setIsRoleDialogOpen}
+          employee={currentEmployee}
+        />
+      )}
+      {/* Password Dialog */}
+      {currentEmployee && (
+        <ResetPasswordDialog
+          open={isPasswordDialogOpen}
+          onOpenChange={setIsPasswordDialogOpen}
           employee={currentEmployee}
         />
       )}
