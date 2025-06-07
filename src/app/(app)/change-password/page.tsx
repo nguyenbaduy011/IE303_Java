@@ -25,7 +25,6 @@ import { changePassword } from "@/app/api/change-password/route";
 import { toast } from "sonner";
 
 export default function ChangePasswordPage() {
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -119,7 +118,7 @@ export default function ChangePasswordPage() {
 
     try {
       const res = await changePassword({
-        currentPassword,
+        currentPassword: "1",
         newPassword,
         confirmPassword,
       });
@@ -171,22 +170,6 @@ export default function ChangePasswordPage() {
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="current-password">
-                {isFirstTime ? "Temporary Password" : "Current Password"}
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <div className="relative">
