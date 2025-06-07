@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
