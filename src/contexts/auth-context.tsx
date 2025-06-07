@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -8,6 +9,7 @@ import SockJS from "sockjs-client";
 import { logoutUser } from "@/app/api/logout/route";
 import { checkSession } from "@/app/api/check-session/route";
 import Loading from "@/components/loading";
+import { toast } from "sonner";
 
 export type UserType = {
   id: string;
@@ -595,6 +597,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.removeItem("user");
         setUser(null);
         setIsAuthenticated(false);
+        toast.info("Session expired");
         router.push("/login");
       } finally {
         setLoading(false);
@@ -624,9 +627,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && isAuthenticated && isConnected) {
       // Refresh online status mỗi 2 phút
-      const refreshInterval = setInterval(() => {
-        refreshOnlineStatus();
-      }, 2 * 60 * 1000);
+      const refreshInterval = setInterval(
+        () => {
+          refreshOnlineStatus();
+        },
+        2 * 60 * 1000
+      );
 
       return () => clearInterval(refreshInterval);
     }

@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios"; // Thêm import axios
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ import {
   Shield,
   User,
   Users,
+  MessageSquare, // Thêm icon MessageSquare
 } from "lucide-react";
 import { TaskList } from "@/components/profile/task-list";
 import { PerformanceChart } from "@/components/profile/performance-chart";
@@ -56,7 +59,7 @@ import {
   EmploymentDetailResponse,
   fetchEmploymentDetail,
 } from "@/app/api/employment-detail/route";
-import { EmploymentHistoryCard } from "@/components/profile/employment-hitsory-card";
+import { EmploymentHistoryCard } from "@/components/profile/employment-history-card";
 
 export type UserProfileCardPropsType = {
   id: string;
@@ -131,7 +134,7 @@ export default function ProfilePage() {
             ...authUser.role,
             permissions: Array.isArray(authUser.role.permissions)
               ? authUser.role.permissions.map((p: any) =>
-                  typeof p === "string" ? p : p.name ?? p.id
+                  typeof p === "string" ? p : (p.name ?? p.id)
                 )
               : [],
           },
@@ -188,6 +191,31 @@ export default function ProfilePage() {
     setUser(null);
     router.push("/login");
   }, [router, setUser]);
+
+  const handleMessageClick = async () => {
+    if (!authUser || !personalInfo.data) return;
+
+    try {
+      const response = await axios.post(
+        `/api/conversations/direct/${personalInfo.data.id}`, // sửa đúng đường dẫn API
+        null, // backend không cần body
+        { withCredentials: true } // gửi kèm cookie để giữ session
+      );
+
+      const conversationId = response.data.id;
+      if (!conversationId) {
+        throw new Error("Conversation ID is missing in response");
+      }
+
+      router.push(`/chat?conversationId=${conversationId}`);
+    } catch (err: any) {
+      console.error("Error creating or getting conversation:", err);
+      setPersonalInfo((prev) => ({
+        ...prev,
+        error: "Unable to initiate conversation",
+      }));
+    }
+  };
 
   const mapToPersonalInfo = (user: UserType): UserProfileCardPropsType => ({
     id: user.id,
@@ -302,9 +330,8 @@ export default function ProfilePage() {
               loading: true,
               error: null,
             }));
-            const data: EmploymentDetailResponse = await fetchEmploymentDetail(
-              id
-            );
+            const data: EmploymentDetailResponse =
+              await fetchEmploymentDetail(id);
             if (data.employment_detail) {
               setEmploymentDetail({
                 data: data.employment_detail,
@@ -527,13 +554,15 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="mt-4 flex gap-2 md:mt-0">
-              <Button variant="outline" size="sm" className="cursor-pointer">
-                <FileText className="mr-2 h-4 w-4" />
+              {/* Sửa nút Message */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleMessageClick}
+                disabled={!!isSessionUser}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Message
-              </Button>
-              <Button variant="outline" size="sm" className="cursor-pointer">
-                <FileText className="mr-2 h-4 w-4" />
-                Documents
               </Button>
               {isSessionUser && (
                 <Button size="sm" className="cursor-pointer" asChild>
@@ -712,7 +741,7 @@ export default function ProfilePage() {
                       "Specializing in project management, team leadership, and strategic planning."}
                   </CardContent>
                 </Card>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-sm font-medium">
