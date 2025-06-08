@@ -1,4 +1,11 @@
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -7,33 +14,98 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { createTeam, CreateTeamPayload } from "@/app/api/create-team/route";
+import {
+  fetchUsersNotInAnyTeam,
+  UserWithoutTeamType,
+} from "@/app/api/get-users-not-in-team/route";
 
+// Định nghĩa props cho dialog
 interface CreateTeamDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onTeamCreated: () => void; // Callback khi tạo team thành công
 }
 
-export function CreateTeamDialog({ isOpen, onClose }: CreateTeamDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    leaderId: "",
+// Định nghĩa schema xác thực form
+const teamSchema = z.object({
+  name: z.string().min(1, "Team name is required"),
+  leaderId: z.string().uuid("Invalid leader ID format"),
+});
+
+export function CreateTeamDialog({
+  isOpen,
+  onClose,
+  onTeamCreated,
+}: CreateTeamDialogProps) {
+  // State để lưu danh sách user không có team
+  const [users, setUsers] = useState<UserWithoutTeamType[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // Khởi tạo form với schema và giá trị mặc định
+  const form = useForm<CreateTeamPayload>({
+    resolver: zodResolver(teamSchema),
+    defaultValues: {
+      name: "",
+      leaderId: "",
+    },
   });
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  // State để quản lý trạng thái loading khi submit
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Fetch users không có team khi dialog mở
+  useEffect(() => {
+    if (isOpen) {
+      const loadUsers = async () => {
+        setLoadingUsers(true);
+        try {
+          const usersList = await fetchUsersNotInAnyTeam();
+          setUsers(usersList);
+        } catch (error: any) {
+          console.error("Lỗi khi lấy danh sách user:", error);
+          toast.error(error.message || "Failed to load users without team");
+        } finally {
+          setLoadingUsers(false);
+        }
+      };
+      loadUsers();
+      form.reset(); // Reset form khi mở dialog
+    }
+  }, [isOpen, form]);
+
+  // Xử lý submit form
+  const onSubmit = async (data: CreateTeamPayload) => {
+    setIsSubmitting(true);
     try {
-      console.log("Creating team:", formData);
-      setFormData({ name: "", leaderId: "" });
+      console.log("Payload gửi đi:", data);
+      await createTeam(data);
+      toast.success("Team created successfully!");
+      form.reset();
+      onTeamCreated();
       onClose();
-    } catch (error) {
-      console.error("Error creating team:", error);
+    } catch (error: any) {
+      console.error("Lỗi khi tạo team:", error);
+      toast.error(error.message || "Failed to create team");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -47,36 +119,86 @@ export function CreateTeamDialog({ isOpen, onClose }: CreateTeamDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Team Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Enter team name"
-              required
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 py-4"
+          >
+            {/* Trường nhập tên team */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Team Name *</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Enter team name"
+                      disabled={isSubmitting || loadingUsers}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="leader">Team Leader</Label>
-            <Input
-              id="leader"
-              value={formData.leaderId}
-              onChange={(e) => handleChange("leaderId", e.target.value)}
-              placeholder="Enter leader ID"
-              required
+            {/* Trường chọn leader */}
+            <FormField
+              control={form.control}
+              name="leaderId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Team Leader *</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isSubmitting || loadingUsers || !users.length}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            loadingUsers
+                              ? "Loading users..."
+                              : "Select team leader"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users.length === 0 && !loadingUsers && (
+                          <SelectItem value="none" disabled>
+                            No users available
+                          </SelectItem>
+                        )}
+                        {users.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {`${user.first_name} ${user.last_name} (${user.email})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Create Team</Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSubmitting || loadingUsers}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting || loadingUsers}>
+                {isSubmitting ? "Creating..." : "Create Team"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

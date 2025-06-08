@@ -236,6 +236,7 @@ export default function TeamsPage() {
   // Lấy thông tin team của user
   const fetchUserTeams = useCallback(async () => {
     if (!user) {
+      console.error("User not authenticated. Redirecting to login."); // Ghi log lỗi
       router.push("/login");
       setError("User not authenticated. Please log in.");
       setLoading(false);
@@ -248,21 +249,29 @@ export default function TeamsPage() {
 
       const employmentResponse: EmploymentDetailResponse =
         await fetchEmploymentDetail(user.id);
+
+      // Kiểm tra nếu không có thông tin team
       if (
         !employmentResponse.employment_detail ||
-        !employmentResponse.employment_detail.team
+        !employmentResponse.employment_detail.team?.id
       ) {
-        throw new Error("No team information found for your account.");
+        console.warn("User has not been assigned to any team."); // Ghi log cảnh báo
+        setError("You have not been assigned to any team yet.");
+        setUserTeam(null);
+        setLoading(false);
+        return;
       }
 
       const teamId = employmentResponse.employment_detail.team.id;
       const teamData = await getTeam(teamId);
       if (!teamData) {
+        console.error("Failed to fetch team data for team ID:", teamId); // Ghi log lỗi
         throw new Error("Failed to load team data.");
       }
 
       setUserTeam(teamData);
     } catch (err: any) {
+      console.error("Error fetching team data:", err); // Ghi log lỗi chi tiết
       const errorMessage = err.message.includes("Network")
         ? "Network error. Please check your connection."
         : err.message || "Failed to load team data.";
@@ -305,6 +314,7 @@ export default function TeamsPage() {
 
       setTeamTasks(tasksResponse.tasks || []);
     } catch (err: any) {
+      console.error("Error fetching team data:", err); // Ghi log lỗi
       const errorMessage = err.message.includes("Network")
         ? "Network error. Please check your connection."
         : err.message || "Failed to load team data.";
@@ -352,15 +362,18 @@ export default function TeamsPage() {
     return (
       <div className="container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold tracking-tight">My Teams</h1>
-        <p className="text-muted-foreground mt-1">Error loading team data</p>
+        <p className="text-muted-foreground mt-1">{error}</p>{" "}
+        {/* Hiển thị thông báo lỗi cụ thể */}
         <Card>
           <CardContent className="p-8 flex flex-col items-center justify-center">
             <AlertCircle className="h-16 w-16 text-destructive mb-4" />
             <h2 className="text-xl font-semibold mb-2">Error</h2>
             <p className="text-center text-muted-foreground mb-6 max-w-md">
-              {error}
+              {error === "You have not been assigned to any team yet."
+                ? "You have not been assigned to any team yet."
+                : error}
             </p>
-            <Button onClick={() => fetchUserTeams()}>Try Again</Button>
+            <Button onClick={() => fetchUserTeams()} className="cursor-pointer">Try Again</Button>
           </CardContent>
         </Card>
       </div>
@@ -380,7 +393,8 @@ export default function TeamsPage() {
             <Users className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">No Team Found</h2>
             <p className="text-center text-muted-foreground mb-6 max-w-md">
-              Please contact your administrator to be assigned to a team.
+              You have not been assigned to any team yet. Please contact your
+              administrator.
             </p>
             <Button onClick={() => router.push("/")}>
               Return to Dashboard

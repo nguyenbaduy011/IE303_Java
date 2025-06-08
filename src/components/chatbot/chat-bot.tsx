@@ -1,7 +1,11 @@
 "use client";
 import { useChat } from "@ai-sdk/react";
 import { PromptSuggestions } from "@/components/chatbot/prompt-suggestion";
-import { ChatContainer, ChatForm, ChatMessages } from "@/components/chatbot/chat";
+import {
+  ChatContainer,
+  ChatForm,
+  ChatMessages,
+} from "@/components/chatbot/chat";
 import { MessageInput } from "@/components/message-input";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,8 +33,28 @@ export function Chatbot() {
 
   const lastMessage = messages.at(-1);
   const isEmpty = messages.length === 0;
-  const isTyping =
-    lastMessage?.role === "user" || (!lastMessage?.content && !isEmpty);
+  const isTyping = (() => {
+    if (lastMessage?.role === "user") {
+      // User vừa gửi, bot đang chuẩn bị phản hồi
+      return true;
+    }
+    if (lastMessage?.role === "assistant") {
+      // Nếu bot có toolInvocations
+      if (!lastMessage.toolInvocations) {
+        // Bot không dùng tool, dựa vào content
+        return !lastMessage.content;
+      }
+
+      // Nếu có toolInvocations, xem trạng thái
+      // Nếu còn tool nào chưa trả kết quả thì vẫn typing
+      const anyToolRunning = lastMessage.toolInvocations.some(
+        (ti) => ti.state !== "result"
+      );
+      return anyToolRunning;
+    }
+    return false;
+  })();
+  
 
   return (
     <Sheet>
@@ -47,8 +71,8 @@ export function Chatbot() {
       </SheetTrigger>
       <SheetContent
         className={cn(
-          "flex h-full w-full flex-col bg-sidebar text-sidebar-foreground sm:max-w-2xl",
-          "border-sidebar-border rounded-l-xl shadow-xl animate-slide-in-from-right dark:bg-sidebar dark:border-sidebar-border"
+          "flex h-full w-full flex-col bg-sidebar text-sidebar-foreground sm:max-w-[1000px]",
+          "border-sidebar-border rounded-l-xl shadow-xl z-[100] pointer-events-auto dark:bg-sidebar dark:border-sidebar-border"
         )}
       >
         <SheetHeader className="flex-none px-4 pt-4">

@@ -105,7 +105,7 @@ export async function POST(req: Request) {
   let teams = [];
   let leaderIds: string[] = [];
 
-  if (roleName === "SYS_ADMIN") {
+  if (roleName === "SUPER_ADMIN") {
     employeesAdmin = await fetchEmployeesAdminServer();
     teams = await fetchTeamsServer();
     leaderIds = teams.map((team) => team.leader.id);
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
 
   // Chuẩn hóa dữ liệu employees để khớp với userInformation
   let normalizedEmployees: userInformation[] = [];
-  if (roleName === "SYS_ADMIN" && employeesAdmin) {
+  if (roleName === "SUPER_ADMIN" && employeesAdmin) {
     normalizedEmployees = await Promise.all(
       employeesAdmin.map(async (e) => {
         const fullUser = await fetchUserByIdServer(e.user.id);

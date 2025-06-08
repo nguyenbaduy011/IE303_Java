@@ -39,22 +39,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { getTeam, Member, TeamType } from "@/app/api/get-team-member/route";
 import { fetchTeamTasks, TaskType } from "@/app/api/get-team-task/route";
 import { AddMemberDialog } from "@/components/teams/add-member-dialog";
 import { DonutChart } from "@/components/teams/team-progress-donut-chart";
 import { getFullName } from "@/utils/getFullName";
 import { Badge } from "@/components/ui/badge";
+import { RemoveMemberDialog } from "@/components/teams/remove-member-dialog";
 
 export default function TeamDetailsPage() {
   const params = useParams();
@@ -122,25 +114,18 @@ export default function TeamDetailsPage() {
     setIsRemoveMemberDialogOpen(true);
   };
 
-  const confirmRemoveMember = async () => {
-    try {
-      console.log(
-        `Removing member: ${memberToRemove?.user.first_name} ${memberToRemove?.user.last_name} from team: ${team?.name}`
-      );
-      if (team && memberToRemove) {
-        const updatedTeam: TeamType = {
-          ...team,
-          members: team.members.filter(
-            (m) => m.user.id !== memberToRemove.user.id
-          ),
-          member_count: (team.member_count || 0) - 1,
-        };
-        setTeam(updatedTeam);
-      }
-      setIsRemoveMemberDialogOpen(false);
+  const handleMemberRemoved = () => {
+    if (team && memberToRemove) {
+      const updatedTeam: TeamType = {
+        ...team,
+        members: team.members.filter(
+          (m) => m.user.id !== memberToRemove.user.id
+        ),
+        member_count: (team.member_count || 0) - 1,
+      };
+      setTeam(updatedTeam);
       setMemberToRemove(null);
-    } catch (error) {
-      console.error("Error removing member:", error);
+      setIsRemoveMemberDialogOpen(false);
     }
   };
 
@@ -378,38 +363,6 @@ export default function TeamDetailsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-
-        <TabsContent value="activity" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Latest actions and updates from the team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                No recent activity available
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="events" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>
-                Scheduled meetings and events for the team
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                No upcoming events available
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <AddMemberDialog
@@ -475,34 +428,18 @@ export default function TeamDetailsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
-        open={isRemoveMemberDialogOpen}
-        onOpenChange={setIsRemoveMemberDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
-            <AlertDialogDescription>
-              {memberToRemove && (
-                <>
-                  Are you sure you want to remove{" "}
-                  <span className="font-medium">{`${memberToRemove.user.first_name} ${memberToRemove.user.last_name}`}</span>{" "}
-                  from the {teamName} team? This action cannot be undone.
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRemoveMember}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {team && memberToRemove && (
+        <RemoveMemberDialog
+          isOpen={isRemoveMemberDialogOpen}
+          onClose={() => {
+            setIsRemoveMemberDialogOpen(false);
+            setMemberToRemove(null);
+          }}
+          team={team}
+          member={memberToRemove}
+          onMemberRemoved={handleMemberRemoved}
+        />
+      )}
     </div>
   );
 }

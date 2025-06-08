@@ -158,6 +158,22 @@ export default function AdminTeamsPage() {
     }
   };
 
+  const handleMemberRemoved = async () => {
+    if (selectedTeam && memberToRemove) {
+      const updatedTeam: TeamType = {
+        ...selectedTeam,
+        members: selectedTeam.members.filter(
+          (m) => m.user.id !== memberToRemove.user.id
+        ),
+        member_count: (selectedTeam.member_count || 0) - 1,
+      };
+      setTeamDetails((prev) => ({ ...prev, [selectedTeam.id]: updatedTeam }));
+      setSelectedTeam(updatedTeam);
+      setMemberToRemove(null);
+      setIsRemoveMemberDialogOpen(false);
+    }
+  };
+
   const handleChangeLeader = async (team: TeamWithLeaderType) => {
     const teamDetail = teamDetails[team.id] || (await getTeam(team.id));
     if (teamDetail) {
@@ -296,6 +312,9 @@ export default function AdminTeamsPage() {
               onAddMember={() => handleAddMember(team)}
               onRemoveMember={(member) => handleRemoveMember(team, member)}
               onChangeLeader={() => handleChangeLeader(team)}
+              onDelete={function (): void {
+                throw new Error("Function not implemented.");
+              }}
             />
           ))}
         </div>
@@ -304,6 +323,9 @@ export default function AdminTeamsPage() {
       <CreateTeamDialog
         isOpen={isCreateTeamDialogOpen}
         onClose={() => setIsCreateTeamDialogOpen(false)}
+        onTeamCreated={function (): void {
+          throw new Error("Function not implemented.");
+        }}
       />
 
       {selectedTeam && (
@@ -325,9 +347,13 @@ export default function AdminTeamsPage() {
       {selectedTeam && memberToRemove && (
         <RemoveMemberDialog
           isOpen={isRemoveMemberDialogOpen}
-          onClose={() => setIsRemoveMemberDialogOpen(false)}
+          onClose={() => {
+            setIsRemoveMemberDialogOpen(false);
+            setMemberToRemove(null);
+          }}
           team={selectedTeam}
           member={memberToRemove}
+          onMemberRemoved={handleMemberRemoved}
         />
       )}
 
@@ -340,6 +366,4 @@ export default function AdminTeamsPage() {
       )}
     </div>
   );
-
- 
 }

@@ -1,9 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Skeleton } from "@/components/ui/skeleton";
 import { ToolInvocation } from "ai";
 import { ChatMessage } from "@/components/chat-message";
 import { TypingIndicator } from "@/components/typing-indicator";
+import EmployeeInfoCard from "@/components/chatbot/profile-card";
+import EmployeeListCard from "@/components/chatbot/profile-list";
 
 export function MessageList({
   messages,
@@ -16,8 +17,8 @@ export function MessageList({
 }) {
   return (
     <div className="space-y-4 overflow-hidden">
-      {messages.map((message: any, index: any) => (
-        <div key={index}>
+      {messages.map((message: any) => (
+        <div key={message.id}>
           {message.content && message.appear !== false && (
             <ChatMessage
               id={message.id}
@@ -39,32 +40,23 @@ export function MessageList({
                   return (
                     <div key={toolCallId}>
                       {toolName === "getInformation" ? (
-                        <div>
-                          <p>{result}</p>
-                        </div>
+                        <EmployeeInfoCard {...result} append={append} />
+                      ) : null}
+                      {toolName === "getEmployeeList" ? (
+                        Array.isArray(result.employees) ? (
+                          <EmployeeListCard employees={result.employees} />
+                        ) : null
                       ) : null}
                     </div>
                   );
                 } else {
                   return (
                     <div key={toolCallId}>
-                      {toolName === "displayProductsByCategory" ? (
-                        <Skeleton className="h-[10px] w-full max-w-md" />
-                      ) : null}
-                      {toolName === "displayProductByCategory" ? (
+                      {toolName === "getInformation" ? (
                         <Skeleton className="h-[100px] w-full max-w-md" />
                       ) : null}
-                      {toolName === "displayCart" ? (
+                      {toolName === "getEmployeeList" ? (
                         <Skeleton className="h-[100px] w-full max-w-md" />
-                      ) : null}
-                      {toolName === "getInvoices" ? (
-                        <Skeleton className="h-[100px] w-full max-w-md" />
-                      ) : null}
-                      {toolName === "trackingInvoice" ? (
-                        <Skeleton className="h-[100px] w-full max-w-2xl" />
-                      ) : null}
-                      {toolName === "checkingInformation" ? (
-                        <Skeleton className="h-[200px] w-full max-w-xl" />
                       ) : null}
                     </div>
                   );
@@ -74,6 +66,7 @@ export function MessageList({
           )}
         </div>
       ))}
+
       {isTyping && <TypingIndicator />}
     </div>
   );
