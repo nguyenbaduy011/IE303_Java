@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/form";
 import { EmployeeFormValues, employeeSchema } from "@/lib/validations";
 import { Label } from "@/components/ui/label";
-import LoadingButton from "@/components/ui/loading-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmployeeType } from "@/app/api/get-all-user(admin)/route";
 import { useEffect, useState } from "react";
 import { fetchUserById, UserType } from "@/app/api/get-user-information/route";

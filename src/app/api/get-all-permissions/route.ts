@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export interface DepartmentType {
+export interface PermissionType {
   id: string;
   name: string;
   description: string;
 }
 
-export const fetchDepartments = async (): Promise<DepartmentType[]> => {
+export const fetchRolePermissions = async (): Promise<PermissionType[]> => {
   try {
-    const response = await fetch(`http://localhost:8080/api/department`, {
+    const response = await fetch(`http://localhost:8080/api/role/permissions`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -24,24 +24,24 @@ export const fetchDepartments = async (): Promise<DepartmentType[]> => {
         throw new Error("You do not have permission to view this information.");
       }
       if (response.status === 404) {
-        throw new Error("Departments not found.");
+        throw new Error("Permissions not found.");
       }
-      throw new Error(`HTTP ${response.status}: Failed to fetch departments`);
+      throw new Error(`HTTP ${response.status}: Failed to fetch permissions`);
     }
 
     const data = await response.json();
-    const departmentsArray = Array.isArray(data) ? data : [];
+    const permissionsArray = Array.isArray(data) ? data : [];
 
-    return departmentsArray.map(
-      (dept: any): DepartmentType => ({
-        id: dept.id,
-        name: dept.name,
-        description: dept.description,
+    return permissionsArray.map(
+      (perm: any): PermissionType => ({
+        id: perm.id,
+        name: perm.name,
+        description: perm.description,
       })
     );
   } catch (error) {
     throw new Error(
-      error instanceof Error ? error.message : "Failed to fetch departments"
+      error instanceof Error ? error.message : "Failed to fetch permissions"
     );
   }
 };
