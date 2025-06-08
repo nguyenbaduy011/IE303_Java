@@ -15,6 +15,7 @@ import {
   UserCog,
   Users,
   Briefcase,
+  RotateCw, // Added for Restore icon
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -66,7 +67,7 @@ import {
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { CreateUserDialog } from "@/components/admin/employees/create-user-dialog"; // Thay thế NewEmployeeDialog
+import { CreateUserDialog } from "@/components/admin/employees/create-user-dialog";
 import { EmployeeDetailDialog } from "@/components/admin/employees/employee-detail-dialog";
 import { RoleDialog } from "@/components/admin/employees/role-dialog";
 import { ResetPasswordDialog } from "@/components/admin/employees/reset-password-alert-dialog";
@@ -95,6 +96,10 @@ import { transferEmployeeDepartment } from "@/app/api/change-user-department/rou
 import { transferEmployeePosition } from "@/app/api/change-user-position/route";
 import { transferEmployeeRole } from "@/app/api/change-user-role/route";
 import { transferEmployeeTeam } from "@/app/api/change-user-team/route";
+import {
+  terminateEmployee,
+  TerminateEmployeeResponse,
+} from "@/app/api/terminate-user/route";
 
 interface TransferFormValues {
   departmentId: string;
@@ -105,7 +110,7 @@ interface TransferFormValues {
 }
 
 const getFullName = (employee: EmployeeType) =>
-  `${employee.user.first_name} ${employee.user.last_name}`;
+  `${employee.user?.first_name ?? ""} ${employee.user?.last_name ?? ""}`.trim();
 
 export default function EmployeeManagementPage() {
   const [employees, setEmployees] = useState<EmployeeType[]>([]);
@@ -118,6 +123,8 @@ export default function EmployeeManagementPage() {
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
+  const [isTerminateDialogOpen, setIsTerminateDialogOpen] = useState(false);
+  const [isRestoreLoading, setIsRestoreLoading] = useState(false); // Added for restore loading state
   const { user } = useAuth();
 
   const [currentEmployee, setCurrentEmployee] = useState<EmployeeType | null>(
@@ -130,6 +137,7 @@ export default function EmployeeManagementPage() {
   const [roles, setRoles] = useState<RoleWithPermissionsType[]>([]);
   const [teams, setTeams] = useState<TeamWithLeaderType[]>([]);
   const [transferLoading, setTransferLoading] = useState(false);
+  const [terminateLoading, setTerminateLoading] = useState(false);
 
   const transferForm = useForm<TransferFormValues>({
     defaultValues: {
@@ -146,9 +154,60 @@ export default function EmployeeManagementPage() {
       const employeeRes = await fetchEmployees();
       setEmployees(employeeRes);
     } catch (err) {
-      toast.error("Failed to refresh employee list.");
+      console.error("Error refreshing employees:", err); // Improved error logging
+      toast.error(
+        err instanceof Error ? err.message : "Failed to refresh employee list."
+      );
     }
   };
+
+  // Placeholder for restoreEmployee API call
+  const restoreEmployee = async (employeeId: string) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/employee/restore/${employeeId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to restore employee`);
+      }
+      const data = await response.json();
+      return { success: data.success || true };
+    } catch (error) {
+      console.error("Error in restoreEmployee:", error);
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to restore employee"
+      );
+    }
+  };
+
+  const handleRestoreEmployee = async (employee: EmployeeType) => {
+    setIsRestoreLoading(true);
+    try {
+      const response = await restoreEmployee(employee.user.id);
+      if (response.success) {
+        await refreshEmployees();
+        toast.success(
+          `Employee ${getFullName(employee)} restored successfully.`
+        );
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to restore employee. Please try again."
+      );
+    } finally {
+      setIsRestoreLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -195,15 +254,17 @@ export default function EmployeeManagementPage() {
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch =
       getFullName(employee).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      employee.department.name
-        .toLowerCase()
+      employee.department?.name
+        ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      employee.position.name.toLowerCase().includes(searchQuery.toLowerCase());
+      employee.position?.name
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase());
     const matchesDepartment =
       selectedDepartment === "all" ||
-      employee.department.id === selectedDepartment;
+      employee.department?.id === selectedDepartment;
     const matchesRole =
-      selectedRole === "all" || employee.position.id === selectedRole;
+      selectedRole === "all" || employee.position?.id === selectedRole;
 
     return matchesSearch && matchesDepartment && matchesRole;
   });
@@ -249,6 +310,34 @@ export default function EmployeeManagementPage() {
       teamId: employee.team?.id || "",
       tab: "department",
     });
+  };
+
+  const handleTerminateEmployee = (employee: EmployeeType) => {
+    setCurrentEmployee(employee);
+    setIsTerminateDialogOpen(true);
+  };
+
+  const confirmTerminateEmployee = async () => {
+    if (!currentEmployee) return;
+    setTerminateLoading(true);
+    try {
+      const response = await terminateEmployee(currentEmployee.user.id);
+      if (response.success) {
+        await refreshEmployees();
+        toast.success(
+          `Employee ${getFullName(currentEmployee)} terminated successfully.`
+        );
+        setIsTerminateDialogOpen(false);
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to terminate employee. Please try again."
+      );
+    } finally {
+      setTerminateLoading(false);
+    }
   };
 
   const handleTransfer = async (data: TransferFormValues) => {
@@ -387,16 +476,16 @@ export default function EmployeeManagementPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{emp.department.name}</TableCell>
+                      <TableCell>{emp.department?.name || "None"}</TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            emp.position.name.toLowerCase() === "admin"
+                            emp.position?.name?.toLowerCase() === "admin"
                               ? "default"
                               : "outline"
                           }
                         >
-                          {emp.position.name}
+                          {emp.position?.name || "None"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -415,7 +504,7 @@ export default function EmployeeManagementPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {emp.team ? (
+                        {emp.team?.name ? (
                           <Badge variant="secondary" className="text-xs">
                             {emp.team.name}
                           </Badge>
@@ -432,7 +521,7 @@ export default function EmployeeManagementPage() {
                               variant="ghost"
                               size="icon"
                               className="cursor-pointer"
-                              disabled={emp.user.id === user?.id}
+                              disabled={!emp.user || emp.user.id === user?.id}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -440,32 +529,47 @@ export default function EmployeeManagementPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleEditEmployee(emp)}
-                              className="cursor-pointer"
-                            >
-                              <UserCog className="mr-2 h-4 w-4" />
-                              Edit Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleChangePassword(emp)}
-                              className="cursor-pointer"
-                            >
-                              <RotateCcwKey className="mr-2 h-4 w-4" />
-                              Reset Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleTransferEmployee(emp)}
-                              className="cursor-pointer"
-                            >
-                              <Briefcase className="mr-2 h-4 w-4" />
-                              Transfer
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive cursor-pointer">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
+                            {emp.working_status === "terminated" ? (
+                              <DropdownMenuItem
+                                onClick={() => handleRestoreEmployee(emp)}
+                                className="cursor-pointer text-green-600"
+                              >
+                                <RotateCw className="mr-2 h-4 w-4" />
+                                Restore
+                              </DropdownMenuItem>
+                            ) : (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditEmployee(emp)}
+                                  className="cursor-pointer"
+                                >
+                                  <UserCog className="mr-2 h-4 w-4" />
+                                  Edit Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleChangePassword(emp)}
+                                  className="cursor-pointer"
+                                >
+                                  <RotateCcwKey className="mr-2 h-4 w-4" />
+                                  Reset Password
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleTransferEmployee(emp)}
+                                  className="cursor-pointer"
+                                >
+                                  <Briefcase className="mr-2 h-4 w-4" />
+                                  Transfer
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleTerminateEmployee(emp)}
+                                  className="text-destructive cursor-pointer"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Terminate
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -684,7 +788,7 @@ export default function EmployeeManagementPage() {
           <CardContent>
             <div className="text-2xl font-bold">
               {
-                employees.filter((emp) => emp.role.name === "SUPER_ADMIN")
+                employees.filter((emp) => emp.role?.name === "SUPER_ADMIN")
                   .length
               }
             </div>
@@ -818,7 +922,7 @@ export default function EmployeeManagementPage() {
                   </TabsContent>
                   <TabsContent value="role">
                     <FormField
-                      control={transferForm.control} // Sửa lỗi tham chiếu form
+                      control={transferForm.control}
                       name="roleId"
                       render={({ field }) => (
                         <FormItem>
@@ -893,6 +997,41 @@ export default function EmployeeManagementPage() {
                 </form>
               </Form>
             </Tabs>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {currentEmployee && (
+        <Dialog
+          open={isTerminateDialogOpen}
+          onOpenChange={setIsTerminateDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Terminate Employee</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to terminate{" "}
+                {getFullName(currentEmployee)}? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsTerminateDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <LoadingButton
+                type="button"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={terminateLoading}
+                loading={terminateLoading}
+                onClick={confirmTerminateEmployee}
+              >
+                {terminateLoading ? "Terminating..." : "Terminate"}
+              </LoadingButton>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
