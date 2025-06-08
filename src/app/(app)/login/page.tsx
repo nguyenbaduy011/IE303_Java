@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import LoadingButton from "@/components/ui/loading-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { loginUser } from "@/app/api/login/route";
@@ -113,8 +113,8 @@ export default function LoginPage() {
       const userMessage = isFetchError
         ? "Unable to connect to the server. Please check your internet connection or try again shortly."
         : err.message === "Sai mật khẩu"
-        ? "Invalid password. Please try again."
-        : "Invalid email or password. Please try again.";
+          ? "Invalid password. Please try again."
+          : "Invalid email or password. Please try again.";
 
       setError(userMessage);
       toast.error(userMessage);

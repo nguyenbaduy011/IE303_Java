@@ -6,7 +6,7 @@ interface LoadingButtonProps
   loading: boolean;
 }
 
-export default function LoadingButton({
+export function LoadingButton({
   children,
   loading,
   ...props
