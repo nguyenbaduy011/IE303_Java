@@ -61,42 +61,44 @@ interface CreateUserDialogProps {
   onEmployeeCreated: () => void;
 }
 
-const uuidSchema = z.string().uuid("Định dạng UUID không hợp lệ");
+// Định nghĩa schema UUID với thông báo lỗi
+const uuidSchema = z.string().uuid("Invalid UUID format");
 
+// Định nghĩa schema cho nhân viên
 const employeeSchema = z.object({
-  firstName: z.string().min(1, "Họ không được để trống"),
-  lastName: z.string().min(1, "Tên không được để trống"),
-  email: z.string().email("Địa chỉ email không hợp lệ"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
   birthDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Định dạng ngày không hợp lệ (YYYY-MM-DD)")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
     .refine((date) => new Date(date) < new Date(), {
-      message: "Ngày sinh phải trong quá khứ",
+      message: "Birth date must be in the past",
     }),
   gender: z.enum(["male", "female"], {
-    errorMap: () => ({ message: "Vui lòng chọn giới tính" }),
+    errorMap: () => ({ message: "Please select a gender" }),
   }),
   nationality: z.string().nullable(),
   phoneNumber: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Số điện thoại phải có 10-15 chữ số"),
+    .regex(/^[0-9]{10,15}$/, "Phone number must be 10-15 digits"),
   address: z.string().nullable(),
   imageUrl: z
     .string()
-    .url("URL không hợp lệ")
+    .url("Invalid URL")
     .nullable()
     .or(z.literal("").transform(() => null)),
   hireDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Định dạng ngày không hợp lệ (YYYY-MM-DD)")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (YYYY-MM-DD)")
     .refine((date) => new Date(date) <= new Date(), {
-      message: "Ngày bắt đầu làm việc phải là hôm nay hoặc trong quá khứ",
+      message: "Hire date must be today or in the past",
     }),
   positionId: uuidSchema,
   departmentId: uuidSchema,
   teamId: uuidSchema.nullable(),
   roleId: uuidSchema,
-  salary: z.number().gt(0, "Lương phải lớn hơn 0"),
+  salary: z.number().gt(0, "Salary must be greater than 0"),
   workingStatus: z.literal("active"),
 });
 
@@ -109,6 +111,7 @@ export function CreateUserDialog({
   teams = [],
   onEmployeeCreated,
 }: CreateUserDialogProps) {
+  // Khởi tạo form với schema và giá trị mặc định
   const form = useForm<CreateEmployeePayload>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -134,6 +137,7 @@ export function CreateUserDialog({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("personal");
 
+  // Xử lý khi submit form
   const onSubmit = async (data: CreateEmployeePayload) => {
     setLoading(true);
     try {
@@ -144,7 +148,7 @@ export function CreateUserDialog({
         workingStatus: data.workingStatus as "active",
       };
       await createEmployee(payload);
-      toast.success("Tạo nhân viên thành công!");
+      toast.success("Employee created successfully!");
       form.reset();
       onEmployeeCreated();
       onOpenChange(false);
@@ -154,17 +158,19 @@ export function CreateUserDialog({
       const errorData = error.message ? await JSON.parse(error.message) : null;
       const errorMessage = errorData?.errors
         ? errorData.errors.map((e: any) => e.message).join(", ")
-        : error.message || "Lỗi không xác định khi tạo nhân viên";
+        : error.message || "Unexpected error while creating employee";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  // Xử lý thay đổi tab
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
 
+  // Kiểm tra tính hợp lệ của tab
   const isTabValid = (tabName: string) => {
     const errors = form.formState.errors;
     switch (tabName) {
@@ -192,20 +198,21 @@ export function CreateUserDialog({
     }
   };
 
+  // Kiểm tra nếu không có dữ liệu phòng ban, vị trí, hoặc vai trò
   if (!departments.length || !positions.length || !roles.length) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[750px]">
           <DialogHeader>
-            <DialogTitle>Lỗi</DialogTitle>
+            <DialogTitle>Error</DialogTitle>
             <DialogDescription>
-              Không thể tạo nhân viên: Không có phòng ban, vị trí hoặc vai trò
-              nào khả dụng.
+              Cannot create employee: No departments, positions, or roles
+              available.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Đóng
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -219,10 +226,10 @@ export function CreateUserDialog({
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Thêm Nhân Viên Mới
+            Add New Employee
           </DialogTitle>
           <DialogDescription>
-            Điền đầy đủ thông tin nhân viên qua các phần bên dưới.
+            Complete the employee information across the sections below.
           </DialogDescription>
         </DialogHeader>
 
@@ -239,7 +246,7 @@ export function CreateUserDialog({
                   className="flex items-center gap-1.5"
                 >
                   <User className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Cá Nhân</span>
+                  <span className="hidden sm:inline">Personal</span>
                   {!isTabValid("personal") && (
                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
@@ -249,7 +256,7 @@ export function CreateUserDialog({
                   className="flex items-center gap-1.5"
                 >
                   <Briefcase className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Công Việc</span>
+                  <span className="hidden sm:inline">Employment</span>
                   {!isTabValid("employment") && (
                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
@@ -259,7 +266,7 @@ export function CreateUserDialog({
                   className="flex items-center gap-1.5"
                 >
                   <DollarSign className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Lương</span>
+                  <span className="hidden sm:inline">Compensation</span>
                   {!isTabValid("compensation") && (
                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
@@ -269,7 +276,7 @@ export function CreateUserDialog({
                   className="flex items-center gap-1.5"
                 >
                   <Settings className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Cài Đặt</span>
+                  <span className="hidden sm:inline">Settings</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -278,10 +285,10 @@ export function CreateUserDialog({
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg">
-                        Thông Tin Cá Nhân
+                        Personal Information
                       </CardTitle>
                       <CardDescription>
-                        Thông tin cá nhân cơ bản và liên hệ
+                        Basic personal details and contact information
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -291,7 +298,7 @@ export function CreateUserDialog({
                           name="firstName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Họ *</FormLabel>
+                              <FormLabel>First Name *</FormLabel>
                               <FormControl>
                                 <Input {...field} placeholder="John" />
                               </FormControl>
@@ -304,7 +311,7 @@ export function CreateUserDialog({
                           name="lastName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Tên *</FormLabel>
+                              <FormLabel>Last Name *</FormLabel>
                               <FormControl>
                                 <Input {...field} placeholder="Doe" />
                               </FormControl>
@@ -319,7 +326,7 @@ export function CreateUserDialog({
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Địa Chỉ Email *</FormLabel>
+                            <FormLabel>Email Address *</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -338,7 +345,7 @@ export function CreateUserDialog({
                           name="birthDate"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Ngày Sinh *</FormLabel>
+                              <FormLabel>Birth Date *</FormLabel>
                               <FormControl>
                                 <Input {...field} type="date" />
                               </FormControl>
@@ -351,18 +358,20 @@ export function CreateUserDialog({
                           name="gender"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Giới Tính *</FormLabel>
+                              <FormLabel>Gender *</FormLabel>
                               <FormControl>
                                 <Select
                                   value={field.value}
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Chọn giới tính" />
+                                    <SelectValue placeholder="Select gender" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="male">Nam</SelectItem>
-                                    <SelectItem value="female">Nữ</SelectItem>
+                                    <SelectItem value="male">Male</SelectItem>
+                                    <SelectItem value="female">
+                                      Female
+                                    </SelectItem>
                                   </SelectContent>
                                 </Select>
                               </FormControl>
@@ -378,7 +387,7 @@ export function CreateUserDialog({
                           name="nationality"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Quốc Tịch</FormLabel>
+                              <FormLabel>Nationality</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -395,7 +404,7 @@ export function CreateUserDialog({
                           name="phoneNumber"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Số Điện Thoại *</FormLabel>
+                              <FormLabel>Phone Number *</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -414,7 +423,7 @@ export function CreateUserDialog({
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Địa Chỉ</FormLabel>
+                            <FormLabel>Address</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -432,7 +441,7 @@ export function CreateUserDialog({
                         name="imageUrl"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>URL Ảnh Hồ Sơ</FormLabel>
+                            <FormLabel>Profile Image URL</FormLabel>
                             <FormControl>
                               <Input
                                 {...field}
@@ -452,10 +461,10 @@ export function CreateUserDialog({
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg">
-                        Chi Tiết Công Việc
+                        Employment Details
                       </CardTitle>
                       <CardDescription>
-                        Vị trí công việc, phòng ban và phân công team
+                        Job position, department, and team assignments
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -464,7 +473,7 @@ export function CreateUserDialog({
                         name="hireDate"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Ngày Bắt Đầu Làm Việc *</FormLabel>
+                            <FormLabel>Hire Date *</FormLabel>
                             <FormControl>
                               <Input {...field} type="date" />
                             </FormControl>
@@ -479,14 +488,14 @@ export function CreateUserDialog({
                           name="departmentId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Phòng Ban *</FormLabel>
+                              <FormLabel>Department *</FormLabel>
                               <FormControl>
                                 <Select
                                   value={field.value}
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Chọn phòng ban" />
+                                    <SelectValue placeholder="Select department" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {departments.map((dept) => (
@@ -506,14 +515,14 @@ export function CreateUserDialog({
                           name="positionId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Vị Trí *</FormLabel>
+                              <FormLabel>Position *</FormLabel>
                               <FormControl>
                                 <Select
                                   value={field.value}
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Chọn vị trí" />
+                                    <SelectValue placeholder="Select position" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {positions.map((pos) => (
@@ -547,12 +556,10 @@ export function CreateUserDialog({
                                   }
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Chọn team" />
+                                    <SelectValue placeholder="Select team" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="null">
-                                      Không có
-                                    </SelectItem>
+                                    <SelectItem value="null">None</SelectItem>
                                     {teams.map((team) => (
                                       <SelectItem key={team.id} value={team.id}>
                                         {team.name}
@@ -570,14 +577,14 @@ export function CreateUserDialog({
                           name="roleId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Vai Trò *</FormLabel>
+                              <FormLabel>Role *</FormLabel>
                               <FormControl>
                                 <Select
                                   value={field.value}
                                   onValueChange={field.onChange}
                                 >
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Chọn vai trò" />
+                                    <SelectValue placeholder="Select role" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {roles.map((role) => (
@@ -601,10 +608,10 @@ export function CreateUserDialog({
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg">
-                        Lương & Trạng Thái
+                        Compensation & Status
                       </CardTitle>
                       <CardDescription>
-                        Thông tin lương và trạng thái làm việc
+                        Salary information and employment status
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -613,7 +620,7 @@ export function CreateUserDialog({
                         name="salary"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Lương Hàng Năm *</FormLabel>
+                            <FormLabel>Annual Salary *</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -639,19 +646,17 @@ export function CreateUserDialog({
                         name="workingStatus"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Trạng Thái Làm Việc *</FormLabel>
+                            <FormLabel>Working Status *</FormLabel>
                             <FormControl>
                               <Select
                                 value={field.value}
                                 onValueChange={field.onChange}
                               >
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Chọn trạng thái" />
+                                  <SelectValue placeholder="Select status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="active">
-                                    Đang Làm
-                                  </SelectItem>
+                                  <SelectItem value="active">Active</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -666,20 +671,22 @@ export function CreateUserDialog({
                 <TabsContent value="settings" className="space-y-4 mt-0">
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Cài Đặt Bổ Sung</CardTitle>
+                      <CardTitle className="text-lg">
+                        Additional Settings
+                      </CardTitle>
                       <CardDescription>
-                        Cấu hình và tùy chọn bổ sung
+                        Optional configurations and preferences
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="text-center py-8 text-muted-foreground">
                         <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>
-                          Các cài đặt bổ sung sẽ được thêm vào đây trong các bản
-                          cập nhật sau.
+                          Additional settings will be available here in future
+                          updates.
                         </p>
                         <p className="text-sm mt-2">
-                          Hiện tại, bạn có thể tiếp tục tạo nhân viên.
+                          For now, you can proceed to create the employee.
                         </p>
                       </div>
                     </CardContent>
@@ -697,10 +704,10 @@ export function CreateUserDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
               >
-                Hủy
+                Cancel
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? "Đang Tạo Nhân Viên..." : "Tạo Nhân Viên"}
+                {loading ? "Creating Employee..." : "Create Employee"}
               </Button>
             </DialogFooter>
           </form>
