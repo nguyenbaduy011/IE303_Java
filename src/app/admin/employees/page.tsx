@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,6 +14,7 @@ import {
   Trash2,
   UserCog,
   Users,
+  Briefcase,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -45,18 +47,63 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { CreateUserDialog } from "@/components/admin/employees/create-user-dialog"; // Thay thế NewEmployeeDialog
 import { EmployeeDetailDialog } from "@/components/admin/employees/employee-detail-dialog";
 import { RoleDialog } from "@/components/admin/employees/role-dialog";
+import { ResetPasswordDialog } from "@/components/admin/employees/reset-password-alert-dialog";
+import { useAuth } from "@/contexts/auth-context";
 import {
   EmployeeType,
   fetchEmployees,
 } from "@/app/api/get-all-user(admin)/route";
-import { DepartmentType, PositionType } from "@/types/types";
-import { ResetPasswordDialog } from "@/components/admin/employees/reset-password-alert-dialog";
-import { useAuth } from "@/contexts/auth-context";
+import {
+  DepartmentType,
+  fetchDepartments,
+} from "@/app/api/get-all-departments/route";
+import {
+  fetchPositions,
+  PositionType,
+} from "@/app/api/get-all-positions/route";
+import {
+  fetchRoles,
+  RoleWithPermissionsType,
+} from "@/app/api/get-all-roles/route";
+import {
+  TeamWithLeaderType,
+  fetchTeams,
+} from "@/app/api/get-all-teams(admin)/route";
+import { transferEmployeeDepartment } from "@/app/api/change-user-department/route";
+import { transferEmployeePosition } from "@/app/api/change-user-position/route";
+import { transferEmployeeRole } from "@/app/api/change-user-role/route";
+import { transferEmployeeTeam } from "@/app/api/change-user-team/route";
 
-// Utility function to get full name from user
+interface TransferFormValues {
+  departmentId: string;
+  positionId: string;
+  roleId: string;
+  teamId: string;
+  tab: string;
+}
+
 const getFullName = (employee: EmployeeType) =>
   `${employee.user.first_name} ${employee.user.last_name}`;
 
@@ -67,8 +114,10 @@ export default function EmployeeManagementPage() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
+  const [isNewEmployeeDialogOpen, setIsNewEmployeeDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const { user } = useAuth();
 
   const [currentEmployee, setCurrentEmployee] = useState<EmployeeType | null>(
@@ -76,36 +125,73 @@ export default function EmployeeManagementPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<DepartmentType[]>([]);
+  const [positions, setPositions] = useState<PositionType[]>([]);
+  const [roles, setRoles] = useState<RoleWithPermissionsType[]>([]);
+  const [teams, setTeams] = useState<TeamWithLeaderType[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
 
-  // Fetch employees on mount
+  const transferForm = useForm<TransferFormValues>({
+    defaultValues: {
+      departmentId: "",
+      positionId: "",
+      roleId: "",
+      teamId: "",
+      tab: "department",
+    },
+  });
+
+  const refreshEmployees = async () => {
+    try {
+      const employeeRes = await fetchEmployees();
+      setEmployees(employeeRes);
+    } catch (err) {
+      toast.error("Failed to refresh employee list.");
+    }
+  };
+
   useEffect(() => {
-    const loadEmployees = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const data = await fetchEmployees();
-        setEmployees(data);
+        const [employeeRes, departmentRes, positionRes, roleRes, teamRes] =
+          await Promise.all([
+            fetchEmployees(),
+            fetchDepartments(),
+            fetchPositions(),
+            fetchRoles(),
+            fetchTeams(),
+          ]);
+        const employeeData =
+          employeeRes instanceof Response
+            ? await employeeRes.json()
+            : employeeRes;
+        const departmentData =
+          departmentRes instanceof Response
+            ? await departmentRes.json()
+            : departmentRes;
+        const positionData =
+          positionRes instanceof Response
+            ? await positionRes.json()
+            : positionRes;
+        const roleData =
+          roleRes instanceof Response ? await roleRes.json() : roleRes;
+        const teamData =
+          teamRes instanceof Response ? await teamRes.json() : teamRes;
+        setEmployees(employeeData);
+        setDepartments(departmentData);
+        setPositions(positionData);
+        setRoles(roleData);
+        setTeams(teamData);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch employees"
-        );
+        setError(err instanceof Error ? err.message : "Failed to fetch data");
       } finally {
         setLoading(false);
       }
     };
-    loadEmployees();
+    loadData();
   }, []);
 
-  // Derive unique departments and roles from employees
-  const departments = Array.from(
-    new Set(employees.map((emp) => JSON.stringify(emp.department))),
-    (str) => JSON.parse(str) as DepartmentType
-  );
-  const roles = Array.from(
-    new Set(employees.map((emp) => JSON.stringify(emp.position))),
-    (str) => JSON.parse(str) as PositionType
-  );
-
-  // Filter employees based on search, department, and role
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch =
       getFullName(employee).toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -153,7 +239,65 @@ export default function EmployeeManagementPage() {
     setIsPasswordDialogOpen(true);
   };
 
-  // Render table content for a specific tab
+  const handleTransferEmployee = (employee: EmployeeType) => {
+    setCurrentEmployee(employee);
+    setIsTransferDialogOpen(true);
+    transferForm.reset({
+      departmentId: employee.department?.id || "",
+      positionId: employee.position?.id || "",
+      roleId: employee.role?.id || "",
+      teamId: employee.team?.id || "",
+      tab: "department",
+    });
+  };
+
+  const handleTransfer = async (data: TransferFormValues) => {
+    if (!currentEmployee) return;
+    setTransferLoading(true);
+    try {
+      let response;
+      switch (data.tab) {
+        case "department":
+          if (!data.departmentId) throw new Error("Department ID is required");
+          response = await transferEmployeeDepartment({
+            employeeId: currentEmployee.user.id,
+            newDepartmentId: data.departmentId,
+          });
+          break;
+        case "position":
+          if (!data.positionId) throw new Error("Position ID is required");
+          response = await transferEmployeePosition({
+            employeeId: currentEmployee.user.id,
+            newPositionId: data.positionId,
+          });
+          break;
+        case "role":
+          if (!data.roleId) throw new Error("Role ID is required");
+          response = await transferEmployeeRole({
+            employeeId: currentEmployee.user.id,
+            newRoleId: data.roleId,
+          });
+          break;
+        case "team":
+          if (!data.teamId) throw new Error("Team ID is required");
+          response = await transferEmployeeTeam({
+            employeeId: currentEmployee.user.id,
+            newTeamId: data.teamId,
+          });
+          break;
+        default:
+          throw new Error("Invalid transfer type");
+      }
+      await refreshEmployees();
+      toast.success(`Employee transferred to new ${data.tab} successfully.`);
+      setIsTransferDialogOpen(false);
+    } catch (err) {
+      toast.error("Failed to transfer employee.");
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
   const renderTableContent = (statusFilter?: string) => (
     <Card className="border-0 shadow-none p-0">
       <CardContent className="p-0">
@@ -304,18 +448,18 @@ export default function EmployeeManagementPage() {
                               Edit Details
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleManageRole(emp)}
-                              className="cursor-pointer"
-                            >
-                              <Users className="mr-2 h-4 w-4" />
-                              Manage Position
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
                               onClick={() => handleChangePassword(emp)}
                               className="cursor-pointer"
                             >
                               <RotateCcwKey className="mr-2 h-4 w-4" />
                               Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleTransferEmployee(emp)}
+                              className="cursor-pointer"
+                            >
+                              <Briefcase className="mr-2 h-4 w-4" />
+                              Transfer
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive cursor-pointer">
@@ -345,10 +489,7 @@ export default function EmployeeManagementPage() {
           </p>
         </div>
         <Button
-          onClick={() => {
-            setCurrentEmployee(null);
-            setIsEmployeeDialogOpen(true);
-          }}
+          onClick={() => setIsNewEmployeeDialogOpen(true)}
           className="cursor-pointer"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -448,9 +589,9 @@ export default function EmployeeManagementPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Positions</SelectItem>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
+                      {positions.map((pos) => (
+                        <SelectItem key={pos.id} value={pos.id}>
+                          {pos.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -478,7 +619,6 @@ export default function EmployeeManagementPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -555,7 +695,16 @@ export default function EmployeeManagementPage() {
         </Card>
       </div>
 
-      {/* Employee Dialog */}
+      <CreateUserDialog
+        open={isNewEmployeeDialogOpen}
+        onOpenChange={setIsNewEmployeeDialogOpen}
+        departments={departments}
+        positions={positions}
+        roles={roles}
+        teams={teams}
+        onEmployeeCreated={refreshEmployees}
+      />
+
       {currentEmployee && (
         <EmployeeDetailDialog
           open={isEmployeeDialogOpen}
@@ -564,7 +713,6 @@ export default function EmployeeManagementPage() {
         />
       )}
 
-      {/* Role Dialog */}
       {currentEmployee && (
         <RoleDialog
           open={isRoleDialogOpen}
@@ -572,13 +720,181 @@ export default function EmployeeManagementPage() {
           employee={currentEmployee}
         />
       )}
-      {/* Password Dialog */}
+
       {currentEmployee && (
         <ResetPasswordDialog
           open={isPasswordDialogOpen}
           onOpenChange={setIsPasswordDialogOpen}
           employee={currentEmployee}
         />
+      )}
+
+      {currentEmployee && (
+        <Dialog
+          open={isTransferDialogOpen}
+          onOpenChange={setIsTransferDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Transfer Employee</DialogTitle>
+              <DialogDescription>
+                Transfer {getFullName(currentEmployee)} to a new department,
+                position, role, or team.
+              </DialogDescription>
+            </DialogHeader>
+            <Tabs
+              defaultValue="department"
+              className="w-full"
+              onValueChange={(value) => transferForm.setValue("tab", value)}
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="department">Department</TabsTrigger>
+                <TabsTrigger value="position">Position</TabsTrigger>
+                <TabsTrigger value="role">Role</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+              </TabsList>
+              <Form {...transferForm}>
+                <form
+                  onSubmit={transferForm.handleSubmit(handleTransfer)}
+                  className="space-y-6"
+                >
+                  <TabsContent value="department">
+                    <FormField
+                      control={transferForm.control}
+                      name="departmentId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Department</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select department" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {departments.map((dept) => (
+                                  <SelectItem key={dept.id} value={dept.id}>
+                                    {dept.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="position">
+                    <FormField
+                      control={transferForm.control}
+                      name="positionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Position</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select position" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {positions.map((pos) => (
+                                  <SelectItem key={pos.id} value={pos.id}>
+                                    {pos.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="role">
+                    <FormField
+                      control={transferForm.control} // Sửa lỗi tham chiếu form
+                      name="roleId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Role</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {roles.map((role) => (
+                                  <SelectItem key={role.id} value={role.id}>
+                                    {role.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <TabsContent value="team">
+                    <FormField
+                      control={transferForm.control}
+                      name="teamId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>New Team</FormLabel>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teams.map((team) => (
+                                  <SelectItem key={team.id} value={team.id}>
+                                    {team.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsTransferDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <LoadingButton
+                      type="submit"
+                      disabled={transferLoading}
+                      loading={transferLoading}
+                    >
+                      {transferLoading ? "Transferring..." : "Transfer"}
+                    </LoadingButton>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

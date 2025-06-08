@@ -7,10 +7,12 @@ import {
   CheckSquare,
   FileText,
   Home,
+  Key,
   LayoutDashboard,
   Menu,
   MessageSquare,
   Settings,
+  UserRound,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -41,7 +43,7 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
   const navItems = [
     {
       title: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: <Home className="h-5 w-5" />,
     },
     {
@@ -95,12 +97,17 @@ export function SidebarNav({ onClose }: SidebarNavProps) {
     {
       title: "Employees",
       href: "/admin/employees",
-      icon: <Users className="h-5 w-5" />,
+      icon: <UserRound className="h-5 w-5" />,
     },
     {
       title: "Teams",
       href: "/admin/teams",
       icon: <Users className="h-5 w-5" />,
+    },
+    {
+      title: "Authorizations",
+      href: "/admin/roles",
+      icon: <Key className="h-5 w-5" />,
     },
     {
       title: "Announcements",
