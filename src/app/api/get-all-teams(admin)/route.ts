@@ -16,7 +16,7 @@ export interface TeamLeaderType {
 export interface TeamWithLeaderType {
   id: string;
   name: string;
-  leader: TeamLeaderType;
+  leader: TeamLeaderType | null;
 }
 
 export const fetchTeams = async (): Promise<TeamWithLeaderType[]> => {
@@ -49,18 +49,20 @@ export const fetchTeams = async (): Promise<TeamWithLeaderType[]> => {
       (team: any): TeamWithLeaderType => ({
         id: team.id,
         name: team.name,
-        leader: {
-          id: team.leader.id,
-          first_name: team.leader.firstName,
-          last_name: team.leader.lastName,
-          email: team.leader.email,
-          birth_date: team.leader.birthDate,
-          gender: team.leader.gender,
-          nationality: team.leader.nationality,
-          phone_number: team.leader.phoneNumber,
-          hire_date: team.leader.hireDate,
-          address: team.leader.address,
-        },
+        leader: team.leader
+          ? {
+              id: team.leader.id,
+              first_name: team.leader.firstName,
+              last_name: team.leader.lastName,
+              email: team.leader.email,
+              birth_date: team.leader.birthDate,
+              gender: team.leader.gender,
+              nationality: team.leader.nationality,
+              phone_number: team.leader.phoneNumber,
+              hire_date: team.leader.hireDate,
+              address: team.leader.address,
+            }
+          : null,
       })
     );
   } catch (error) {
