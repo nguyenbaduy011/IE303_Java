@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -219,84 +221,156 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const subscribeToChannels = (client: Client) => {
     if (!user) return;
 
-    // Đăng ký nhận thông báo
-    client.subscribe(`/topic/user/${user.id}`, (message) => {
-      try {
-        const parsedMessage = JSON.parse(message.body);
-        if (parsedMessage.type === "NOTIFICATION") {
-          setNotifications((prev) => [
-            ...prev,
-            {
-              id: parsedMessage.id || Date.now().toString(),
-              message: parsedMessage.data.message,
-              timestamp: parsedMessage.data.timestamp,
-            },
-          ]);
-        } else {
-          handleWebSocketMessage(parsedMessage);
+    console.log("Subscribing to channels for user:", user.id);
+
+    // 1. Subscribe nhận tin nhắn cá nhân
+    const privateSubscription = client.subscribe(
+      `/user/${user.id}/queue/messages`,
+      (message) => {
+        try {
+          const messageData = JSON.parse(message.body);
+          console.log("Received message from WebSocket:", messageData);
+
+          if (messageData.type === "CHAT_MESSAGE") {
+            handleChatMessage(messageData.data);
+          } else if (messageData.type === "TEST_MESSAGE") {
+            console.log("Test message received:", messageData);
+            toast.success("WebSocket kết nối thành công!");
+          }
+        } catch (error) {
+          console.error("Error parsing message:", error);
         }
-      } catch (error) {
-        console.error("Error parsing STOMP message:", error);
       }
-    });
+    );
 
-    // Đăng ký nhận tin nhắn chat
-    client.subscribe(`/user/${user.id}/queue/messages`, (message) => {
-      try {
-        const parsedMessage = JSON.parse(message.body);
-        if (parsedMessage.type === "CHAT_MESSAGE") {
-          setChatMessages((prev) => [
-            ...prev,
-            {
-              id: parsedMessage.id || Date.now().toString(),
-              content: parsedMessage.data.content,
-              timestamp: parsedMessage.data.timestamp,
-              sender:
-                parsedMessage.data.senderId === user.id ? "user" : "contact",
-              read: parsedMessage.data.read || false,
-              senderName: parsedMessage.data.senderName,
-              conversationId: parsedMessage.data.conversationId,
-            },
-          ]);
+    // 2. Subscribe conversation updates
+    const conversationSubscription = client.subscribe(
+      `/topic/conversations/+`, // Không dùng wildcard, sẽ subscribe cụ thể sau
+      (message) => {
+        try {
+          const messageData = JSON.parse(message.body);
+          console.log("Received conversation update:", messageData);
+
+          if (messageData.type === "CONVERSATION_UPDATE") {
+            handleConversationUpdate(messageData);
+          }
+        } catch (error) {
+          console.error("Error parsing conversation update:", error);
         }
-      } catch (error) {
-        console.error("Error parsing chat message:", error);
       }
-    });
+    );
 
-    // Đăng ký nhận session invalidation
-    client.subscribe(`/user/queue/session-invalidation`, (message) => {
-      try {
-        const parsedMessage = JSON.parse(message.body);
-        console.log("Session invalidated:", parsedMessage);
-        handleWebSocketMessage(parsedMessage);
-      } catch (error) {
-        console.error("Error parsing session invalidation:", error);
+    // 3. Subscribe read receipts
+    const receiptSubscription = client.subscribe(
+      `/user/${user.id}/queue/receipts`,
+      (message) => {
+        try {
+          const receiptData = JSON.parse(message.body);
+          console.log("Received read receipt:", receiptData);
+          handleReadReceipt(receiptData);
+        } catch (error) {
+          console.error("Error parsing read receipt:", error);
+        }
       }
-    });
+    );
 
-    // Đăng ký nhận offline messages
-    client.subscribe(`/user/${user.id}/queue/offline-messages`, (message) => {
-      try {
-        const parsedMessage = JSON.parse(message.body);
-        console.log("Received offline message:", parsedMessage);
+    // 4. Subscribe offline messages
+    const offlineSubscription = client.subscribe(
+      `/user/${user.id}/queue/offline-messages`,
+      (message) => {
+        try {
+          const messagesArray = JSON.parse(message.body);
+          console.log("Received offline messages:", messagesArray);
 
-        setChatMessages((prev) => [
-          ...prev,
-          {
-            id: parsedMessage.id || Date.now().toString(),
-            content: parsedMessage.content,
-            timestamp: parsedMessage.createdAt,
-            sender: parsedMessage.sender.id === user.id ? "user" : "contact",
-            read: false,
-            senderName: parsedMessage.sender.fullName,
-            conversationId: parsedMessage.conversationId,
-          },
-        ]);
-      } catch (error) {
-        console.error("Error parsing offline message:", error);
+          if (Array.isArray(messagesArray) && messagesArray.length > 0) {
+            messagesArray.forEach((messageData) => {
+              handleChatMessage(messageData);
+            });
+
+            toast.info(`📬 Bạn có ${messagesArray.length} tin nhắn chưa đọc`);
+          }
+        } catch (error) {
+          console.error("Error parsing offline messages:", error);
+        }
       }
-    });
+    );
+
+    // 5. Subscribe notifications
+    const notificationSubscription = client.subscribe(
+      `/topic/user/${user.id}`,
+      (message) => {
+        try {
+          const parsedMessage = JSON.parse(message.body);
+
+          if (parsedMessage.type === "NOTIFICATION") {
+            setNotifications((prev) => [
+              ...prev,
+              {
+                id: parsedMessage.id || Date.now().toString(),
+                message: parsedMessage.data.message,
+                timestamp: parsedMessage.data.timestamp,
+              },
+            ]);
+          } else {
+            handleWebSocketMessage(parsedMessage);
+          }
+        } catch (error) {
+          console.error("Error parsing notification:", error);
+        }
+      }
+    );
+
+    console.log("All subscriptions created successfully");
+  };
+
+  // Thêm các helper functions
+  const handleChatMessage = (messageData: any) => {
+    // Chỉ xử lý nếu không phải tin nhắn của chính mình
+    if (messageData.senderId && messageData.senderId !== user?.id) {
+      setChatMessages((prev) => {
+        // Kiểm tra trùng lặp
+        const exists = prev.some((msg) => msg.id === messageData.id);
+        if (exists) {
+          console.log("Message already exists, skipping:", messageData.id);
+          return prev;
+        }
+
+        const newMessage: ChatMessage = {
+          id: messageData.id,
+          content: messageData.content,
+          timestamp: messageData.timestamp,
+          sender: "contact",
+          read: messageData.isRead || false,
+          senderName: messageData.senderName,
+          conversationId: messageData.conversationId,
+        };
+
+        console.log("Adding new message to state:", newMessage);
+
+        // Hiển thị notification
+        // toast.info(`💬 ${messageData.senderName}: ${messageData.content}`);
+
+        return [...prev, newMessage];
+      });
+    }
+  };
+
+  const handleConversationUpdate = (updateData: any) => {
+    console.log("Handling conversation update:", updateData);
+    // Có thể trigger re-fetch conversation list hoặc update UI
+  };
+
+  const handleReadReceipt = (receiptData: any) => {
+    console.log("Handling read receipt:", receiptData);
+    // Update UI để hiển thị tin nhắn đã được đọc
+    setChatMessages((prev) =>
+      prev.map((msg) =>
+        msg.conversationId === receiptData.conversationId &&
+        msg.id === receiptData.lastReadMessageId
+          ? { ...msg, read: true }
+          : msg
+      )
+    );
   };
 
   // Khởi tạo STOMP connection với heartbeat tự động
@@ -491,6 +565,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setWsError("Không thể gửi tin nhắn");
       }
     }
+  };
+
+  const testWebSocketConnection = async () => {
+    if (!user?.id) {
+      console.log("No user ID for testing");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/test/websocket/${user.id}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const message = await response.text();
+        console.log("Test WebSocket response:", message);
+      } else {
+        console.error("Test WebSocket failed:", response.status);
+      }
+    } catch (error) {
+      console.error("Error testing WebSocket:", error);
+    }
+  };
+
+  // Thêm test khi WebSocket connect thành công
+  (frame: import("@stomp/stompjs").IFrame, client: Client) => {
+    console.log("STOMP connected:", frame);
+    stompClientRef.current = client;
+    reconnectAttemptsRef.current = 0;
+    isConnectingRef.current = false;
+    setIsConnected(true);
+    setWsError(null);
+
+    // Đăng ký subscribers
+    subscribeToChannels(client);
+
+    // Refresh trạng thái online ngay sau khi connect
+    refreshOnlineStatus();
+
+    // Test WebSocket sau 2 giây
+    setTimeout(() => {
+      testWebSocketConnection();
+    }, 2000);
   };
 
   // Hàm logout

@@ -32,7 +32,8 @@ import { TaskType } from "@/app/api/get-team-task/route";
 import { Crown, Edit2, Settings, UserPlus, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-
+import { deleteTeam } from "@/app/api/delete-team/route"; // Thay bằng đường dẫn thực tế đến file chứa API
+import { toast } from "sonner";
 // Định nghĩa props cho component
 export function TeamManagementCard({
   team,
@@ -42,7 +43,6 @@ export function TeamManagementCard({
   onAddMember,
   onRemoveMember,
   onChangeLeader,
-  onDelete,
 }: {
   team: TeamWithLeaderType;
   teamDetails?: TeamType;
@@ -52,7 +52,6 @@ export function TeamManagementCard({
   onAddMember: () => void;
   onRemoveMember: (member: Member) => void;
   onChangeLeader: () => void;
-  onDelete: () => void; // Prop mới để xóa team
 }) {
   // State để quản lý trạng thái mở AlertDialog
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -213,9 +212,15 @@ export function TeamManagementCard({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                onDelete();
-                setIsDeleteDialogOpen(false);
+              onClick={async () => {
+                try {
+                  await deleteTeam(team.id); // Gọi API xóa team
+                  setIsDeleteDialogOpen(false);
+                  window.location.reload();
+                } catch (error) {
+                  console.error("Failed to delete team:", error);
+                  toast.error("Failed to delete team. Please try again.");
+                }
               }}
               className="bg-destructive text-destructive-foreground"
             >

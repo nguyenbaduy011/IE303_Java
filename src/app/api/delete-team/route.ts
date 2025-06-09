@@ -10,7 +10,7 @@ export async function deleteTeam(teamId: string): Promise<{ message: string }> {
     }
 
     const res = await fetch(`http://localhost:8080/api/team/delete/${teamId}`, {
-      method: "POST",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         "X-CSRF-TOKEN": csrfToken,

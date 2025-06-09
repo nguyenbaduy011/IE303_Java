@@ -100,6 +100,7 @@ import {
   terminateEmployee,
   TerminateEmployeeResponse,
 } from "@/app/api/terminate-user/route";
+import { restoreEmployee } from "@/app/api/restore-user/route";
 
 interface TransferFormValues {
   departmentId: string;
@@ -162,30 +163,6 @@ export default function EmployeeManagementPage() {
   };
 
   // Placeholder for restoreEmployee API call
-  const restoreEmployee = async (employeeId: string) => {
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/employee/restore/${employeeId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to restore employee`);
-      }
-      const data = await response.json();
-      return { success: data.success || true };
-    } catch (error) {
-      console.error("Error in restoreEmployee:", error);
-      throw new Error(
-        error instanceof Error ? error.message : "Failed to restore employee"
-      );
-    }
-  };
 
   const handleRestoreEmployee = async (employee: EmployeeType) => {
     setIsRestoreLoading(true);
@@ -207,7 +184,6 @@ export default function EmployeeManagementPage() {
       setIsRestoreLoading(false);
     }
   };
-
 
   useEffect(() => {
     const loadData = async () => {

@@ -41,7 +41,6 @@ import {
 interface CreateTeamDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onTeamCreated: () => void; // Callback khi tạo team thành công
 }
 
 // Định nghĩa schema xác thực form
@@ -53,7 +52,6 @@ const teamSchema = z.object({
 export function CreateTeamDialog({
   isOpen,
   onClose,
-  onTeamCreated,
 }: CreateTeamDialogProps) {
   // State để lưu danh sách user không có team
   const [users, setUsers] = useState<UserWithoutTeamType[]>([]);
@@ -99,7 +97,6 @@ export function CreateTeamDialog({
       await createTeam(data);
       toast.success("Team created successfully!");
       form.reset();
-      onTeamCreated();
       onClose();
     } catch (error: any) {
       console.error("Lỗi khi tạo team:", error);
