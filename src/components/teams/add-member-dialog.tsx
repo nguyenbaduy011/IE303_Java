@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,27 +11,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Member, TeamType } from "@/app/api/get-team-member/route";
-import { fetchUsersNotInAnyTeam } from "@/app/api/get-users-not-in-team/route";
+import { TeamType } from "@/app/api/get-team-member/route";
+import {
+  fetchUsersNotInAnyTeam,
+  UserWithoutTeamType,
+} from "@/app/api/get-users-not-in-team/route";
+import { toast } from "sonner";
+import { addEmployeeToTeam } from "@/app/api/add-member-to-team/route";
+
 
 interface AddMemberDialogProps {
   isOpen: boolean;
   onClose: () => void;
   team: TeamType;
+  onMemberAdded?: () => void; // Thêm prop để thông báo khi thêm thành viên thành công
 }
 
 export function AddMemberDialog({
   isOpen,
   onClose,
   team,
+  onMemberAdded,
 }: AddMemberDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [availableMembers, setAvailableMembers] = useState<Member[]>([]);
+  const [availableMembers, setAvailableMembers] = useState<
+    UserWithoutTeamType[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchAvailableMembers = async () => {
-      const notInTeamUsers = await fetchUsersNotInAnyTeam();
-      setAvailableMembers([]);
+      try {
+        setIsLoading(true);
+        const notInTeamUsers = await fetchUsersNotInAnyTeam();
+        setAvailableMembers(notInTeamUsers || []); // Đảm bảo không set undefined
+      } catch (error) {
+        console.error("Error fetching available members:", error);
+        toast.error("Failed to load available members");
+        setAvailableMembers([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
     if (isOpen) {
       fetchAvailableMembers();
@@ -46,12 +67,30 @@ export function AddMemberDialog({
   };
 
   const handleAddExisting = async () => {
+    if (selectedMembers.length === 0) {
+      toast.error("Please select at least one member to add");
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      console.log(`Adding existing members to ${team.name}:`, selectedMembers);
+      // Gọi API cho từng member đã chọn
+      for (const memberId of selectedMembers) {
+        await addEmployeeToTeam(memberId, team.id);
+      }
+      toast.success(
+        `Added ${selectedMembers.length} member(s) to team ${team.name}`
+      );
       setSelectedMembers([]);
       onClose();
-    } catch (error) {
+      if (onMemberAdded) {
+        onMemberAdded(); // Thông báo cho component cha để refresh dữ liệu
+      }
+    } catch (error: any) {
       console.error("Error adding members:", error);
+      toast.error(error.message || "Failed to add members to team");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,36 +106,38 @@ export function AddMemberDialog({
 
         <div className="space-y-4">
           <div className="max-h-[300px] overflow-y-auto space-y-2">
-            {availableMembers.length === 0 ? (
+            {isLoading ? (
+              <p className="text-center text-muted-foreground py-4">
+                Loading members...
+              </p>
+            ) : availableMembers.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
                 No available members to add
               </p>
             ) : (
               availableMembers.map((member) => (
                 <div
-                  key={member.user.id}
+                  key={member.id}
                   className="flex items-center space-x-3 p-2 rounded-lg border"
                 >
                   <Checkbox
-                    id={member.user.id}
-                    checked={selectedMembers.includes(member.user.id)}
-                    onCheckedChange={() => handleMemberToggle(member.user.id)}
+                    id={member.id}
+                    checked={selectedMembers.includes(member.id)}
+                    onCheckedChange={() => handleMemberToggle(member.id)}
+                    disabled={isLoading}
                   />
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       src="/placeholder.svg"
-                      alt={`${member.user.first_name} ${member.user.last_name}`}
+                      alt={`${member.first_name} ${member.last_name}`}
                     />
                     <AvatarFallback>
-                      {member.user.first_name.charAt(0)}
+                      {member.first_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <p className="font-medium">
-                      {`${member.user.first_name} ${member.user.last_name}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {member.employment_detail.position.name}
+                      {`${member.first_name} ${member.last_name}`}
                     </p>
                   </div>
                 </div>
@@ -104,14 +145,16 @@ export function AddMemberDialog({
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button
               onClick={handleAddExisting}
-              disabled={selectedMembers.length === 0}
+              disabled={selectedMembers.length === 0 || isLoading}
             >
-              Add Selected ({selectedMembers.length})
+              {isLoading
+                ? "Adding..."
+                : `Add Selected (${selectedMembers.length})`}
             </Button>
           </DialogFooter>
         </div>
