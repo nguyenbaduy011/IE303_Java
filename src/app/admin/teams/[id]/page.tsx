@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import { getTeam, Member, TeamType } from "@/app/api/get-team-member/route";
 import { fetchTeamTasks, TaskType } from "@/app/api/get-team-task/route";
 import { AddMemberDialog } from "@/components/teams/add-member-dialog";
@@ -47,6 +48,8 @@ import { DonutChart } from "@/components/teams/team-progress-donut-chart";
 import { getFullName } from "@/utils/getFullName";
 import { Badge } from "@/components/ui/badge";
 import { RemoveMemberDialog } from "@/components/teams/remove-member-dialog";
+import { updateTeam, UpdateTeamPayload } from "@/app/api/update-team/route";
+import { toast } from "sonner";
 
 export default function TeamDetailsPage() {
   const params = useParams();
@@ -61,51 +64,72 @@ export default function TeamDetailsPage() {
     useState(false);
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
   const [teamName, setTeamName] = useState("");
-  const [teamDescription, setTeamDescription] = useState("");
   const [teamLead, setTeamLead] = useState("");
+
+  // Function to fetch team and tasks data
+  const refreshTeamData = async () => {
+    try {
+      setLoading(true);
+      const [teamData, taskResponse] = await Promise.all([
+        getTeam(teamId),
+        fetchTeamTasks(teamId),
+      ]);
+      if (teamData) {
+        setTeam(teamData);
+        setTeamName(teamData.name);
+        setTeamLead(
+          teamData.leader
+            ? `${teamData.leader.first_name} ${teamData.leader.last_name}`
+            : "Not assigned"
+        );
+        setTasks(taskResponse.tasks);
+      } else {
+        setError("Team not found");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load team");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch team and tasks on mount
   useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        setLoading(true);
-        const [teamData, taskResponse] = await Promise.all([
-          getTeam(teamId),
-          fetchTeamTasks(teamId),
-        ]);
-        if (teamData) {
-          setTeam(teamData);
-          setTeamName(teamData.name);
-          setTeamDescription(""); // API doesn't provide description
-          setTeamLead(
-            teamData.leader
-              ? `${teamData.leader.first_name} ${teamData.leader.last_name}`
-              : "Not assigned"
-          );
-          setTasks(taskResponse.tasks);
-        } else {
-          setError("Team not found");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load team");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTeamData();
+    refreshTeamData();
   }, [teamId]);
 
   const handleEditTeam = async () => {
     try {
-      console.log(`Updating team ${team?.name}:`, {
+      // Find the selected leader's ID from team members
+      const selectedLeader = team?.members.find(
+        (member) =>
+          `${member.user.first_name} ${member.user.last_name}` === teamLead
+      );
+      if (!teamName) {
+        toast.error("Team name is required");
+        return;
+      }
+      if (!selectedLeader) {
+        toast.error("Please select a valid team lead");
+        return;
+      }
+
+      // Construct payload for updateTeam
+      const payload: UpdateTeamPayload = {
         name: teamName,
-        description: teamDescription,
-        lead: teamLead,
-      });
+        leaderId: selectedLeader.user.id, // Use leaderId as per UpdateTeamPayload
+      };
+
+      // Call updateTeam API with teamId and payload
+      await updateTeam(teamId, payload);
+
+      // Refresh data after update
+      await refreshTeamData();
       setIsEditTeamDialogOpen(false);
-      alert(`Team ${teamName} has been updated`);
-    } catch (error) {
+      toast.success(`Team ${teamName} has been updated successfully`);
+    } catch (error: any) {
       console.error("Error updating team:", error);
+      toast.error(error.message || "Failed to update team");
     }
   };
 
@@ -196,9 +220,6 @@ export default function TeamDetailsPage() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Team Overview</CardTitle>
-            <CardDescription>
-              {teamDescription || "No description available"}
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
