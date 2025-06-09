@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
     );
 
     const data = await springResponse.json();
-
     if (!springResponse.ok) {
       return NextResponse.json(data, { status: springResponse.status });
     }

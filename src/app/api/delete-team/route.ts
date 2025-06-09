@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCookie } from "@/utils/cookie";
 
@@ -19,19 +20,38 @@ export async function deleteTeam(teamId: string): Promise<{ message: string }> {
     });
 
     if (!res.ok) {
-      const errorData = await res.json();
-      console.error("Error from backend:", errorData);
-      const errorMessage =
-        errorData.message ||
-        errorData.error ||
-        (errorData.errors
-          ? errorData.errors.map((e: any) => e.message).join(", ")
-          : "Failed to delete team");
+      let errorMessage = "Failed to delete team";
+
+      try {
+        const errorData = await res.json();
+        console.error("Error from backend:", errorData);
+
+        errorMessage =
+          errorData.message ||
+          errorData.error ||
+          (errorData.errors
+            ? errorData.errors.map((e: any) => e.message).join(", ")
+            : errorMessage);
+      } catch (jsonError) {
+        console.warn("Could not parse error response as JSON");
+      }
+
       throw new Error(errorMessage);
     }
 
-    const data = (await res.json()) as { message: string };
-    return data;
+    if (res.status === 204) {
+      return { message: "Team deleted successfully" };
+    }
+
+    // Nếu có nội dung JSON thì mới parse
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const data = (await res.json()) as { message: string };
+      return data;
+    }
+
+    // Nếu không có nội dung JSON, trả về message mặc định
+    return { message: "Team deleted successfully" };
   } catch (error: any) {
     console.error("deleteTeam error:", error.message, error.stack);
     throw new Error(error.message || "Unexpected error while deleting team");
