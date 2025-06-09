@@ -23,6 +23,7 @@ import { MessageType } from "@/types/message-types";
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
 import { useRouter, useSearchParams } from "next/navigation";
 import debounce from "lodash/debounce";
+import { checkOnline, CheckOnlineResponse } from "@/app/api/check-online/route"; // Giả định đường dẫn import
 
 // Hàm tính thời gian tương đối
 const formatRelativeTime = (createdAt: string): string => {
@@ -118,7 +119,7 @@ export default function ChatPage() {
     return () => axios.interceptors.response.eject(interceptor);
   }, [logout]);
 
-  // Load all conversations (contacts)
+  // Load all conversations (contacts) and check online status
   const loadContacts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -127,34 +128,49 @@ export default function ChatPage() {
         "/api/conversations/all",
         { withCredentials: true }
       );
-      const fetchedContacts: Contact[] = response.data.map((conv) => {
-        const otherMember = conv.members.find(
-          (member) => member.user.id !== conv.createdByUser?.id
-        );
-        const name =
-          conv.name ||
-          (conv.type === "DIRECT" && otherMember
-            ? `${otherMember.user.firstName} ${otherMember.user.lastName}`
-            : "Unknown");
-        return {
-          id: conv.id || "",
-          name,
-          role: conv.type === "GROUP" ? "GROUP" : "DIRECT",
-          avatar: otherMember?.user?.avatarUrl || "/placeholder.svg",
-          initials: name
-            .split(" ")
-            .map((n) => n[0] || "")
-            .join("")
-            .toUpperCase()
-            .slice(0, 2),
-          online: false,
-          lastSeen: conv.lastMessage?.timestamp
-            ? new Date(conv.lastMessage.timestamp).toLocaleTimeString()
-            : "Chưa có tin nhắn",
-          unreadCount: conv.unreadCount || 0,
-          isGroup: conv.type === "GROUP",
-        };
-      });
+      const fetchedContacts: Contact[] = await Promise.all(
+        response.data.map(async (conv) => {
+          const otherMember = conv.members.find(
+            (member) => member.user.id !== conv.createdByUser?.id
+          );
+          const name =
+            conv.name ||
+            (conv.type === "DIRECT" && otherMember
+              ? `${otherMember.user.firstName} ${otherMember.user.lastName}`
+              : "Unknown");
+          let onlineStatus = false;
+          if (conv.type === "DIRECT" && otherMember) {
+            const onlineResponse: CheckOnlineResponse = await checkOnline({
+              id: otherMember.user.id,
+            });
+            onlineStatus = onlineResponse.isValid;
+            if (onlineResponse.error) {
+              console.error(
+                `Error checking online status for ${otherMember.user.id}:`,
+                onlineResponse.error
+              );
+            }
+          }
+          return {
+            id: conv.id || "",
+            name,
+            role: conv.type === "GROUP" ? "GROUP" : "DIRECT",
+            avatar: otherMember?.user?.avatarUrl || "/placeholder.svg",
+            initials: name
+              .split(" ")
+              .map((n) => n[0] || "")
+              .join("")
+              .toUpperCase()
+              .slice(0, 2),
+            online: onlineStatus,
+            lastSeen: conv.lastMessage?.timestamp
+              ? new Date(conv.lastMessage.timestamp).toLocaleTimeString()
+              : "Chưa có tin nhắn",
+            unreadCount: conv.unreadCount || 0,
+            isGroup: conv.type === "GROUP",
+          };
+        })
+      );
       setContacts(fetchedContacts);
     } catch (err: any) {
       setError(
@@ -329,13 +345,38 @@ export default function ChatPage() {
     tryLoadContacts();
   }, [isAuthenticated, loadContacts]);
 
-  // Load selected contact from URL and preload messages
+  // Load selected contact from URL, preload messages, and check online status
   useEffect(() => {
     const contactId = searchParams.get("contactId");
     if (contactId && contacts.length > 0) {
       const contact = contacts.find((c) => c.id === contactId);
       if (contact) {
-        setSelectedContact(contact);
+        const updateSelectedContactStatus = async () => {
+          let onlineStatus = contact.online;
+          if (!contact.isGroup) {
+            const convResponse = await axios.get<ConversationResponseDto>(
+              `/api/conversations/${contact.id}`,
+              { withCredentials: true }
+            );
+            const otherMember = convResponse.data.members.find(
+              (member) => member.user.id !== user?.id
+            );
+            if (otherMember) {
+              const onlineResponse: CheckOnlineResponse = await checkOnline({
+                id: otherMember.user.id,
+              });
+              onlineStatus = onlineResponse.isValid;
+              if (onlineResponse.error) {
+                console.error(
+                  `Error checking online status for ${otherMember.user.id}:`,
+                  onlineResponse.error
+                );
+              }
+            }
+          }
+          setSelectedContact({ ...contact, online: onlineStatus });
+        };
+        updateSelectedContactStatus();
         if (!messagesByConversation[contact.id]) {
           loadMessages(contact.id, 0); // Tải tin nhắn nếu chưa có
         }
@@ -346,7 +387,14 @@ export default function ChatPage() {
     } else {
       setSelectedContact(null);
     }
-  }, [searchParams, contacts, router, messagesByConversation, loadMessages]);
+  }, [
+    searchParams,
+    contacts,
+    router,
+    messagesByConversation,
+    loadMessages,
+    user,
+  ]);
 
   // Đồng bộ chatMessages từ WebSocket và xử lý tin nhắn chưa đọc
   useEffect(() => {
@@ -416,6 +464,7 @@ export default function ChatPage() {
     debouncedMarkMessagesAsRead,
     tempMessages,
   ]);
+
   // Search messages
   const handleSearch = useCallback(async () => {
     if (!selectedContact || !searchTerm) return;
