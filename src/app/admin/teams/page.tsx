@@ -312,9 +312,6 @@ export default function AdminTeamsPage() {
               onAddMember={() => handleAddMember(team)}
               onRemoveMember={(member) => handleRemoveMember(team, member)}
               onChangeLeader={() => handleChangeLeader(team)}
-              onDelete={function (): void {
-                throw new Error("Function not implemented.");
-              }}
             />
           ))}
         </div>
@@ -323,9 +320,7 @@ export default function AdminTeamsPage() {
       <CreateTeamDialog
         isOpen={isCreateTeamDialogOpen}
         onClose={() => setIsCreateTeamDialogOpen(false)}
-        onTeamCreated={function (): void {
-          throw new Error("Function not implemented.");
-        }}
+
       />
 
       {selectedTeam && (
