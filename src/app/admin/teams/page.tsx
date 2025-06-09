@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,6 +44,7 @@ import { EditTeamDialog } from "@/components/teams/edit-team-dialog";
 import { CreateTeamDialog } from "@/components/teams/create-team-dialog";
 import { RemoveMemberDialog } from "@/components/teams/remove-member-dialog";
 import { AddMemberDialog } from "@/components/teams/add-member-dialog";
+import { toast } from "sonner";
 
 export default function AdminTeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,33 +65,45 @@ export default function AdminTeamsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Function to refresh teams, details, and tasks
+  const refreshTeamsAndTasks = async () => {
+    try {
+      setLoading(true);
+      const fetchedTeams = await fetchTeams();
+      setTeams(fetchedTeams);
+
+      const details: { [key: string]: TeamType } = {};
+      const tasks: { [key: string]: TaskType[] } = {};
+      for (const team of fetchedTeams) {
+        const teamDetail = await getTeam(team.id);
+        if (teamDetail) {
+          details[team.id] = teamDetail;
+        }
+        const taskResponse = await fetchTeamTasks(team.id);
+        tasks[team.id] = taskResponse.tasks;
+      }
+      setTeamDetails(details);
+      setTeamTasks(tasks);
+      // If the selected team still exists, update its details
+      if (selectedTeam && details[selectedTeam.id]) {
+        setSelectedTeam(details[selectedTeam.id]);
+      } else {
+        setSelectedTeam(null); // Reset if the selected team no longer exists
+      }
+    } catch (err) {
+      console.error("Error refreshing teams and tasks:", err);
+      setError(err instanceof Error ? err.message : "Failed to refresh teams");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to refresh teams"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch teams and tasks on component mount
   useEffect(() => {
-    const loadTeamsAndTasks = async () => {
-      try {
-        setLoading(true);
-        const fetchedTeams = await fetchTeams();
-        setTeams(fetchedTeams);
-
-        const details: { [key: string]: TeamType } = {};
-        const tasks: { [key: string]: TaskType[] } = {};
-        for (const team of fetchedTeams) {
-          const teamDetail = await getTeam(team.id);
-          if (teamDetail) {
-            details[team.id] = teamDetail;
-          }
-          const taskResponse = await fetchTeamTasks(team.id);
-          tasks[team.id] = taskResponse.tasks;
-        }
-        setTeamDetails(details);
-        setTeamTasks(tasks);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load teams");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadTeamsAndTasks();
+    refreshTeamsAndTasks();
   }, []);
 
   // Filter teams based on search query
@@ -119,32 +133,6 @@ export default function AdminTeamsPage() {
     };
   });
 
-  const handleTeamSelect = async (team: TeamWithLeaderType) => {
-    const teamDetail = teamDetails[team.id] || (await getTeam(team.id));
-    if (teamDetail) {
-      setTeamDetails((prev) => ({ ...prev, [team.id]: teamDetail }));
-      setSelectedTeam(teamDetail);
-    }
-  };
-
-  const handleEditTeam = async (team: TeamWithLeaderType) => {
-    const teamDetail = teamDetails[team.id] || (await getTeam(team.id));
-    if (teamDetail) {
-      setTeamDetails((prev) => ({ ...prev, [team.id]: teamDetail }));
-      setSelectedTeam(teamDetail);
-      setIsEditTeamDialogOpen(true);
-    }
-  };
-
-  const handleAddMember = async (team: TeamWithLeaderType) => {
-    const teamDetail = teamDetails[team.id] || (await getTeam(team.id));
-    if (teamDetail) {
-      setTeamDetails((prev) => ({ ...prev, [team.id]: teamDetail }));
-      setSelectedTeam(teamDetail);
-      setIsAddMemberDialogOpen(true);
-    }
-  };
-
   const handleRemoveMember = async (
     team: TeamWithLeaderType,
     member: Member
@@ -171,15 +159,7 @@ export default function AdminTeamsPage() {
       setSelectedTeam(updatedTeam);
       setMemberToRemove(null);
       setIsRemoveMemberDialogOpen(false);
-    }
-  };
-
-  const handleChangeLeader = async (team: TeamWithLeaderType) => {
-    const teamDetail = teamDetails[team.id] || (await getTeam(team.id));
-    if (teamDetail) {
-      setTeamDetails((prev) => ({ ...prev, [team.id]: teamDetail }));
-      setSelectedTeam(teamDetail);
-      setIsChangeLeaderDialogOpen(true);
+      await refreshTeamsAndTasks(); // Refresh data after removing member
     }
   };
 
@@ -252,7 +232,7 @@ export default function AdminTeamsPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="font-medium">Total Members</span>
-                <span className="text-muted">
+                <span className="text-muted-foreground">
                   {Object.values(teamDetails).reduce(
                     (sum, team) => sum + (team.member_count || 0),
                     0
@@ -307,11 +287,8 @@ export default function AdminTeamsPage() {
               team={team}
               teamDetails={teamDetails[team.id]}
               tasks={teamTasks[team.id] || []}
-              onSelect={() => handleTeamSelect(team)}
-              onEdit={() => handleEditTeam(team)}
-              onAddMember={() => handleAddMember(team)}
               onRemoveMember={(member) => handleRemoveMember(team, member)}
-              onChangeLeader={() => handleChangeLeader(team)}
+              onTeamChange={refreshTeamsAndTasks} // Pass refresh function
             />
           ))}
         </div>
@@ -319,14 +296,19 @@ export default function AdminTeamsPage() {
 
       <CreateTeamDialog
         isOpen={isCreateTeamDialogOpen}
-        onClose={() => setIsCreateTeamDialogOpen(false)}
-
+        onClose={() => {
+          setIsCreateTeamDialogOpen(false);
+          refreshTeamsAndTasks(); // Refresh after creating team
+        }}
       />
 
       {selectedTeam && (
         <EditTeamDialog
           isOpen={isEditTeamDialogOpen}
-          onClose={() => setIsEditTeamDialogOpen(false)}
+          onClose={() => {
+            setIsEditTeamDialogOpen(false);
+            refreshTeamsAndTasks(); // Refresh after editing team
+          }}
           team={selectedTeam}
         />
       )}
@@ -334,7 +316,10 @@ export default function AdminTeamsPage() {
       {selectedTeam && (
         <AddMemberDialog
           isOpen={isAddMemberDialogOpen}
-          onClose={() => setIsAddMemberDialogOpen(false)}
+          onClose={() => {
+            setIsAddMemberDialogOpen(false);
+            refreshTeamsAndTasks(); // Refresh after adding member
+          }}
           team={selectedTeam}
         />
       )}
@@ -355,7 +340,10 @@ export default function AdminTeamsPage() {
       {selectedTeam && (
         <ChangeLeaderDialog
           isOpen={isChangeLeaderDialogOpen}
-          onClose={() => setIsChangeLeaderDialogOpen(false)}
+          onClose={() => {
+            setIsChangeLeaderDialogOpen(false);
+            refreshTeamsAndTasks(); // Refresh after changing leader
+          }}
           team={selectedTeam}
         />
       )}
