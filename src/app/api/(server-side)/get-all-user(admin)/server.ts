@@ -36,42 +36,52 @@ export const fetchEmployeesAdminServer = async (): Promise<EmployeeType[]> => {
     const employeesArray = Array.isArray(data.employees) ? data.employees : [];
 
     return employeesArray.map((employee: any) => ({
-      id: employee.id,
+      id: employee.id || "", // Fallback to empty string if id is missing
       user: {
-        id: employee.user.id,
-        first_name: employee.user.firstName,
-        last_name: employee.user.lastName,
+        id: employee.user?.id || "",
+        first_name: employee.user?.firstName || employee.user?.first_name || "",
+        last_name: employee.user?.lastName || employee.user?.last_name || "",
       },
-      position: {
-        id: employee.position.id,
-        name: employee.position.name,
-        description: employee.position.description,
-      },
-      department: {
-        id: employee.department.id,
-        name: employee.department.name,
-        description: employee.department.description,
-      },
+      position: employee.position
+        ? {
+            id: employee.position.id || null,
+            name: employee.position.name || null,
+            description: employee.position.description || null,
+          }
+        : null,
+      department: employee.department
+        ? {
+            id: employee.department.id || null,
+            name: employee.department.name || null,
+            description: employee.department.description || null,
+          }
+        : null,
       team: employee.team
         ? {
-            id: employee.team.id,
-            name: employee.team.name,
+            id: employee.team.id || null,
+            name: employee.team.name || null,
           }
         : undefined,
-      role: {
-        id: employee.role.id,
-        name: employee.role.name,
-        description: employee.role.description,
-        created_at: employee.role.createdAt,
-        updated_at: employee.role.updatedAt,
-        permissions: employee.role.permissions.map((perm: any) => ({
-          id: perm.id,
-          name: perm.name,
-          description: perm.description,
-        })),
-      },
-      start_date: employee.startDate,
-      working_status: employee.workingStatus,
+      role: employee.role
+        ? {
+            id: employee.role.id || null,
+            name: employee.role.name || null,
+            description: employee.role.description || null,
+            created_at:
+              employee.role.createdAt || employee.role.created_at || null,
+            updated_at:
+              employee.role.updatedAt || employee.role.updated_at || null,
+            permissions: Array.isArray(employee.role.permissions)
+              ? employee.role.permissions.map((perm: any) => ({
+                  id: perm.id || null,
+                  name: perm.name || null,
+                  description: perm.description || null,
+                }))
+              : [],
+          }
+        : null,
+      start_date: employee.startDate || employee.start_date || "",
+      working_status: employee.workingStatus || employee.working_status || "",
     }));
   } catch (error) {
     throw new Error(

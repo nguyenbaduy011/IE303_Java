@@ -33,30 +33,34 @@ export const fetchEmployeesServer = async (): Promise<EmployeeType[]> => {
     // Xử lý cấu trúc API linh hoạt
     const employeesArray = Array.isArray(data.employees) ? data.employees : [];
     return employeesArray.map((employee: any) => ({
-      id: employee.id,
+      id: employee.id || "", // Fallback to empty string if id is missing
       user: {
-        id: employee.user.id,
-        firstName: employee.user.firstName,
-        lastName: employee.user.lastName,
+        id: employee.user?.id || "",
+        first_name: employee.user?.firstName || employee.user?.first_name || "",
+        last_name: employee.user?.lastName || employee.user?.last_name || "",
       },
-      position: {
-        id: employee.position.id,
-        name: employee.position.name,
-        description: employee.position.description,
-      },
-      department: {
-        id: employee.department.id,
-        name: employee.department.name,
-        description: employee.department.description,
-      },
+      position: employee.position
+        ? {
+            id: employee.position.id || null,
+            name: employee.position.name || null,
+            description: employee.position.description || null,
+          }
+        : null,
+      department: employee.department
+        ? {
+            id: employee.department.id || null,
+            name: employee.department.name || null,
+            description: employee.department.description || null,
+          }
+        : null,
       team: employee.team
         ? {
-            id: employee.team.id,
-            name: employee.team.name,
+            id: employee.team.id || null,
+            name: employee.team.name || null,
           }
         : undefined,
-      startDate: employee.startDate,
-      workingStatus: employee.workingStatus,
+      start_date: employee.startDate || employee.start_date || "",
+      working_status: employee.workingStatus || employee.working_status || "",
     }));
   } catch (error) {
     throw new Error(
