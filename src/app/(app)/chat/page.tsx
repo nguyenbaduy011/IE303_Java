@@ -198,10 +198,7 @@ export default function ChatPage() {
 
         const newMessages: Message[] = response.data.content.map((msg) => ({
           id: msg.id,
-          content:
-            msg.messageType === MessageType.TEXT
-              ? msg.content || ""
-              : msg.fileUrl || "File",
+          content: msg.content || "",
           timestamp: msg.timestamp,
           createdAt: msg.createdAt,
           sender: msg.sender.email === user.email ? "user" : "contact",
@@ -210,6 +207,12 @@ export default function ChatPage() {
             : false,
           senderName: `${msg.sender.firstName} ${msg.sender.lastName}`,
           conversationId: msg.conversationId,
+          messageType: msg.messageType,
+          fileUrl: msg.fileUrl,
+          fileOriginalName: msg.fileOriginalName,
+          fileContentType: msg.fileContentType,
+          fileSize: msg.fileSize,
+          displayUrl: msg.displayUrl,
         }));
 
         setMessagesByConversation((prev) => ({
@@ -320,17 +323,10 @@ export default function ChatPage() {
 
   // Load contacts on mount
   useEffect(() => {
-    let retryCount = 0;
-    const maxRetries = 3;
-
     const tryLoadContacts = async () => {
+      // Chỉ load khi đã authenticated
       if (!isAuthenticated) {
-        if (retryCount < maxRetries) {
-          retryCount++;
-          setTimeout(tryLoadContacts, 1000); // Thử lại sau 1 giây
-          return;
-        }
-        setError("Không thể tải danh sách contact: Vui lòng đăng nhập lại");
+        console.log("Not authenticated yet, waiting...");
         return;
       }
 
@@ -338,12 +334,16 @@ export default function ChatPage() {
       try {
         await loadContacts();
       } catch (err) {
+        console.error("Error loading contacts:", err);
         setError("Không thể tải danh sách contact");
       }
     };
 
-    tryLoadContacts();
-  }, [isAuthenticated, loadContacts]);
+    // Chỉ chạy khi isAuthenticated = true
+    if (isAuthenticated) {
+      tryLoadContacts();
+    }
+  }, [isAuthenticated]);
 
   // Load selected contact from URL, preload messages, and check online status
   useEffect(() => {
@@ -528,16 +528,17 @@ export default function ChatPage() {
       if (file) {
         const formData = new FormData();
         formData.append("conversationId", conversationId);
+        formData.append("content", newMessage.trim() || "");
         formData.append(
           "type",
           file.type.startsWith("image/") ? "IMAGE" : "FILE"
         );
         formData.append("file", file);
 
-        // Thêm tin nhắn file tạm thời vào UI
+        // Thêm tin nhắn file tạm thời vào UI với preview
         const tempFileMessage: Message = {
           id: tempMessageId,
-          content: URL.createObjectURL(file),
+          content: newMessage.trim() || "",
           timestamp: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           sender: "user",
@@ -545,46 +546,51 @@ export default function ChatPage() {
           senderName: `${user.first_name} ${user.last_name}`,
           conversationId,
           isTemp: true,
+          messageType: file.type.startsWith("image/") ? "IMAGE" : "FILE",
+          fileOriginalName: file.name,
+          fileSize: file.size,
+          fileUrl: URL.createObjectURL(file), // Temporary preview URL
         };
+
         setMessagesByConversation((prev) => ({
           ...prev,
           [conversationId]: [...(prev[conversationId] || []), tempFileMessage],
-        }));
-        setTempMessages((prev) => ({
-          ...prev,
-          [tempMessageId]: { content: file.name, conversationId },
         }));
 
         const response = await axios.post<MessageResponseDto>(
           "/api/messages/file",
           formData,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
 
-        // Cập nhật tin nhắn tạm thời với dữ liệu từ server
+        // Tạo tin nhắn thực từ server response
         const newFileMessage: Message = {
           id: response.data.id,
-          content: response.data.fileUrl || "File",
+          content: response.data.content || "",
           timestamp: response.data.timestamp,
           createdAt: response.data.createdAt,
           sender: "user",
           read: false,
           senderName: `${user.first_name} ${user.last_name}`,
           conversationId,
+          messageType: response.data.messageType,
+          fileUrl: response.data.fileUrl,
+          fileOriginalName: response.data.fileOriginalName,
+          fileContentType: response.data.fileContentType,
+          fileSize: response.data.fileSize,
+          displayUrl: response.data.displayUrl,
         };
+
+        // Xóa tin nhắn tạm thời và thêm tin nhắn thực
         setMessagesByConversation((prev) => ({
           ...prev,
           [conversationId]: (prev[conversationId] || [])
             .filter((msg) => msg.id !== tempMessageId)
             .concat(newFileMessage),
         }));
-        setTempMessages((prev) => {
-          const { [tempMessageId]: _, ...rest } = prev;
-          return rest;
-        });
+
         setFile(null);
+        setNewMessage("");
       } else {
         // Thêm tin nhắn text tạm thời vào UI
         const tempTextMessage: Message = {
@@ -676,25 +682,87 @@ export default function ChatPage() {
   // Delete message
   const handleDelete = useCallback(
     async (messageId: string) => {
+      if (!messageId) {
+        setError("ID tin nhắn không hợp lệ");
+        return;
+      }
+
       setError(null);
+
       try {
-        await axios.delete(`/api/messages/${messageId}`);
+        console.log("Attempting to delete message:", messageId);
+
+        // Gọi API xóa tin nhắn
+        const response = await axios.delete(`/api/messages/${messageId}`, {
+          withCredentials: true,
+          timeout: 10000, // 10 seconds timeout
+        });
+
+        console.log("Delete response:", response.data);
+
+        // Cập nhật UI ngay lập tức - đánh dấu tin nhắn là đã xóa
         if (selectedContact) {
           const conversationId = selectedContact.id;
           setMessagesByConversation((prev) => ({
             ...prev,
-            [conversationId]: (prev[conversationId] || []).filter(
-              (msg) => msg.id !== messageId
+            [conversationId]: (prev[conversationId] || []).map((msg) =>
+              msg.id === messageId
+                ? { ...msg, isDeleted: true, content: "Tin nhắn đã được xóa" }
+                : msg
             ),
           }));
         }
-        setSearchResults((prev) => prev.filter((msg) => msg.id !== messageId));
+
+        // Cập nhật search results nếu có
+        setSearchResults((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, isDeleted: true, content: "Tin nhắn đã được xóa" }
+              : msg
+          )
+        );
+
+        console.log("Message deleted successfully");
       } catch (err: any) {
-        setError(err.response?.data?.error || "Không thể xóa tin nhắn");
+        console.error("Error deleting message:", err);
+
+        let errorMessage = "Không thể xóa tin nhắn";
+
+        if (err.response) {
+          // Server đã phản hồi với status code lỗi
+          errorMessage =
+            err.response.data?.error ||
+            err.response.data?.message ||
+            `Lỗi server: ${err.response.status}`;
+        } else if (err.request) {
+          // Request đã được gửi nhưng không có phản hồi
+          errorMessage = "Không thể kết nối tới server";
+        } else if (err.code === "ECONNABORTED") {
+          // Timeout
+          errorMessage = "Hết thời gian chờ khi xóa tin nhắn";
+        } else {
+          // Lỗi khác
+          errorMessage = err.message || "Lỗi không xác định";
+        }
+
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
     },
     [selectedContact]
   );
+
+  const handleCopy = useCallback((content: string) => {
+    navigator.clipboard
+      .writeText(content)
+      .then(() => {
+        // Có thể thêm toast notification ở đây
+        console.log("Copied to clipboard:", content);
+      })
+      .catch((err) => {
+        console.error("Failed to copy:", err);
+      });
+  }, []);
 
   // Handle contact selection and update URL
   const handleSelectContact = useCallback(
@@ -782,15 +850,9 @@ export default function ChatPage() {
                         message={msg}
                         isGroup={selectedContact.isGroup || false}
                         isLatest={index === memoizedMessages.length - 1}
+                        onDelete={handleDelete}
+                        onCopy={handleCopy}
                       />
-                      {msg.sender === "user" && (
-                        <button
-                          onClick={() => handleDelete(msg.id)}
-                          className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 text-xs text-red-500"
-                        >
-                          Xóa
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -805,6 +867,8 @@ export default function ChatPage() {
                         message={msg}
                         isGroup={selectedContact.isGroup || false}
                         isLatest={false}
+                        onDelete={handleDelete}
+                        onCopy={handleCopy}
                       />
                     ))}
                   </div>

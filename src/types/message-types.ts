@@ -44,6 +44,7 @@ export interface MessageResponseDto {
   content?: string; // Message content
   messageType: MessageType;
   fileUrl?: string;
+  displayUrl?: string;
   fileOriginalName?: string;
   fileContentType?: string;
   fileSize?: number;

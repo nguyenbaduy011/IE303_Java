@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/types/conversation.d.ts
 
 /**
@@ -5,6 +6,7 @@
  * Adjust fields to match your Spring ConversationMemberDto.
  */
 export interface ConversationMemberDto {
+  user: any;
   id: string; // Or number, depending on your entity ID type
   userId: string; // UUID string
   username: string;
@@ -41,6 +43,8 @@ export interface ConversationResponseDto {
     role: string;
   }>;
   lastMessage?: {
+    messageType: any;
+    createdAt: any;
     id: string;
     content: string;
     timestamp: string;
