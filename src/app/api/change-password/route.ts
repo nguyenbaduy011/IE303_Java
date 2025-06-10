@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getCookie } from "@/utils/cookie";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -27,14 +28,19 @@ export async function changePassword({
     });
 
     if (!res.ok) {
-      const errorData = await res.json(); // Mong đợi JSON
-      console.error("Server error response:", errorData);
-      throw new Error(
-        errorData.error || `Change password failed with status ${res.status}`
-      );
+      let errorMessage = `Change password failed with status ${res.status}`;
+      try {
+        const errorData = await res.json();
+        console.error("Server error response:", errorData);
+        errorMessage = errorData.error || errorMessage;
+      } catch (jsonErr) {
+        console.warn("No JSON body in error response");
+      }
+      throw new Error(errorMessage);
     }
 
-    return await res.json();
+    const text = await res.text();
+    return text ? JSON.parse(text) : { success: true };
   } catch (error: any) {
     console.error("Change password error:", error);
     throw new Error(error.message || "Something went wrong");
