@@ -1,24 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCookie } from "@/utils/cookie";
 
-export type CreateRolePayload = {
+export type PermissionType = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+export type RoleType = {
+  id: string;
+  name: string;
+  description: string;
+  permissions: PermissionType[];
+};
+
+export async function createRole({
+  name,
+  description,
+  permissionIds,
+}: {
   name: string;
   description: string;
   permissionIds: string[];
-};
-
-export type CreateRoleResponse = {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  description: string;
-  permissions: string[];
-};
-
-export async function createRole(
-  payload: CreateRolePayload
-): Promise<CreateRoleResponse> {
+}): Promise<RoleType> {
   try {
     const csrfToken = getCookie("XSRF-TOKEN");
     if (!csrfToken) {
@@ -32,7 +36,11 @@ export async function createRole(
         "X-CSRF-TOKEN": csrfToken,
       },
       credentials: "include",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        name,
+        description,
+        permissionIds,
+      }),
     });
 
     if (!res.ok) {
@@ -43,8 +51,18 @@ export async function createRole(
       );
     }
 
-    const data = (await res.json()) as CreateRoleResponse;
-    return data;
+    const data = await res.json();
+
+    return {
+      id: data.id ?? "",
+      name: data.name ?? "",
+      description: data.description ?? "",
+      permissions: (data.permissions ?? []).map((p: any) => ({
+        id: p.id ?? "",
+        name: p.name ?? "",
+        description: p.description ?? "",
+      })),
+    };
   } catch (error: any) {
     console.error("Create role error:", error);
     throw new Error(
