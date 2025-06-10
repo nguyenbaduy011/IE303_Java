@@ -9,11 +9,12 @@ import { MessageWindow } from "@/components/message-window";
 import { ThemeToggle } from "@/theme/theme-toggle";
 import SociusLogo from "@/components/socius-logo";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { BotMessageSquare, Menu } from "lucide-react";
 import { useState } from "react";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { UserType } from "@/contexts/auth-context";
+import { Chatbot } from "./chatbot/chat-bot";
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   user: UserType;
@@ -25,7 +26,7 @@ export function Header({
   ...rest
 }: HeaderProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b bg-background ${className ?? ""}`}
@@ -44,10 +45,7 @@ export function Header({
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SidebarNav
-              user={user}
-              onClose={() => setIsSidebarOpen(false)}
-            />
+            <SidebarNav user={user} onClose={() => setIsSidebarOpen(false)} />
           </Sheet>
           <Link href={"/dashboard"}>
             <div className="relative h-12 w-24 md:h-10 md:w-10 object-contain">
@@ -60,6 +58,20 @@ export function Header({
           <ThemeToggle />
           <MessageWindow />
           <NotificationWindow currentUserId={user.id} />
+          <Sheet open={isChatbotOpen} onOpenChange={setIsChatbotOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative cursor-pointer transition-colors"
+                aria-label="Trợ lý ảo"
+              >
+                <BotMessageSquare className="h-6 w-6" />
+
+              </Button>
+            </SheetTrigger>
+            <Chatbot />
+          </Sheet>
           <Separator orientation="vertical" className="h-6 bg-primary" />
           <Profile user={user} />
         </div>
