@@ -131,7 +131,7 @@ const MessageContent: React.FC<MessageContentProps> = ({ message, isOwn }) => {
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent text-white p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Image size={14} />
+                      <Image size={14} aria-label="image file icon" />
                       <span className="truncate text-sm font-medium">
                         {message.fileOriginalName}
                       </span>

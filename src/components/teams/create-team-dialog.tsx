@@ -49,10 +49,7 @@ const teamSchema = z.object({
   leaderId: z.string().uuid("Invalid leader ID format"),
 });
 
-export function CreateTeamDialog({
-  isOpen,
-  onClose,
-}: CreateTeamDialogProps) {
+export function CreateTeamDialog({ isOpen, onClose }: CreateTeamDialogProps) {
   // State để lưu danh sách user không có team
   const [users, setUsers] = useState<UserWithoutTeamType[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
