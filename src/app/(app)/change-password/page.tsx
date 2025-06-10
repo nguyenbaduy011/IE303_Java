@@ -324,15 +324,7 @@ export default function ChangePasswordPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Saving..." : "Save New Password"}
             </Button>
-            {!isFirstTime && (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-            )}
+           
           </CardFooter>
         </form>
       </Card>
