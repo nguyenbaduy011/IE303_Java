@@ -45,5 +45,3 @@ export function ChatMessages({
     </div>
   );
 }
-export type { Message };
-
