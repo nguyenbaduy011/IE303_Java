@@ -39,8 +39,32 @@ export function ContactCard({ contact, isActive, onClick }: ContactCardProps) {
           />
           <AvatarFallback>{contact.initials}</AvatarFallback>
         </Avatar>
-        {contact.online && (
-          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></span>
+        {/* Hiển thị trạng thái online/offline */}
+        {!contact.isGroup && (
+          <div
+            className={cn(
+              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background transition-colors",
+              contact.online
+                ? "bg-green-500 shadow-green-500/50 shadow-sm"
+                : "bg-gray-400 dark:bg-gray-600"
+            )}
+            title={contact.online ? "Đang online" : "Đã offline"}
+          >
+            {/* Thêm hiệu ứng nhấp nháy cho online */}
+            {contact.online && (
+              <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></div>
+            )}
+          </div>
+        )}
+        {/* Hiển thị icon nhóm nếu là group chat */}
+        {contact.isGroup && (
+          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-primary border-2 border-background">
+            <div className="flex items-center justify-center h-full w-full">
+              <span className="text-[6px] text-primary-foreground font-bold">
+                G
+              </span>
+            </div>
+          </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -51,9 +75,24 @@ export function ContactCard({ contact, isActive, onClick }: ContactCardProps) {
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground truncate">
-            {contact.role}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground truncate">
+              {contact.role}
+            </p>
+            {/* Hiển thị text trạng thái */}
+            {!contact.isGroup && (
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  contact.online
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-gray-500 dark:text-gray-400"
+                )}
+              >
+                {contact.online ? "• Online" : "• Offline"}
+              </span>
+            )}
+          </div>
           {contact.unreadCount > 0 && (
             <Badge className="ml-auto bg-primary">{contact.unreadCount}</Badge>
           )}
