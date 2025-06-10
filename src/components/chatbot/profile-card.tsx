@@ -50,7 +50,7 @@ type EmployeeCardProps = {
   };
 };
 
-export default function EnhancedEmployeeCard({
+export default function EmployeeCard({
   information,
   employmentDetail,
 }: EmployeeCardProps) {

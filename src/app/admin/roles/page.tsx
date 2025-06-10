@@ -32,7 +32,24 @@ import {
   fetchRolePermissions,
   PermissionType,
 } from "@/app/api/get-all-permissions/route";
-import { RoleWithPermissionsType } from "@/app/api/get-all-roles/route";
+import {
+  fetchRoles,
+  RoleWithPermissionsType,
+} from "@/app/api/get-all-roles/route";
+import { createRole } from "@/app/api/create-role/route";
+import { updateRole } from "@/app/api/update-role/route";
+import { toast } from "sonner";
+import { deleteRole } from "@/app/api/delete-role/route";
+import {
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialog,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<RoleWithPermissionsType[]>([]);
@@ -99,76 +116,112 @@ export default function RolesPage() {
     loadData();
   }, []);
 
-  // Filter roles based on search query
+  // lọc role trên thanh tìm kiếm
   const filteredRoles = roles.filter(
     (role) =>
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter permissions based on search query
+  // lọc permission trên thanh tìm kiếm
   const filteredPermissions = permissions.filter(
     (permission) =>
       permission.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       permission.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle role creation
-  const handleCreateRole = () => {
-    const selectedPermissions = newRole.permissions
-      .map((id) => permissions.find((p) => p.id === id))
-      .filter((p): p is PermissionType => p !== undefined);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    const role: RoleWithPermissionsType = {
-      id: `role-${roles.length + 1}`,
-      name: newRole.name,
-      description: newRole.description,
-      permissions: selectedPermissions,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+      // Fetch roles
+      const rolesResponse = await fetchRoles();
+      const rolesData = await rolesResponse.json();
+      if (rolesResponse.status !== 200) {
+        throw new Error(rolesData.message || "Failed to fetch roles");
+      }
+      setRoles(Array.isArray(rolesData) ? rolesData : []);
 
-    setRoles([...roles, role]);
-    setNewRole({ name: "", description: "", permissions: [] });
-    setIsCreateRoleOpen(false);
+      // Fetch permissions
+      const permissionsData = await fetchRolePermissions();
+      setPermissions(permissionsData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle role update
-  const handleUpdateRole = () => {
-    if (currentRole) {
-      const updatedRoles = roles.map((role) =>
-        role.id === currentRole.id
-          ? { ...currentRole, updated_at: new Date().toISOString() }
-          : role
+  // Lấy role và permission mỗi khi mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleCreateRole = async () => {
+    try {
+      await createRole({
+        name: newRole.name,
+        description: newRole.description,
+        permissionIds: newRole.permissions,
+      });
+
+      // Gọi lại loadData để fetch danh sách roles mới
+      toast.success("Role created successfully!");
+      await loadData();
+
+      setNewRole({ name: "", description: "", permissions: [] });
+      setIsCreateRoleOpen(false);
+    } catch (error) {
+      toast.error("Failed to create role");
+      setError(
+        error instanceof Error ? error.message : "Failed to create role"
       );
-      setRoles(updatedRoles);
-      setIsEditRoleOpen(false);
     }
   };
 
-  // Handle role deletion
-  const handleDeleteRole = () => {
+  // Xử lý cập nhật role
+  const handleUpdateRole = async () => {
     if (currentRole) {
-      const updatedRoles = roles.filter((role) => role.id !== currentRole.id);
-      setRoles(updatedRoles);
-      setIsDeleteRoleOpen(false);
+      try {
+        await updateRole({
+          roleId: currentRole.id,
+          name: currentRole.name,
+          description: currentRole.description,
+          permissionIds: currentRole.permissions.map((p) => p.id),
+        });
+        toast.success("Role updated successfully!");
+        // Gọi lại loadData để cập nhật danh sách roles
+        await loadData();
+
+        setIsEditRoleOpen(false);
+      } catch (error) {
+        toast.error("Failed to update role");
+        setError(
+          error instanceof Error ? error.message : "Failed to update role"
+        );
+      }
     }
   };
 
-  // Handle permission creation
-  const handleCreatePermission = () => {
-    const permission: PermissionType = {
-      id: `perm-${permissions.length + 1}`,
-      name: newPermission.name,
-      description: newPermission.description,
-    };
-
-    setPermissions([...permissions, permission]);
-    setNewPermission({ name: "", description: "" });
-    setIsCreatePermissionOpen(false);
+  // Xử lý xoá role
+  const handleDeleteRole = async () => {
+    if (currentRole) {
+      try {
+        await deleteRole(currentRole.id);
+        toast.success("Role deleted successfully!");
+        await loadData();
+        setIsDeleteRoleOpen(false);
+      } catch (error) {
+        toast.error("Failed to delete role");
+        setError(
+          error instanceof Error ? error.message : "Failed to delete role"
+        );
+      }
+    }
   };
 
-  // Handle permission toggle for a role
+  // Xử lý toggle permission của từng role
   const handlePermissionToggle = (
     roleId: string,
     permissionId: string,
@@ -285,21 +338,26 @@ export default function RolesPage() {
                             setCurrentRole(role);
                             setIsEditRoleOpen(true);
                           }}
+                          disabled={role.name === "SUPER_ADMIN"}
                         >
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setCurrentRole(role);
-                            setIsDeleteRoleOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                        {role.name !== "SUPER_ADMIN" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setCurrentRole(role);
+                              setIsDeleteRoleOpen(true);
+                            }}
+                          >
+                            {role.name !== "SUPER_ADMIN" && (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -330,17 +388,6 @@ export default function RolesPage() {
                     <div className="text-xs text-muted-foreground">
                       Created {new Date(role.created_at).toLocaleDateString()}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={() => {
-                        setCurrentRole(role);
-                        setIsEditRoleOpen(true);
-                      }}
-                    >
-                      Manage Permissions
-                    </Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -656,49 +703,39 @@ export default function RolesPage() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleCreatePermission}
-              disabled={!newPermission.name}
-            >
-              Create Permission
-            </Button>
+            <Button disabled={!newPermission.name}>Create Permission</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Role Confirmation Dialog */}
-      <Dialog open={isDeleteRoleOpen} onOpenChange={setIsDeleteRoleOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Role</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={isDeleteRoleOpen} onOpenChange={setIsDeleteRoleOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to delete this role? This action cannot be
               undone.
-            </DialogDescription>
-          </DialogHeader>
-
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {currentRole && (
             <Alert variant="destructive" className="mt-4">
               <AlertDescription>
-                Deleting the role &quot;{currentRole.name}&quot; will remove it from all
-                users who currently have this role assigned.
+                Deleting the role &quot;{currentRole.name}&quot; will remove it
+                from all users who currently have this role assigned.
               </AlertDescription>
             </Alert>
           )}
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteRoleOpen(false)}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRole}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteRole}>
               Delete Role
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

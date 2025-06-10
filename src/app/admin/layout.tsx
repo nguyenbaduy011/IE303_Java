@@ -10,17 +10,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {/* {user?.passwordChangeRequired || (user && <Header user={user} />)} */}
       {user && <Header user={user} />}
 
       <main>
         <div className="relative mx-auto  min-h-[calc(100vh-4rem)]">
-          {/* <SidebarNav user={mockUser} isAdmin={true} className="absolute z-50"/> */}
 
           {children}
         </div>
       </main>
-      {/* {user?.passwordChangeRequired || (user && <Footer />)} */}
       {user && <Footer />}
     </>
   );

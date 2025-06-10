@@ -1,35 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface UserType {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
 }
 
 export interface PositionType {
-  id: string;
-  name: string;
-  description: string;
+  id: string | null;
+  name: string | null;
+  description: string | null;
 }
 
 export interface DepartmentType {
-  id: string;
-  name: string;
-  description: string;
+  id: string | null;
+  name: string | null;
+  description: string | null;
 }
 
 export interface TeamType {
-  id: string;
-  name: string;
+  id: string | null;
+  name: string | null;
+}
+
+export interface PermissionType {
+  id: string | null;
+  name: string | null;
+  description: string | null;
 }
 
 export interface EmployeeType {
   id: string;
   user: UserType;
-  position: PositionType;
-  department: DepartmentType;
-  team?: TeamType; // Optional vì không phải nhân viên nào cũng có team
-  startDate: string;
-  workingStatus: string;
+  position: PositionType | null;
+  department: DepartmentType | null;
+  team?: TeamType | null;
+  start_date: string;
+  working_status: string;
 }
 
 export const fetchEmployees = async (): Promise<EmployeeType[]> => {
@@ -61,30 +67,34 @@ export const fetchEmployees = async (): Promise<EmployeeType[]> => {
     // Xử lý cấu trúc API linh hoạt
     const employeesArray = Array.isArray(data.employees) ? data.employees : [];
     return employeesArray.map((employee: any) => ({
-      id: employee.id,
+      id: employee.id || "", // Fallback to empty string if id is missing
       user: {
-        id: employee.user.id,
-        firstName: employee.user.firstName,
-        lastName: employee.user.lastName,
+        id: employee.user?.id || "",
+        first_name: employee.user?.firstName || employee.user?.first_name || "",
+        last_name: employee.user?.lastName || employee.user?.last_name || "",
       },
-      position: {
-        id: employee.position.id,
-        name: employee.position.name,
-        description: employee.position.description,
-      },
-      department: {
-        id: employee.department.id,
-        name: employee.department.name,
-        description: employee.department.description,
-      },
+      position: employee.position
+        ? {
+            id: employee.position.id || null,
+            name: employee.position.name || null,
+            description: employee.position.description || null,
+          }
+        : null,
+      department: employee.department
+        ? {
+            id: employee.department.id || null,
+            name: employee.department.name || null,
+            description: employee.department.description || null,
+          }
+        : null,
       team: employee.team
         ? {
-            id: employee.team.id,
-            name: employee.team.name,
+            id: employee.team.id || null,
+            name: employee.team.name || null,
           }
         : undefined,
-      startDate: employee.startDate,
-      workingStatus: employee.workingStatus,
+      start_date: employee.startDate || employee.start_date || "",
+      working_status: employee.workingStatus || employee.working_status || "",
     }));
   } catch (error) {
     throw new Error(

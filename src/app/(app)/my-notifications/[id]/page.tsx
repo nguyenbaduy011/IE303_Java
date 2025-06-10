@@ -1,6 +1,7 @@
+// src/app/(app)/my-notifications/[id]/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Footer } from "@/components/footer";
 import { UserAnnouncementDetail } from "@/components/user-announcements/user-announcement-detail";
 import { Button } from "@/components/ui/button";
@@ -10,18 +11,27 @@ import Link from "next/link";
 export default function AnnouncementDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const [id, setId] = useState<string | null>(null);
   const [isRead, setIsRead] = useState(false);
 
+  // Resolve the params promise
+  useEffect(() => {
+    params
+      .then(({ id }) => setId(id))
+      .catch((err) => console.error("Error resolving params:", err));
+  }, [params]);
+
   const markAsRead = async () => {
+    if (!id) return; // Wait until id is resolved
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch(`/api/notifications/${params.id}/read`, {
+      const response = await fetch(`/api/notifications/${id}/read`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -38,6 +48,10 @@ export default function AnnouncementDetailPage({
       console.error("Error marking announcement as read:", err);
     }
   };
+
+  if (!id) {
+    return <div>Loading...</div>; // Show loading state until id is resolved
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -65,7 +79,7 @@ export default function AnnouncementDetailPage({
               </div>
             </div>
 
-            <UserAnnouncementDetail id={params.id} />
+            <UserAnnouncementDetail id={id} />
           </div>
         </main>
       </div>

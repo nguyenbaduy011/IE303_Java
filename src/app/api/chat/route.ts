@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tool } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import z from "zod";
-
+import { headers } from "next/headers";
 import { UserType } from "@/app/api/get-user-information/route";
 import { EmploymentDetailType } from "@/app/api/employment-detail/route";
 import { fetchEmployeesAdminServer } from "@/app/api/(server-side)/get-all-user(admin)/server";
@@ -10,12 +11,176 @@ import { fetchUserByIdServer } from "@/app/api/(server-side)/get-user-informatio
 import { fetchEmploymentDetailServer } from "@/app/api/(server-side)/get-user-employment-detail/server";
 import { fetchTeamsServer } from "@/app/api/(server-side)/get-all-team/server";
 import { fetchCurrentUserServer } from "@/app/api/(server-side)/get-current-user/server";
-import { createTaskServer } from "@/app/api/(server-side)/create-task/server";
 import { fetchEmployeesServer } from "@/app/api/(server-side)/get-all-user(user)/server";
-import { fetchTeamServer } from "@/app/api/(server-side)/get-team/server";
+import { fetchUserTeamServer } from "@/app/api/(server-side)/get-team/server";
 import { fetchUserTasksServer } from "@/app/api/(server-side)/get-user-tasks/server";
 
-// Định nghĩa type cho dữ liệu thô từ fetchEmployeesAdminServer
+// New imports for the additional APIs
+export interface DepartmentType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface PositionType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface PermissionType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface RoleWithPermissionsType {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  description: string;
+  permissions: PermissionType[];
+}
+
+const fetchDepartments = async (): Promise<DepartmentType[]> => {
+  try {
+    const cookieHeader = (await headers()).get("cookie") ?? "";
+    const response = await fetch(`http://localhost:8080/api/department`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      if (response.status === 403) {
+        throw new Error("You do not have permission to view this information.");
+      }
+      if (response.status === 404) {
+        throw new Error("Departments not found.");
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch departments`);
+    }
+
+    const data = await response.json();
+    const departmentsArray = Array.isArray(data) ? data : [];
+
+    return departmentsArray.map(
+      (dept: any): DepartmentType => ({
+        id: dept.id,
+        name: dept.name,
+        description: dept.description,
+      })
+    );
+  } catch (error) {
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to fetch departments"
+    );
+  }
+};
+
+const fetchPositions = async (): Promise<PositionType[]> => {
+  try {
+    const cookieHeader = (await headers()).get("cookie") ?? "";
+    const response = await fetch("http://localhost:8080/api/position", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      if (response.status === 403) {
+        throw new Error("You do not have permission to view this information.");
+      }
+      if (response.status === 404) {
+        throw new Error("Positions not found.");
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch positions`);
+    }
+
+    const data = await response.json();
+    const positionsArray = Array.isArray(data) ? data : [];
+
+    return positionsArray.map(
+      (position: any): PositionType => ({
+        id: position.id,
+        name: position.name,
+        description: position.description,
+      })
+    );
+  } catch (error) {
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to fetch positions"
+    );
+  }
+};
+
+const fetchRoles = async (): Promise<RoleWithPermissionsType[]> => {
+  try {
+    const cookieHeader = (await headers()).get("cookie") ?? "";
+    const response = await fetch("http://localhost:8080/api/role/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: cookieHeader,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      if (response.status === 403) {
+        throw new Error("You do not have permission to view this information.");
+      }
+      if (response.status === 404) {
+        throw new Error("Roles not found.");
+      }
+      throw new Error(`HTTP ${response.status}: Failed to fetch roles`);
+    }
+
+    const data = await response.json();
+    const rolesArray = Array.isArray(data) ? data : [];
+
+    return rolesArray.map(
+      (role: any): RoleWithPermissionsType => ({
+        id: role.id,
+        created_at: role.createdAt,
+        updated_at: role.updatedAt,
+        name: role.name,
+        description: role.description,
+        permissions: Array.isArray(role.permissions)
+          ? role.permissions.map(
+              (p: any): PermissionType => ({
+                id: p.id,
+                name: p.name,
+                description: p.description,
+              })
+            )
+          : [],
+      })
+    );
+  } catch (error) {
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to fetch roles"
+    );
+  }
+};
+
+// Existing types from the original code
 interface AdminUserType {
   id: string;
   first_name: string;
@@ -51,7 +216,6 @@ interface AdminEmployeeType {
   working_status: string;
 }
 
-// Định nghĩa type cho dữ liệu thô từ fetchEmployeesServer
 interface UserEmployeeType {
   id: string;
   firstName: string;
@@ -89,159 +253,229 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  // Lấy thông tin user hiện tại
+  // Get current user
   const currentUser = await fetchCurrentUserServer();
-  if (!currentUser) {
+  if (!currentUser || !currentUser.user?.id) {
+    console.error("Invalid or missing user ID from fetchCurrentUserServer");
     return new Response("Không tìm thấy thông tin người dùng hiện tại.", {
       status: 404,
     });
   }
-
-  // Giả sử currentUser.user.role là object hoặc string có role name
   const roleName = currentUser.role?.name || "";
 
   let employeesAdmin: AdminEmployeeType[] = [];
   let employees: ServerEmployeeType[] = [];
   let teams = [];
   let leaderIds: string[] = [];
+  let currentUserTeam = null;
+
+  // Validate teamId
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const teamId = currentUser.team?.id;
+  if (teamId && !uuidRegex.test(teamId)) {
+    console.error("Invalid teamId format:", teamId);
+    return new Response("ID đội nhóm không hợp lệ.", { status: 400 });
+  }
+
+  // Pre-fetch user team
+  if (teamId) {
+    try {
+      currentUserTeam = await fetchUserTeamServer(teamId);
+      console.log("Pre-fetched current user team:", currentUserTeam?.id);
+    } catch (error: any) {
+      console.error("Failed to pre-fetch current user team:", error.message);
+    }
+  }
+
+  // Normalize AdminEmployeeType
+  const normalizeAdminEmployee = async (
+    e: AdminEmployeeType
+  ): Promise<userInformation> => {
+    const fullUser = await fetchUserByIdServer(e.user.id);
+    const fullEmployment = await fetchEmploymentDetailServer(e.user.id);
+
+    return {
+      information: fullUser || {
+        id: e.user.id,
+        createdAt: "",
+        updatedAt: "",
+        firstName: e.user.first_name,
+        lastName: e.user.last_name,
+        email: "",
+        birthDate: "",
+        image_url: "",
+        gender: "",
+        nationality: "",
+        phoneNumber: "",
+        hireDate: e.start_date,
+        address: "",
+      },
+      employmentDetail: fullEmployment || {
+        id: e.id,
+        user: {
+          id: e.user.id,
+          first_name: e.user.first_name,
+          last_name: e.user.last_name,
+        },
+        position: {
+          id: e.position?.id ?? "",
+          name: e.position?.name ?? "",
+          description: e.position?.description ?? "",
+        },
+        department: {
+          id: e.department?.id ?? "",
+          name: e.department?.name ?? "",
+          description: e.department?.description ?? "",
+        },
+        team: e.team
+          ? { id: e.team.id ?? "", name: e.team.name ?? "" }
+          : { id: "", name: "" },
+        start_date: e.start_date,
+        working_status: e.working_status,
+      },
+    };
+  };
+
+  // Normalize ServerEmployeeType
+  const normalizeBasicEmployee = async (
+    e: ServerEmployeeType
+  ): Promise<userInformation> => {
+    const fullUser = await fetchUserByIdServer(e.user.id);
+    const fullEmployment = await fetchEmploymentDetailServer(e.user.id);
+
+    return {
+      information: fullUser || {
+        id: e.user.id,
+        createdAt: "",
+        updatedAt: "",
+        firstName: e.user.firstName,
+        lastName: e.user.lastName,
+        email: "",
+        birthDate: "",
+        image_url: "",
+        gender: "",
+        nationality: "",
+        phoneNumber: "",
+        hireDate: e.startDate,
+        address: "",
+      },
+      employmentDetail: fullEmployment || {
+        id: e.id,
+        user: {
+          id: e.user.id,
+          first_name: e.user.firstName,
+          last_name: e.user.lastName,
+        },
+        position: {
+          id: e.position?.id ?? "",
+          name: e.position?.name ?? "",
+          description: e.position?.description ?? "",
+        },
+        department: {
+          id: e.department?.id ?? "",
+          name: e.department?.name ?? "",
+          description: e.department?.description ?? "",
+        },
+        team: e.team
+          ? { id: e.team.id ?? "", name: e.team.name ?? "" }
+          : { id: "", name: "" },
+        start_date: e.startDate,
+        working_status: e.workingStatus,
+      },
+    };
+  };
+
+  let normalizedEmployees: userInformation[] = [];
 
   if (roleName === "SUPER_ADMIN") {
-    employeesAdmin = await fetchEmployeesAdminServer();
+    employeesAdmin = (await fetchEmployeesAdminServer()).filter(
+      (e): e is AdminEmployeeType =>
+        e.position !== null && e.department !== null && e.role !== null
+    );
     teams = await fetchTeamsServer();
-    leaderIds = teams.map((team) => team.leader.id);
+    leaderIds = teams.flatMap((team) =>
+      team.leader?.id ? [team.leader.id] : []
+    );
+    normalizedEmployees = await Promise.all(
+      employeesAdmin.map(normalizeAdminEmployee)
+    );
   } else {
-    employees = await fetchEmployeesServer();
-  }
-
-  // Chuẩn hóa dữ liệu employees để khớp với userInformation
-  let normalizedEmployees: userInformation[] = [];
-  if (roleName === "SUPER_ADMIN" && employeesAdmin) {
+    const fetchedEmployees = await fetchEmployeesServer();
+    employees = fetchedEmployees.map((e: any) => ({
+      ...e,
+      startDate: e.startDate ?? e.start_date ?? "",
+      workingStatus: e.workingStatus ?? e.working_status ?? "",
+    })) as ServerEmployeeType[];
     normalizedEmployees = await Promise.all(
-      employeesAdmin.map(async (e) => {
-        const fullUser = await fetchUserByIdServer(e.user.id);
-        const fullEmployment = await fetchEmploymentDetailServer(e.user.id);
-        return {
-          information: fullUser || {
-            id: e.user.id,
-            createdAt: "",
-            updatedAt: "",
-            firstName: e.user.first_name,
-            lastName: e.user.last_name,
-            email: "",
-            birthDate: "",
-            image_url: "",
-            gender: "",
-            nationality: "",
-            phoneNumber: "",
-            hireDate: e.start_date,
-            address: "",
-          },
-          employmentDetail: fullEmployment || {
-            id: e.id,
-            user: {
-              id: e.user.id,
-              first_name: e.user.first_name,
-              last_name: e.user.last_name,
-            },
-            position: e.position,
-            department: e.department,
-            team: e.team || { id: "", name: "" },
-            start_date: e.start_date,
-            working_status: e.working_status,
-          },
-        };
-      })
-    );
-  } else if (employees) {
-    normalizedEmployees = await Promise.all(
-      employees.map(async (e) => {
-        const fullUser = await fetchUserByIdServer(e.user.id);
-        const fullEmployment = await fetchEmploymentDetailServer(e.user.id);
-        return {
-          information: fullUser || {
-            id: e.user.id,
-            createdAt: "",
-            updatedAt: "",
-            firstName: e.user.firstName,
-            lastName: e.user.lastName,
-            email: "",
-            birthDate: "",
-            image_url: "",
-            gender: "",
-            nationality: "",
-            phoneNumber: "",
-            hireDate: e.startDate,
-            address: "",
-          },
-          employmentDetail: fullEmployment || {
-            id: e.id,
-            user: {
-              id: e.user.id,
-              first_name: e.user.firstName,
-              last_name: e.user.lastName,
-            },
-            position: e.position,
-            department: e.department,
-            team: e.team || { id: "", name: "" },
-            start_date: e.startDate,
-            working_status: e.workingStatus,
-          },
-        };
-      })
+      employees.map(normalizeBasicEmployee)
     );
   }
 
-  // Kiểm tra dữ liệu
-  console.log("Normalized employees:", normalizedEmployees);
+  const systemPrompt = `Bạn là trợ lý ảo chuyên nghiệp trong hệ thống quản lý nhân sự Socius. Trả lời chính xác, ngắn gọn, sử dụng đúng công cụ được cung cấp để truy xuất dữ liệu. Luôn kèm theo phản hồi văn bản tóm tắt (không quá 50 từ). Chỉ hiển thị **card** (Markdown) nếu dữ liệu thực sự cần thiết, ngắn gọn (dưới 5 mục), rõ ràng và dễ đọc. Tránh hiển thị danh sách dài hoặc thông tin lặp lại.
 
-  const systemPrompt = `
-  Bạn là một trợ lý ảo chuyên nghiệp trong hệ thống quản lý nhân sự Socius. Mục tiêu là trả lời chính xác, ngắn gọn, và chỉ sử dụng các tool được chỉ định để render dữ liệu dưới dạng card.
-  
-  🔹 **Thông tin người dùng hiện tại:**
-  - Họ tên: ${currentUser.user.firstName} ${currentUser.user.lastName}
-  - ID: ${currentUser.user.id}
-  
-  🔹 **Danh sách trưởng nhóm (Team Leader):**
-  ${leaderIds.map((id) => `- User ID: ${id}`).join("\n")}
-  
-  ---
-  
-  🔧 **QUY TẮC BẮT BUỘC (TUÂN THỦ 100%)**
-  
-  1. 🚫 **TUYỆT ĐỐI KHÔNG được trả về bất kỳ văn bản, JSON, hoặc thẻ JSX nào.**
-     - ❌ Không được viết: <EmployeeInfoCard ... />
-     - ✅ Chỉ gọi tool và để hệ thống tự render card.
-     - Mọi nội dung trả về phải được thực hiện thông qua gọi tool.
-  
-  2. ✅ **Nếu người dùng yêu cầu thông tin cá nhân** (ví dụ: "Thông tin của tôi", "Hồ sơ của Nguyễn Văn A", "Thông tin nhân viên ID X"):
-     - Gọi tool: \`getInformation({ userId })\`
-     - KHÔNG được viết bất kỳ văn bản nào khác.
-  
-  3. ✅ **Nếu người dùng yêu cầu danh sách nhân viên**:
-     - Gọi tool: \`getEmployeeList({ ...params })\`
-     - KHÔNG được viết bất kỳ câu dẫn hay đoạn mô tả nào.
-  
-  4. ✅ **Nếu người dùng yêu cầu thêm nhiệm vụ**:
-     - Nếu \`currentUser.id\` KHÔNG thuộc \`leaderIds\`, trả về chuỗi: "Bạn không phải trưởng nhóm, không thể tạo nhiệm vụ."
-     - Ngược lại, gọi \`addTask(...)\`
-  
-  5. 🚫 **Tuyệt đối KHÔNG sử dụng dữ liệu trong prompt để tự lọc, xử lý hoặc trả lời.**
-  
-  ---
-  
-  ✨ **Tóm lại**:
-  - ✅ Chỉ gọi tool → để hệ thống hiển thị component tương ứng.
-  - 🚫 KHÔNG bao giờ trả về văn bản chứa JSX như: <EmployeeInfoCard ... />
-  - ✅ Tuân thủ hoàn toàn các quy tắc trên để trả lời đúng định dạng hệ thống yêu cầu.
-  `;
-  
+**Thông tin người dùng:**
+- Họ tên: ${currentUser.user.firstName} ${currentUser.user.lastName}
+- ID: ${currentUser.user.id}
+- Vai trò: ${roleName}
+- Nhóm: ${currentUser.team?.id ?? "Không có"}
+**Trưởng nhóm:** ${leaderIds.map((id) => `- ${id}`).join("\n")}
 
-  const result = streamText({
+---
+
+### **QUY TẮC HOẠT ĐỘNG:**
+
+1. **Phân quyền truy cập:**
+   - SUPER_ADMIN: Truy cập toàn bộ dữ liệu hệ thống (nhân viên, team, phòng ban, vị trí, vai trò).
+   - Non-SUPER_ADMIN: Chỉ truy cập nhân viên và team liên quan (\`fetchEmployeesServer\`, \`fetchUserTeamServer\`).
+   - Các công cụ \`getDepartments\`, \`getPositions\`, \`getRoles\` chỉ dùng cho SUPER_ADMIN. Nếu không đủ quyền, trả lời: **"Bạn không có quyền thực hiện hành động này."**
+
+2. **Trình bày kết quả:**
+   - Chỉ dùng card khi dữ liệu **ngắn gọn, trọng yếu và dễ đọc**.
+   - Với danh sách dài: **tóm tắt văn bản**, chỉ nêu số lượng hoặc điểm chính.
+   - Không hiển thị danh sách lớn nếu người dùng không yêu cầu rõ ràng (VD: không tự động liệt kê toàn bộ nhiệm vụ khi chỉ hỏi "ai có nhiều task nhất").
+   - Khi được hỏi thông tin của một người cụ thể, chỉ sử dụng card để trả về, không sử dụng văn bản, không sử dụng card danh sách.
+   - Nếu đã trả về được card thì không trả về văn bản với toàn bộ nội dung trong card. Chỉ trả về văn bản với nội dung tóm tắt. Hoặc có thể trả lời theo kiểu "Dưới đây là card thông tin bạn cần".
+
+3. **Định dạng card (Markdown):**
+   - Dùng tiêu đề rõ ràng (VD: **Danh sách nhân viên**, **Chi tiết nhiệm vụ**).
+   - Trình bày súc tích, không trình bày lại dữ liệu trong văn bản phản hồi.
+   - Tối đa 5 mục; nếu dài hơn, ưu tiên tóm tắt.
+
+4. **Xác minh ID và dữ liệu:**
+   - Kiểm tra \`userId\`, \`teamId\`, \`taskId\` là UUID hợp lệ. Nếu không hợp lệ: **"ID không hợp lệ hoặc không tìm thấy."**
+   - Nếu không có dữ liệu phù hợp, trả lời: **"Không tìm thấy thông tin phù hợp."**
+
+5. **Ngôn ngữ và phong cách:**
+   - Ngôn ngữ: **Tiếng Việt**, rõ ràng, chuyên nghiệp.
+   - Tránh dùng ngôn ngữ đời thường, không trang trọng.
+   - Nếu yêu cầu mơ hồ, trả lời: **"Vui lòng cung cấp thêm thông tin."**
+
+6. **Xử lý lỗi:**
+   - Nếu công cụ trả lỗi hoặc không phản hồi: **"Có lỗi, vui lòng thử lại."**
+   - Không mô tả lỗi kỹ thuật, không ghi log nội bộ.
+
+7. **Bảo mật dữ liệu:**
+   - Không trả về thông tin nhạy cảm (như lương, mật khẩu).
+   - Chỉ hiển thị dữ liệu mà người dùng hiện tại được phép truy cập.
+
+---
+
+### **LƯU Ý:**
+- Luôn phản hồi ngắn gọn bằng văn bản, tóm tắt ý chính.
+- Chỉ dùng card nếu dữ liệu ngắn, quan trọng và dễ đọc.
+- Không lặp nội dung giữa card và phần mô tả.
+- Ưu tiên quyền truy cập, độ chính xác, và bảo mật.
+
+`;
+
+  const result = await streamText({
     model: openai("gpt-4.1-mini"),
     system: systemPrompt,
     messages,
-    maxSteps: 5,
-    maxTokens: 150, // Giới hạn token để giảm output dư thừa
+    maxRetries: 3,
+    maxSteps: 4,
+    maxTokens: 200,
     tools: {
       getInformation: tool({
         description: "Trả về thông tin cá nhân theo userId",
@@ -250,6 +484,9 @@ export async function POST(req: Request) {
         }),
         execute: async ({ userId }) => {
           console.log("Calling getInformation for userId:", userId);
+          if (!uuidRegex.test(userId)) {
+            throw new Error("ID người dùng không hợp lệ");
+          }
           const user: userInformation = {
             information: {} as UserType,
             employmentDetail: {} as EmploymentDetailType,
@@ -306,33 +543,82 @@ export async function POST(req: Request) {
           return { employees: filtered };
         },
       }),
-      addTask: tool({
-        description: "Thêm nhiệm vụ cho nhân viên",
+      getTaskList: tool({
+        description: "Trả về danh sách nhiệm vụ của một người dùng theo userId",
         parameters: z.object({
-          name: z.string().describe("Tên nhiệm vụ"),
-          description: z.string().describe("Mô tả nhiệm vụ"),
-          deadline: z.string().describe("Thời hạn nhiệm vụ"),
-          status: z.string().describe("Trạng thái nhiệm vụ"),
-          assignedToId: z
-            .string()
-            .describe("ID người được giao nhiệm vụ (UUID)"),
+          userId: z.string().describe("ID của người dùng (UUID)"),
         }),
-        execute: async ({ name, description, deadline, assignedToId }) => {
-          console.log("Calling addTask with:", {
-            name,
-            description,
-            deadline,
-            assignedToId,
-          });
-          const task = await createTaskServer({
-            name,
-            description,
-            deadline,
-            status: "in_progress",
-            assignedToId,
-          });
-          console.log("addTask result:", task);
-          return task;
+        execute: async ({ userId }) => {
+          console.log("Calling getTaskList for userId:", userId);
+          if (!uuidRegex.test(userId)) {
+            throw new Error("ID người dùng không hợp lệ");
+          }
+          const taskList = await fetchUserTasksServer(userId);
+          console.log("getTaskList result:", taskList);
+          return taskList;
+        },
+      }),
+      getTeam: tool({
+        description:
+          "Trả về thông tin chi tiết của một team, bao gồm leader và danh sách thành viên",
+        parameters: z.object({
+          teamId: z.string().describe("ID của team (UUID)"),
+        }),
+        execute: async ({ teamId }) => {
+          console.log("Calling getTeam with teamId:", teamId);
+          if (!uuidRegex.test(teamId)) {
+            throw new Error("ID đội nhóm không hợp lệ");
+          }
+          const team = await fetchUserTeamServer(teamId);
+          if (!team) {
+            throw new Error(
+              "Không tìm thấy thông tin đội nhóm hoặc có lỗi xảy ra"
+            );
+          }
+          console.log("getTeam result:", team);
+          return team;
+        },
+      }),
+      getDepartments: tool({
+        description:
+          "Trả về danh sách tất cả phòng ban (chỉ dành cho SUPER_ADMIN)",
+        parameters: z.object({}),
+        execute: async () => {
+          console.log("Calling getDepartments");
+          if (roleName !== "SUPER_ADMIN") {
+            throw new Error("Bạn không có quyền thực hiện hành động này.");
+          }
+          const departments = await fetchDepartments();
+          console.log("getDepartments result:", departments);
+          return { departments };
+        },
+      }),
+      getPositions: tool({
+        description:
+          "Trả về danh sách tất cả vị trí (chỉ dành cho SUPER_ADMIN)",
+        parameters: z.object({}),
+        execute: async () => {
+          console.log("Calling getPositions");
+          if (roleName !== "SUPER_ADMIN") {
+            throw new Error("Bạn không có quyền thực hiện hành động này.");
+          }
+          const positions = await fetchPositions();
+          console.log("getPositions result:", positions);
+          return { positions };
+        },
+      }),
+      getRoles: tool({
+        description:
+          "Trả về danh sách tất cả vai trò (chỉ dành cho SUPER_ADMIN)",
+        parameters: z.object({}),
+        execute: async () => {
+          console.log("Calling getRoles");
+          if (roleName !== "SUPER_ADMIN") {
+            throw new Error("Bạn không có quyền thực hiện hành động này.");
+          }
+          const roles = await fetchRoles();
+          console.log("getRoles result:", roles);
+          return { roles };
         },
       }),
     },

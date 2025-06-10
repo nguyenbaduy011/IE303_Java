@@ -6,7 +6,7 @@ import { ArrowDown, ThumbsDown, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
 import { Button } from "@/components/ui/button";
-import { type Message } from "@/components/chatbot/chat-messages";
+import { type Message } from "@/components/chat-message";
 import { CopyButton } from "@/components/copy-button";
 import { MessageInput } from "@/components/message-input";
 import { PromptSuggestions } from "@/components/chatbot/prompt-suggestion";

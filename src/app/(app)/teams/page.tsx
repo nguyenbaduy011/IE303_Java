@@ -373,7 +373,9 @@ export default function TeamsPage() {
                 ? "You have not been assigned to any team yet."
                 : error}
             </p>
-            <Button onClick={() => fetchUserTeams()} className="cursor-pointer">Try Again</Button>
+            <Button onClick={() => fetchUserTeams()} className="cursor-pointer">
+              Try Again
+            </Button>
           </CardContent>
         </Card>
       </div>
