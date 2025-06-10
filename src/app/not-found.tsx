@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background px-4">
-      <div className="max-w-md w-full mx-auto text-center space-y-6">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background px-4">
+      {/* ShokoChan đè lên */}
+      <div className="absolute  left-1/2 -translate-x-1/3  z-0">
+        <Image
+          width={2000}
+          height={2000}
+          src="/shoko-chan.png"
+          alt="ShokoChan"
+        />
+      </div>
+
+      <div className="max-w-md w-full mx-auto text-center space-y-6 z-10">
         <div className="flex justify-center">
           <div className="relative">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#024023]/20 to-[#024023]/40 blur-md" />
@@ -22,8 +33,8 @@ export default function NotFound() {
           Page not found
         </h2>
         <p className="text-muted-foreground mt-2">
-          Sorry, we couldn&apos;t find the page you&apos;re looking for. It might have
-          been moved, deleted, or never existed.
+          Sorry, we couldn&apos;t find the page you&apos;re looking for. It
+          might have been moved, deleted, or never existed.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">

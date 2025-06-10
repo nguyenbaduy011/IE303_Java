@@ -11,19 +11,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { TeamType } from "@/app/api/get-team-member/route";
 import {
   fetchUsersNotInAnyTeam,
   UserWithoutTeamType,
 } from "@/app/api/get-users-not-in-team/route";
 import { toast } from "sonner";
 import { addEmployeeToTeam } from "@/app/api/add-member-to-team/route";
-
+import { TeamWithLeaderType } from "@/app/api/get-all-teams(admin)/route";
 
 interface AddMemberDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  team: TeamType;
+  team: TeamWithLeaderType;
   onMemberAdded?: () => void; // Thêm prop để thông báo khi thêm thành viên thành công
 }
 
@@ -72,6 +71,11 @@ export function AddMemberDialog({
       return;
     }
 
+    if (!team?.id) {
+      toast.error("Team ID is missing");
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Gọi API cho từng member đã chọn
@@ -79,7 +83,7 @@ export function AddMemberDialog({
         await addEmployeeToTeam(memberId, team.id);
       }
       toast.success(
-        `Added ${selectedMembers.length} member(s) to team ${team.name}`
+        `Added ${selectedMembers.length} member(s) to team ${team?.name}`
       );
       setSelectedMembers([]);
       onClose();
@@ -98,7 +102,7 @@ export function AddMemberDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add Members to {team.name}</DialogTitle>
+          <DialogTitle>Add Members to {team?.name}</DialogTitle>
           <DialogDescription>
             Select existing members to add to the team.
           </DialogDescription>
