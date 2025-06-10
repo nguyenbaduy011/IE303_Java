@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import LoadingButton from "@/components/ui/loading-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
