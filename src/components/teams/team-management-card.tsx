@@ -81,6 +81,12 @@ export function TeamManagementCard({
 
   // Lấy danh sách thành viên
   const teamMembers = teamDetails?.members || [];
+
+  if (!team?.id) {
+    console.error("Team ID is missing", team);
+    return null; // hoặc render một component error
+  }
+
   // Tính tổng số task
   const totalTasks = tasks.length;
   // Tính số task đã hoàn thành
@@ -267,9 +273,15 @@ export function TeamManagementCard({
           </div>
         </CardContent>
         <div className="p-4 pt-0">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/admin/teams/${team.id}`}>Manage Team</Link>
-          </Button>
+          {teamMembers.length === 0 ? (
+            <Button variant="outline" size="sm" disabled>
+              Manage Team
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/teams/${team.id}`}>Manage Team</Link>
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -360,7 +372,7 @@ export function TeamManagementCard({
       <AddMemberDialog
         isOpen={isAddMemberDialogOpen}
         onClose={() => setIsAddMemberDialogOpen(false)}
-        team={teamDetails as TeamType}
+        team={team}
         onMemberAdded={handleMemberAdded} // Gọi refresh khi thành viên được thêm
       />
     </>
