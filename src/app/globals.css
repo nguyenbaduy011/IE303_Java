@@ -1,26 +1,190 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: oklch(1 0 0); /* Trắng (#ffffff) */
+  --foreground: oklch(0.2 0.03 264.23); /* Đen đậm hơn (~#2a2a2a) */
+  --card: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --card-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --popover: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --popover-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --primary: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --primary-50: oklch(0.953 0.026 159.92); /* Xanh rừng nhạt nhất (~#e6f0eb) */
+  --primary-100: oklch(0.891 0.048 159.92); /* Xanh rừng nhạt (~#cce1d7) */
+  --primary-200: oklch(0.767 0.091 159.92); /* Xanh rừng trung bình nhạt (~#99c3af) */
+  --primary-300: oklch(0.642 0.134 159.92); /* Xanh rừng trung bình (~#66a587) */
+  --primary-400: oklch(0.518 0.177 159.92); /* Xanh rừng đậm nhạt (~#33875f) */
+  --primary-500: oklch(0.394 0.198 159.92); /* Xanh rừng đậm (~#024023) */
+  --primary-600: oklch(0.363 0.201 159.92); /* Xanh rừng rất đậm (~#023a1f) */
+  --primary-700: oklch(0.332 0.204 159.92); /* Xanh rừng siêu đậm (~#01331b) */
+  --primary-800: oklch(0.301 0.207 159.92); /* Xanh rừng tối (~#012d17) */
+  --primary-900: oklch(0.27 0.21 159.92); /* Xanh rừng rất tối (~#012613) */
+  --primary-950: oklch(0.239 0.213 159.92); /* Xanh rừng tối nhất (~#001f0f) */
+  --secondary: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --secondary-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --muted: oklch(0.961 0.009 234.29); /* Xám nhạt (~#f3f4f6) */
+  --muted-foreground: oklch(0.5 0.02 235.83); /* Xám đậm hơn (~#6b7280) */
+  --accent: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --accent-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --destructive: oklch(0.672 0.216 32.47); /* Đỏ (~#dc2626) */
+  --destructive-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --border: oklch(0.914 0.013 235.83); /* Viền nhạt (~#e5e7eb) */
+  --input: oklch(0.914 0.013 235.83); /* Trường nhập liệu (~#e5e7eb) */
+  --ring: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --chart-1: oklch(0.953 0.026 159.92); /* Primary-50 (~#e6f0eb) */
+  --chart-2: oklch(0.891 0.048 159.92); /* Primary-100 (~#cce1d7) */
+  --chart-3: oklch(0.767 0.091 159.92); /* Primary-200 (~#99c3af) */
+  --chart-4: oklch(0.642 0.134 159.92); /* Primary-300 (~#66a587) */
+  --chart-5: oklch(0.518 0.177 159.92); /* Primary-400 (~#33875f) */
+  --sidebar: oklch(0.98 0.005 159.92); /* Trắng nhạt (~#f9fafb) */
+  --sidebar-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --sidebar-primary: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --sidebar-primary-foreground: oklch(0.98 0.005 234.29); /* Trắng nhạt (~#f9fafb) */
+  --sidebar-accent: oklch(0.914 0.026 159.92); /* Xanh nhạt (~#d4e8e0) */
+  --sidebar-accent-foreground: oklch(0.2 0.03 264.23); /* Đen đậm (~#2a2a2a) */
+  --sidebar-border: oklch(0.914 0.013 235.83); /* Viền nhạt (~#e5e7eb) */
+  --sidebar-ring: oklch(0.285 0.124 159.92); /* Xanh rừng (~#024023) */
+  --radius: 0.5rem; /* Bán kính bo góc */
+}
+
+.dark {
+  --background: oklch(0.18 0.04 170); /* Xanh đen tối (~#152426) - nền tối hơn */
+  --foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) - chữ rõ nét */
+  --card: oklch(0.23 0.045 170); /* Xanh đen nhạt (~#223435) - thẻ nổi nhẹ */
+  --card-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --popover: oklch(0.23 0.045 170); /* Xanh đen nhạt (~#223435) - popover tương tự thẻ */
+  --popover-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --primary: oklch(0.40 0.15 170); /* Xanh rừng sáng (~#1b704a) - màu chính nổi bật */
+  --primary-foreground: oklch(0.98 0.005 190); /* Gần trắng (~#f0f5f5) */
+  --primary-50: oklch(0.92 0.05 170); /* Xanh rừng nhạt (~#d6e8df) */
+  --primary-100: oklch(0.87 0.08 170); /* Xanh rừng nhạt hơn (~#bcd9cb) */
+  --primary-200: oklch(0.77 0.12 170); /* Xanh rừng trung bình (~#92c2aa) */
+  --primary-300: oklch(0.67 0.16 170); /* Xanh rừng đậm nhạt (~#68ab86) */
+  --primary-400: oklch(0.57 0.20 170); /* Xanh rừng đậm (~#3f9362) */
+  --primary-500: oklch(0.47 0.23 170); /* Xanh rừng rất đậm (~#267b3e) */
+  --primary-600: oklch(0.44 0.24 170); /* Xanh rừng siêu đậm (~#217239) */
+  --primary-700: oklch(0.41 0.25 170); /* Xanh rừng tối (~#1c6834) */
+  --primary-800: oklch(0.38 0.26 170); /* Xanh rừng rất tối (~#185e30) */
+  --primary-900: oklch(0.35 0.27 170); /* Xanh rừng tối nhất (~#14542b) */
+  --primary-950: oklch(0.32 0.28 170); /* Xanh rừng cực tối (~#0f4a26) */
+  --secondary: oklch(0.38 0.07 170); /* Xanh đậm nhạt (~#355b58) - màu phụ nhẹ */
+  --secondary-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --muted: oklch(0.38 0.06 170); /* Xanh đậm nhạt (~#355b58) - màu tắt tiếng */
+  --muted-foreground: oklch(0.80 0.07 170); /* Xanh nhạt trung bình (~#a6c8bf) */
+  --accent: oklch(0.43 0.09 170); /* Xanh rừng sáng hơn (~#4a736b) - màu nhấn */
+  --accent-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --destructive: oklch(0.62 0.19 25); /* Đỏ đậm (~#bf2626) - màu cảnh báo */
+  --destructive-foreground: oklch(0.98 0.005 190); /* Gần trắng (~#f0f5f5) */
+  --border: oklch(0.48 0.07 170); /* Xanh xám nhạt (~#4d6b68) - viền rõ hơn */
+  --input: oklch(0.48 0.07 170); /* Xanh xám nhạt (~#4d6b68) - trường nhập liệu */
+  --ring: oklch(0.57 0.20 170); /* Xanh rừng đậm (~#3f9362) - vòng focus */
+  --chart-1: oklch(0.92 0.05 170); /* Primary-50 (~#d6e8df) */
+  --chart-2: oklch(0.87 0.08 170); /* Primary-100 (~#bcd9cb) */
+  --chart-3: oklch(0.77 0.12 170); /* Primary-200 (~#92c2aa) */
+  --chart-4: oklch(0.67 0.16 170); /* Primary-300 (~#68ab86) */
+  --chart-5: oklch(0.57 0.20 170); /* Primary-400 (~#3f9362) */
+  --sidebar: oklch(0.23 0.045 170); /* Xanh đen nhạt (~#223435) - thanh bên */
+  --sidebar-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --sidebar-primary: oklch(0.40 0.15 170); /* Xanh rừng sáng (~#1b704a) */
+  --sidebar-primary-foreground: oklch(0.98 0.005 190); /* Gần trắng (~#f0f5f5) */
+  --sidebar-accent: oklch(0.43 0.09 170); /* Xanh rừng sáng hơn (~#4a736b) */
+  --sidebar-accent-foreground: oklch(0.97 0.01 170); /* Xanh nhạt rất sáng (~#edf5f5) */
+  --sidebar-border: oklch(0.48 0.07 170); /* Xanh xám nhạt (~#4d6b68) */
+  --sidebar-ring: oklch(0.57 0.20 170); /* Xanh rừng đậm (~#3f9362) */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-50: oklch(var(--primary-50));
+  --color-primary-100: oklch(var(--primary-100));
+  --color-primary-200: oklch(var(--primary-200));
+  --color-primary-300: oklch(var(--primary-300));
+  --color-primary-400: oklch(var(--primary-400));
+  --color-primary-500: oklch(var(--primary-500));
+  --color-primary-600: oklch(var(--primary-600));
+  --color-primary-700: oklch(var(--primary-700));
+  --color-primary-800: oklch(var(--primary-800));
+  --color-primary-900: oklch(var(--primary-900));
+  --color-primary-950: oklch(var(--primary-950));
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.video-container {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
 }

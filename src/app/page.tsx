@@ -1,103 +1,163 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import SociusLogo from "@/components/socius-logo";
+import { useAuth } from "@/contexts/auth-context";
+import StarfieldBackground from "@/components/dots-background";
+import { useTheme } from "next-themes";
+
+export const ThemeToggle = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  const handleToggle = () => {
+    const newTheme = (resolvedTheme === "dark" ? "light" : "dark") as
+      | "light"
+      | "dark";
+    setTheme(newTheme);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <button
+      onClick={handleToggle}
+      aria-label="Toggle Theme"
+      className="relative w-8 h-8 rounded-full flex items-center justify-center focus:outline-none cursor-pointer focus:ring-2 focus:ring-[#156b45] hover:bg-[#b8d4cb]/50 dark:hover:bg-[#01331b]/50 transition-all duration-300"
+    >
+      <svg
+        className="w-6 h-6 text-yellow-500 dark:text-blue-300"
+        viewBox="0 0 24 24"
+      >
+        <mask id="moon-mask">
+          <rect x="0" y="0" width="100%" height="100%" fill="white" />
+          <circle
+            cx="24"
+            cy="10"
+            r="6"
+            fill="black"
+            className={resolvedTheme === "dark" ? "translate-x-[-7px]" : ""}
+          />
+        </mask>
+        <circle
+          cx="12"
+          cy="12"
+          r="6"
+          mask="url(#moon-mask)"
+          fill="currentColor"
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        <g
+          stroke="currentColor"
+          strokeWidth="2"
+          className={`transition-all duration-300 ${resolvedTheme === "dark" ? "opacity-0 rotate-[-25deg]" : "opacity-100 rotate-0"}`}
+        >
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </g>
+      </svg>
+    </button>
+  );
+};
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+export default function WelcomePage() {
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.push("/dashboard");
+    }
+  }, [user, isAuthenticated, router]);
+
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      <StarfieldBackground
+        theme={
+          (resolvedTheme === "dark" ? "dark" : "light") as "light" | "dark"
+        }
+      />
+
+      {/* Blur background */}
+      <div
+        className="absolute top-1/2 left-1/2 w-[600px] h-[300px] transform -translate-x-1/2 -translate-y-1/2 z-[-1]"
+        style={{
+          background: isDark ? "#012d17" : "#e6f3ef",
+          opacity: 0.7,
+          filter: "blur(50px)",
+        }}
+      />
+
+      {/* Logo */}
+      <div className="absolute top-8 left-8 z-10">
+        <SociusLogo
+          className={`w-12 h-12 ${isDark ? "text-white" : "text-[#024023]"} animate-fade-in`}
+        />
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <h1
+          className="text-5xl md:text-7xl font-bold mb-6 tracking-tight animate-fade-in"
+          style={{ color: isDark ? "var(--primary-foreground)" : "#024023" }}
+        >
+          Welcome to Socius
+        </h1>
+        <p
+          className="text-lg md:text-2xl max-w-2xl mx-auto mb-8 animate-fade-in"
+          style={{
+            color: isDark ? "var(--primary-foreground)" : "#1a3b2a",
+            animationDelay: "0.2s",
+          }}
+        >
+          Connect, collaborate, and thrive with our innovative platform designed
+          for modern teams.
+        </p>
+      </div>
+
+      {/* Action buttons */}
+      <div className="absolute top-8 right-8 z-10 flex items-center gap-4">
+        <ThemeToggle />
+
+        {isAuthenticated && user ? (
+          <Button
+            asChild
+            className="p-2 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-fade-in"
+            style={{
+              background: isDark ? "var(--secondary)" : "#e6f3ef",
+              color: isDark ? "#FFF" : "#024023",
+              animationDelay: "0.4s",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <Link href="/dashboard">
+              <SociusLogo
+                className={`w-8 h-8 ${isDark ? "text-white" : "text-[#024023]"}`}
+              />
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            asChild
+            className={`px-8 py-4 text-xl font-bold rounded-lg shadow-lg hover:shadow-2xl hover:scale-110 transition-all duration-300 animate-fade-in ${
+              isDark
+                ? "bg-[#024023] text-[#ffffff] hover:bg-[#01331b] dark:bg-[#156b45] dark:text-[#ffffff] dark:hover:bg-[#1a6530]"
+                : "bg-[#e6f3ef] text-[#024023] hover:bg-[#e6f3ef] hover:text-[#01331b]"
+            }`}
+            style={{ animationDelay: "0.4s" }}
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <Link href="/login">Login</Link>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
