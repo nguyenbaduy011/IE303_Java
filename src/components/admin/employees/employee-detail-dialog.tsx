@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
@@ -118,7 +119,7 @@ export function EmployeeDetailDialog({
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      {/* <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {employee ? "Edit Employee" : "Add New Employee"}
@@ -389,7 +390,7 @@ export function EmployeeDetailDialog({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </DialogContent> */}
     </Dialog>
   );
 }
