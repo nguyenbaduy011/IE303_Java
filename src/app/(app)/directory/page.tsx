@@ -44,9 +44,9 @@ export default function DirectoryPage() {
         // Ánh xạ dữ liệu từ API sang định dạng hiển thị
         const mappedEmployees: DisplayEmployee[] = data.map((employee) => ({
           id: employee.user.id,
-          name: getFullName(employee.user.firstName, employee.user.lastName),
-          position: employee.position.name,
-          department: employee.department.name,
+          name: getFullName(employee.user?.first_name, employee.user.last_name),
+          position: employee.position?.name ?? "No information",
+          department: employee.department?.name ?? "No information",
           location: "Hà Nội", // Giả định, thay bằng dữ liệu thực nếu có
           avatar: undefined, // API không có avatar, để undefined
         }));
