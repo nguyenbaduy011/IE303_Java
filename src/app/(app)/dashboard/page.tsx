@@ -37,7 +37,7 @@ import {
   fetchEmploymentDetail,
   EmploymentDetailResponse,
 } from "@/app/api/employment-detail/route";
-import { checkOnline, CheckOnlineResponse } from "@/app/api/check-online/route";
+import { checkOnline } from "@/app/api/check-online/route";
 import { getOnlineUsers } from "@/app/api/online-users/route";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -103,6 +103,8 @@ export default function DashboardPage() {
   const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeUsers, setActiveUsers] = useState<number>(0);
+  const [employmentDetail, setEmploymentDetail] =
+    useState<EmploymentDetailResponse["employment_detail"]>(null);
 
   useEffect(() => {
     if (!user?.id) {
@@ -117,17 +119,16 @@ export default function DashboardPage() {
         const tasksData = await fetchTasks(user.id);
         setTasks(tasksData.tasks);
 
-        // Gọi getOnlineUsers
+        // Fetch online users
         const onlineUsers = await getOnlineUsers();
         setActiveUsers(onlineUsers.length);
 
-        // Fetch team information
+        // Fetch employment details
         const employmentResponse: EmploymentDetailResponse =
           await fetchEmploymentDetail(user.id);
-        if (
-          !employmentResponse.employment_detail ||
-          !employmentResponse.employment_detail.team
-        ) {
+        setEmploymentDetail(employmentResponse.employment_detail);
+
+        if (!employmentResponse.employment_detail?.team) {
           throw new Error("No team information found for your account.");
         }
 
@@ -263,8 +264,8 @@ export default function DashboardPage() {
                   Welcome back, {user?.first_name}
                 </h1>
                 <p className="text-muted-foreground">
-                  {user ? user.position?.name || "Employee" : "Employee"} •{" "}
-                  {user ? user.department?.name || "Department" : "Department"}
+                  {employmentDetail?.position?.name || "Employee"} •{" "}
+                  {employmentDetail?.department?.name || "Department"}
                 </p>
               </div>
               <Button variant="outline" size="sm" className="gap-2" asChild>
@@ -446,7 +447,7 @@ export default function DashboardPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={handlePreviousMonth}
+                          onClick={handleNextMonth} // Fixed to call handleNextMonth
                           className="h-6 w-6 cursor-pointer"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -616,18 +617,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-const monthNames = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];

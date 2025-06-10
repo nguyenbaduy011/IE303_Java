@@ -30,24 +30,26 @@ export const fetchTeamsServer = async (): Promise<TeamWithLeaderType[]> => {
     const data = await response.json();
     const teamsArray = Array.isArray(data) ? data : [];
 
-    return teamsArray.map(
-      (team: any): TeamWithLeaderType => ({
-        id: team.id,
-        name: team.name,
-        leader: {
-          id: team.leader.id,
-          first_name: team.leader.firstName,
-          last_name: team.leader.lastName,
-          email: team.leader.email,
-          birth_date: team.leader.birthDate,
-          gender: team.leader.gender,
-          nationality: team.leader.nationality,
-          phone_number: team.leader.phoneNumber,
-          hire_date: team.leader.hireDate,
-          address: team.leader.address,
-        },
-      })
-    );
+    return teamsArray
+      .filter((team: any) => team && team.leader) // lọc các team không có leader
+      .map(
+        (team: any): TeamWithLeaderType => ({
+          id: team.id,
+          name: team.name,
+          leader: {
+            id: team.leader.id ?? "",
+            first_name: team.leader.firstName ?? "",
+            last_name: team.leader.lastName ?? "",
+            email: team.leader.email ?? "",
+            birth_date: team.leader.birthDate ?? "",
+            gender: team.leader.gender ?? "",
+            nationality: team.leader.nationality ?? "",
+            phone_number: team.leader.phoneNumber ?? "",
+            hire_date: team.leader.hireDate ?? "",
+            address: team.leader.address ?? "",
+          },
+        })
+      );
   } catch (error) {
     throw new Error(
       error instanceof Error ? error.message : "Failed to fetch teams"

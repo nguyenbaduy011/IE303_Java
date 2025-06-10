@@ -1,24 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCookie } from "@/utils/cookie";
+import { RoleType } from "@/app/api/create-role/route";
 
-export type PermissionType = {
-  id: string;
-  name: string;
-  description: string;
-};
-
-export type RoleType = {
-  id: string;
-  name: string;
-  description: string;
-  permissions: PermissionType[];
-};
-
-export async function createRole({
+export async function updateRole({
+  roleId,
   name,
   description,
   permissionIds,
 }: {
+  roleId: string;
   name: string;
   description: string;
   permissionIds: string[];
@@ -29,8 +19,8 @@ export async function createRole({
       throw new Error("CSRF token not found in cookies");
     }
 
-    const res = await fetch("http://localhost:8080/api/role/create", {
-      method: "POST",
+    const res = await fetch(`http://localhost:8080/api/role/update/${roleId}`, {
+      method: "POST", // hoặc "PATCH" tuỳ backend bạn định nghĩa
       headers: {
         "Content-Type": "application/json",
         "X-CSRF-TOKEN": csrfToken,
@@ -47,7 +37,7 @@ export async function createRole({
       const errorData = await res.json();
       console.error("Server error response:", errorData);
       throw new Error(
-        errorData.error || `Create role failed with status ${res.status}`
+        errorData.error || `Update role failed with status ${res.status}`
       );
     }
 
@@ -64,9 +54,9 @@ export async function createRole({
       })),
     };
   } catch (error: any) {
-    console.error("Create role error:", error);
+    console.error("Update role error:", error);
     throw new Error(
-      error.message || "Something went wrong while creating role"
+      error.message || "Something went wrong while updating role"
     );
   }
 }

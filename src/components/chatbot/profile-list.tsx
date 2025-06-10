@@ -235,7 +235,7 @@ export default function EnhancedEmployeeListCard({
 
                         {/* Expandable section */}
                         {isExpanded && (
-                          <div className="mt-3 pt-3 border-t border-t border">
+                          <div className="mt-3 pt-3 border-t border">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                               <CompactInfoItem
                                 icon={<UserIcon className="h-3 w-3" />}
