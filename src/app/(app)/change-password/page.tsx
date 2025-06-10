@@ -324,7 +324,6 @@ export default function ChangePasswordPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Saving..." : "Save New Password"}
             </Button>
-           
           </CardFooter>
         </form>
       </Card>
