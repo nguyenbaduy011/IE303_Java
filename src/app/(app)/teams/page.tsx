@@ -256,7 +256,7 @@ export default function TeamsPage() {
         !employmentResponse.employment_detail.team?.id
       ) {
         console.warn("User has not been assigned to any team."); // Ghi log cảnh báo
-        setError("You have not been assigned to any team yet.");
+        setError("You may have not been assigned to any team yet.");
         setUserTeam(null);
         setLoading(false);
         return;
@@ -347,9 +347,9 @@ export default function TeamsPage() {
         <Card>
           <CardContent className="p-8 flex items-center justify-center">
             <div className="animate-pulse">
-              <div className="rounded-full bg-background h-12 w-12 mb-4"></div>
-              <div className="rounded-md bg-background h-6 w-48 mb-2"></div>
-              <div className="rounded-md bg-background h-4 w-32"></div>
+              <div className="rounded-full h-12 w-12 mb-4"></div>
+              <div className="rounded-md h-6 w-48 mb-2"></div>
+              <div className="rounded-md h-4 w-32"></div>
             </div>
           </CardContent>
         </Card>
@@ -370,7 +370,7 @@ export default function TeamsPage() {
             <h2 className="text-xl font-semibold mb-2">Error</h2>
             <p className="text-center text-muted-foreground mb-6 max-w-md">
               {error === "You have not been assigned to any team yet."
-                ? "You have not been assigned to any team yet."
+                ? "You may have not been assigned to any team yet."
                 : error}
             </p>
             <Button onClick={() => fetchUserTeams()} className="cursor-pointer">
@@ -411,7 +411,7 @@ export default function TeamsPage() {
     <div className="container mx-auto px-4 py-6">
       {userTeam && (
         <div className="space-y-6">
-          <Card className="bg-background">
+          <Card className="">
             <CardHeader className="pb-4">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div className="flex items-center">
@@ -483,7 +483,7 @@ export default function TeamsPage() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <Card className="bg-background">
+              <Card className="">
                 <CardHeader>
                   <CardTitle className="text-2xl">Team Overview</CardTitle>
                   <CardDescription>
@@ -539,7 +539,7 @@ export default function TeamsPage() {
             </TabsContent>
 
             <TabsContent value="members" className="space-y-4">
-              <Card className="bg-background">
+              <Card className="">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <CardTitle>Team Members</CardTitle>
@@ -635,7 +635,7 @@ export default function TeamsPage() {
             </TabsContent>
 
             <TabsContent value="tasks" className="space-y-4">
-              <Card className="bg-background">
+              <Card className="">
                 <CardHeader className="pb-3">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                     <div>

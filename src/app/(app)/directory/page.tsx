@@ -95,7 +95,7 @@ export default function DirectoryPage() {
             <Input
               type="search"
               placeholder="Search employees..."
-              className="w-full pl-8 bg-background"
+              className="w-full pl-8 "
             />
           </div>
           <Button variant="outline" size="icon">

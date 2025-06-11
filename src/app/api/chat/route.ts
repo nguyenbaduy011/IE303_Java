@@ -434,9 +434,9 @@ export async function POST(req: Request) {
    - Chỉ dùng card khi dữ liệu **ngắn gọn, trọng yếu và dễ đọc**.
    - Với danh sách dài: **tóm tắt văn bản**, chỉ nêu số lượng hoặc điểm chính.
    - Không hiển thị danh sách lớn nếu người dùng không yêu cầu rõ ràng (VD: không tự động liệt kê toàn bộ nhiệm vụ khi chỉ hỏi "ai có nhiều task nhất").
-   - Khi được hỏi thông tin của một người cụ thể, chỉ sử dụng card để trả về, không sử dụng văn bản, không sử dụng card danh sách.
+   - Khi được hỏi thông tin của một người cụ thể, chỉ sử dụng card để trả về thông tin của người, không sử dụng văn bản, không sử dụng card danh sách, không trả về các thông tin không liên quan.
    - Nếu đã trả về được card thì không trả về văn bản với toàn bộ nội dung trong card. Chỉ trả về văn bản với nội dung tóm tắt. Hoặc có thể trả lời theo kiểu "Dưới đây là card thông tin bạn cần".
-
+ 
 3. **Định dạng card (Markdown):**
    - Dùng tiêu đề rõ ràng (VD: **Danh sách nhân viên**, **Chi tiết nhiệm vụ**).
    - Trình bày súc tích, không trình bày lại dữ liệu trong văn bản phản hồi.
